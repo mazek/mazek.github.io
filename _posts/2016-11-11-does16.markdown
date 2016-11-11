@@ -7,7 +7,7 @@ categories: devops does does16
 
 I'm returning from DOES16 event in San Francisco. Great event, lots of hints, but also lots of surprising information to match with what we do at Allegro. Seems we are going in same direction and some ideas from leading companies match what we do.
 
-You can expect slides here: http://www.slideshare.net/ITRevolution
+You can expect slides [here.](http://www.slideshare.net/ITRevolution)
 
 <!--more-->
 
