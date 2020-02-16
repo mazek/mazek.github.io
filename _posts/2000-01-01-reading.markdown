@@ -1,13 +1,13 @@
 ---
 layout: post
 title:  "Reading list, pre and post."
-date:   2000-01-01 00:00:00
+date:   2100-01-01 00:00:00
 categories: reading books
 ---
 
 Nothing in life is better than reading:) So here you've got my goodread list where some of books I had my hands is listed.
 
-Goodreads: (https://www.goodreads.com/review/list/39585864)
+[Goodreads](https://www.goodreads.com/review/list/39585864)
 
 <!--more-->
 
