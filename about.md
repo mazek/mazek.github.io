@@ -4,6 +4,8 @@ title: About
 permalink: /about/
 ---
 
-This is a standard about page. There is nothing more that You could find on linkedin profile. Need some help, get me in touch via linkedin. Thx.
+Hi, I'm Marcin — a product and technology person based in Poland.
 
-M.
+I spend my time thinking about how software can be more useful, and occasionally writing about it here.
+
+The best place to find me is [LinkedIn](https://pl.linkedin.com/in/mmazurek/). I also share things on [Twitter](https://twitter.com/mazuchna) and push code to [GitHub](https://github.com/mazek).

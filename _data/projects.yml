@@ -1,0 +1,19 @@
+# Add your projects here.
+# Each entry can link to:
+#   - a standalone HTML file in /projects/  →  url: /projects/my-thing.html
+#   - an external URL                        →  url: https://github.com/mazek/repo
+#
+# Fields:
+#   title       — displayed as the link text
+#   url         — where it points (internal path or full URL)
+#   description — one-line summary shown below the title
+#   external    — set to true to open in a new tab (optional)
+
+# Example — a local HTML experiment:
+# - title: "Fun Thing"
+#   url: /projects/fun-thing.html
+#   description: "A weird little interactive experiment."
+
+- title: "Pyramid builder"
+  url: /projects/pyramid-builder.html
+  description: "Pyramid builder."

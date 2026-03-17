@@ -2,23 +2,36 @@
 layout: default
 ---
 
-<div class="home">
+<section class="hero">
+  <h1 class="hero-name">Marcin Mazurek</h1>
+  <p class="hero-tagline">Product · Technology · Curiosity</p>
+</section>
 
-  <h1 class="page-heading">Posts</h1>
-
+<section class="section" id="writing">
+  <h2 class="section-heading">Writing</h2>
+  {% if site.posts.size > 0 %}
   <ul class="post-list">
     {% for post in site.posts %}
-      <li>
-        <span class="post-meta">{{ post.date | date: "%b %-d, %Y" }}</span>
-
-        <h2>
-          <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
-        </h2>
-	<p>{{ post.excerpt }}</p>
+      <li class="post-item">
+        <time class="post-meta" datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%B %-d, %Y" }}</time>
+        <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
+        {% if post.excerpt %}<p class="post-excerpt">{{ post.excerpt | strip_html | truncate: 160 }}</p>{% endif %}
       </li>
     {% endfor %}
   </ul>
+  {% else %}
+  <p class="empty-state">No posts yet — stay tuned.</p>
+  {% endif %}
+</section>
 
-  <p class="rss-subscribe">subscribe <a href="{{ "/feed.xml" | prepend: site.baseurl }}">via RSS</a></p>
-
-</div>
+<section class="section" id="projects">
+  <h2 class="section-heading">Projects</h2>
+  <ul class="project-list">
+    {% for project in site.data.projects %}
+    <li class="project-item">
+      <a class="project-link" href="{{ project.url }}"{% if project.external %} target="_blank" rel="noopener"{% endif %}>{{ project.title }} →</a>
+      {% if project.description %}<p class="project-desc">{{ project.description }}</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>

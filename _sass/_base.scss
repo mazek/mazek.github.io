@@ -17,10 +17,12 @@ body {
     font-family: $base-font-family;
     font-size: $base-font-size;
     line-height: $base-line-height;
-    font-weight: 300;
+    font-weight: 400;
     color: $text-color;
     background-color: $background-color;
     -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 
@@ -32,7 +34,7 @@ h1, h2, h3, h4, h5, h6,
 p, blockquote, pre,
 ul, ol, dl, figure,
 %vertical-rhythm {
-    margin-bottom: $spacing-unit / 2;
+    margin-bottom: $spacing-unit-half;
 }
 
 
@@ -80,7 +82,7 @@ li {
  * Headings
  */
 h1, h2, h3, h4, h5, h6 {
-    font-weight: 300;
+    font-weight: 600;
 }
 
 
@@ -93,7 +95,7 @@ a {
     text-decoration: none;
 
     &:visited {
-        color: darken($brand-color, 15%);
+        color: $brand-color-dark;
     }
 
     &:hover {
@@ -109,10 +111,9 @@ a {
  */
 blockquote {
     color: $grey-color;
-    border-left: 4px solid $grey-color-light;
-    padding-left: $spacing-unit / 2;
+    border-left: 3px solid $grey-color-light;
+    padding-left: $spacing-unit-half;
     font-size: 18px;
-    letter-spacing: -1px;
     font-style: italic;
 
     > :last-child {
@@ -127,19 +128,19 @@ blockquote {
  */
 pre,
 code {
-    font-size: 15px;
+    font-size: 14px;
     border: 1px solid $grey-color-light;
-    border-radius: 3px;
-    background-color: #eef;
+    border-radius: 4px;
+    background-color: #f9fafb;
 }
 
 code {
-    padding: 1px 5px;
+    padding: 2px 6px;
 }
 
 pre {
-    padding: 8px 12px;
-    overflow-x: scroll;
+    padding: 12px 16px;
+    overflow-x: auto;
 
     > code {
         border: 0;
@@ -154,8 +155,7 @@ pre {
  * Wrapper
  */
 .wrapper {
-    max-width: -webkit-calc(#{$content-width} - (#{$spacing-unit} * 2));
-    max-width:         calc(#{$content-width} - (#{$spacing-unit} * 2));
+    max-width: calc(#{$content-width} - (#{$spacing-unit} * 2));
     margin-right: auto;
     margin-left: auto;
     padding-right: $spacing-unit;
@@ -163,10 +163,9 @@ pre {
     @extend %clearfix;
 
     @include media-query($on-laptop) {
-        max-width: -webkit-calc(#{$content-width} - (#{$spacing-unit}));
-        max-width:         calc(#{$content-width} - (#{$spacing-unit}));
-        padding-right: $spacing-unit / 2;
-        padding-left: $spacing-unit / 2;
+        max-width: calc(#{$content-width} - #{$spacing-unit});
+        padding-right: $spacing-unit-half;
+        padding-left: $spacing-unit-half;
     }
 }
 

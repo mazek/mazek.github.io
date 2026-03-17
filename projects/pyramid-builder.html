@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pyramid Net Builder — Interactive Cutting Template</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fafaf8;--bg2:#f0efeb;--bg3:#e8e7e2;
+  --fg:#1a1a18;--fg2:#5c5b56;--fg3:#8a8983;
+  --accent:#2d5ce6;--accent-bg:#eaf0ff;--accent2:#e85d24;
+  --success:#1d9e75;--warn:#ba7517;--danger:#e24b4a;
+  --info-bg:#e6f1fb;--success-bg:#e1f5ee;--warn-bg:#faeeda;--danger-bg:#fcebeb;
+  --radius:10px;--radius-lg:16px;
+  --font:'DM Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg:0 10px 40px rgba(0,0,0,.08),0 2px 8px rgba(0,0,0,.04);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#141413;--bg2:#1e1e1c;--bg3:#2a2a28;
+  --fg:#e8e7e2;--fg2:#a09f9a;--fg3:#6e6d69;
+  --accent:#6b93f5;--accent-bg:#1c2a4a;--accent2:#f09060;
+  --info-bg:#0c2240;--success-bg:#083020;--warn-bg:#2c1e08;--danger-bg:#301010;
+  --shadow:0 1px 3px rgba(0,0,0,.3);
+  --shadow-lg:0 10px 40px rgba(0,0,0,.4);
+}}
+html{font-family:var(--font);color:var(--fg);background:var(--bg);line-height:1.5}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{max-width:none;padding:0}
+  .header,.panel,.stats,.hint{display:none!important}
+  .layout{display:block!important}
+  .canvas-wrap{background:none!important;border-radius:0!important}
+  .canvas-wrap svg{width:100%!important;max-height:90vh}
+}
+body.printing .panel,body.printing .header,body.printing .stats{display:none}
+body{max-width:840px;margin:0 auto;padding:24px 20px 60px}
+
+.header{margin-bottom:32px}
+.header h1{font-size:28px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
+.header p{font-size:15px;color:var(--fg2);max-width:520px}
+
+.layout{display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start}
+@media(max-width:720px){.layout{grid-template-columns:1fr;gap:16px}}
+
+.panel{background:var(--bg2);border-radius:var(--radius-lg);padding:20px;position:sticky;top:20px}
+.panel h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg3);margin-bottom:16px}
+
+.ctrl{margin-bottom:14px}
+.ctrl label{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--fg2);margin-bottom:5px}
+.ctrl label .val{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--fg);background:var(--bg3);padding:2px 8px;border-radius:6px;min-width:60px;text-align:right}
+.ctrl input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:var(--bg3);outline:none;cursor:pointer}
+.ctrl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);box-shadow:var(--shadow);cursor:grab;transition:transform .15s}
+.ctrl input[type=range]::-webkit-slider-thumb:active{transform:scale(1.15);cursor:grabbing}
+.ctrl input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);box-shadow:var(--shadow);cursor:grab}
+
+.section-divider{height:1px;background:var(--bg3);margin:18px 0}
+
+.toggles{display:flex;flex-wrap:wrap;gap:10px}
+.toggle-chip{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--fg2);cursor:pointer;user-select:none;padding:4px 10px;border-radius:20px;border:1px solid transparent;transition:all .2s}
+.toggle-chip:hover{background:var(--bg3)}
+.toggle-chip input{display:none}
+.toggle-chip .dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--fg3);transition:all .2s}
+.toggle-chip input:checked~.dot{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+
+.canvas-wrap{background:var(--bg2);border-radius:var(--radius-lg);overflow:hidden;position:relative}
+.canvas-wrap svg{display:block;width:100%;height:auto}
+.canvas-wrap svg text{font-family:var(--font)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:16px}
+.stat{background:var(--bg2);border-radius:var(--radius);padding:10px 14px}
+.stat .label{font-size:11px;color:var(--fg3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.stat .value{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--fg)}
+
+.hint{font-size:12px;color:var(--fg3);margin-top:12px;padding:10px 14px;background:var(--accent-bg);border-radius:var(--radius);line-height:1.6}
+.hint strong{color:var(--accent);font-weight:500}
+
+.face-colors{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.face-swatch{width:14px;height:14px;border-radius:4px;border:1px solid var(--bg3)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Pyramid net builder</h1>
+  <p>Design a cutting template for any pyramid — regular or skewed. Adjust parameters and print the net.</p>
+</div>
+
+<div class="layout">
+  <div class="panel">
+    <h2>Geometry</h2>
+    <div class="ctrl">
+      <label>Base side <span class="val" id="base-v">120 mm</span></label>
+      <input type="range" id="base" min="40" max="220" value="120" step="1" oninput="draw()">
+    </div>
+    <div class="ctrl">
+      <label>Height <span class="val" id="height-v">100 mm</span></label>
+      <input type="range" id="height" min="20" max="220" value="100" step="1" oninput="draw()">
+    </div>
+    <div class="ctrl">
+      <label>Sides <span class="val" id="sides-v">4</span></label>
+      <input type="range" id="sides" min="3" max="8" value="4" step="1" oninput="draw()">
+    </div>
+
+    <div class="section-divider"></div>
+    <h2>Apex offset</h2>
+    <div class="ctrl">
+      <label>Offset X <span class="val" id="offx-v">0 mm</span></label>
+      <input type="range" id="offx" min="-120" max="120" value="0" step="1" oninput="draw()">
+    </div>
+    <div class="ctrl">
+      <label>Offset Y <span class="val" id="offy-v">0 mm</span></label>
+      <input type="range" id="offy" min="-120" max="120" value="0" step="1" oninput="draw()">
+    </div>
+
+    <div class="section-divider"></div>
+    <h2>Display</h2>
+    <div class="toggles">
+      <label class="toggle-chip"><input type="checkbox" id="tabs" checked onchange="draw()"><span class="dot"></span>Glue tabs</label>
+      <label class="toggle-chip"><input type="checkbox" id="dims" checked onchange="draw()"><span class="dot"></span>Dimensions</label>
+      <label class="toggle-chip"><input type="checkbox" id="grid" onchange="draw()"><span class="dot"></span>Grid</label>
+      <label class="toggle-chip"><input type="checkbox" id="foldlines" checked onchange="draw()"><span class="dot"></span>Fold lines</label>
+    </div>
+
+    <div class="section-divider"></div>
+    <button onclick="printNet()" style="width:100%;padding:10px;font-size:14px;font-weight:500;font-family:var(--font);background:var(--accent);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;transition:opacity .2s" onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">Print template</button>
+    <button onclick="downloadSVG()" style="width:100%;padding:10px;font-size:14px;font-weight:500;font-family:var(--font);background:transparent;color:var(--fg2);border:1px solid var(--bg3);border-radius:var(--radius);cursor:pointer;margin-top:8px;transition:all .2s" onmouseenter="this.style.borderColor='var(--fg3)'" onmouseleave="this.style.borderColor='var(--bg3)'">Download SVG</button>
+
+    <div class="hint">
+      <strong>Tip:</strong> Dashed lines on the base edges are fold lines. Score them before folding faces upward. Glue tabs attach to adjacent faces.
+    </div>
+  </div>
+
+  <div>
+    <div class="canvas-wrap">
+      <svg id="net" viewBox="0 0 680 680" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="stats" id="stats"></div>
+  </div>
+</div>
+
+<script>
+const FACE_FILLS = [
+  {fill:'#e1f5ee',stroke:'#0f6e56',dimCol:'#0f6e56'},
+  {fill:'#faeeda',stroke:'#854f0b',dimCol:'#854f0b'},
+  {fill:'#fcebeb',stroke:'#a32d2d',dimCol:'#a32d2d'},
+  {fill:'#e6f1fb',stroke:'#185fa5',dimCol:'#185fa5'},
+  {fill:'#eeedfe',stroke:'#534ab7',dimCol:'#534ab7'},
+  {fill:'#faece7',stroke:'#993c1d',dimCol:'#993c1d'},
+  {fill:'#fbeaf0',stroke:'#993556',dimCol:'#993556'},
+  {fill:'#eaf3de',stroke:'#3b6d11',dimCol:'#3b6d11'},
+];
+const FACE_FILLS_DARK = [
+  {fill:'#085041',stroke:'#5dcaa5',dimCol:'#5dcaa5'},
+  {fill:'#412402',stroke:'#fac775',dimCol:'#fac775'},
+  {fill:'#501313',stroke:'#f09595',dimCol:'#f09595'},
+  {fill:'#042c53',stroke:'#85b7eb',dimCol:'#85b7eb'},
+  {fill:'#26215c',stroke:'#afa9ec',dimCol:'#afa9ec'},
+  {fill:'#4a1b0c',stroke:'#f0997b',dimCol:'#f0997b'},
+  {fill:'#4b1528',stroke:'#ed93b1',dimCol:'#ed93b1'},
+  {fill:'#173404',stroke:'#97c459',dimCol:'#97c459'},
+];
+const isDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+const CF = isDark ? FACE_FILLS_DARK : FACE_FILLS;
+
+function d3(a,b){return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2+((a.z||0)-(b.z||0))**2)}
+function d2(a,b){return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2)}
+
+function draw(){
+  const base=+document.getElementById('base').value;
+  const h=+document.getElementById('height').value;
+  const n=+document.getElementById('sides').value;
+  const apexOX=+document.getElementById('offx').value;
+  const apexOY=+document.getElementById('offy').value;
+  const showTabs=document.getElementById('tabs').checked;
+  const showDims=document.getElementById('dims').checked;
+  const showGrid=document.getElementById('grid').checked;
+  const showFold=document.getElementById('foldlines').checked;
+
+  document.getElementById('base-v').textContent=base+' mm';
+  document.getElementById('height-v').textContent=h+' mm';
+  const sideNames={3:'triangle',4:'square',5:'pentagon',6:'hexagon',7:'heptagon',8:'octagon'};
+  document.getElementById('sides-v').textContent=n+' ('+sideNames[n]+')';
+  document.getElementById('offx-v').textContent=apexOX+' mm';
+  document.getElementById('offy-v').textContent=apexOY+' mm';
+
+  const r3d=base/(2*Math.sin(Math.PI/n));
+  const apothem=base/(2*Math.tan(Math.PI/n));
+  const baseVerts3D=[];
+  for(let i=0;i<n;i++){
+    const a=2*Math.PI*i/n-Math.PI/2;
+    baseVerts3D.push({x:r3d*Math.cos(a),y:r3d*Math.sin(a),z:0});
+  }
+  const apex3D={x:apexOX,y:apexOY,z:h};
+  const slantLengths=[],edgeLengths=[];
+  for(let i=0;i<n;i++){
+    slantLengths.push(d3(baseVerts3D[i],apex3D));
+    edgeLengths.push(d3(baseVerts3D[i],baseVerts3D[(i+1)%n]));
+  }
+
+  const maxSlant=Math.max(...slantLengths);
+  const sc=Math.min(240/(maxSlant+apothem+30),1.6);
+  const cx=340,cy=340;
+
+  let paths='';
+  const gridCol=isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)';
+  if(showGrid){
+    for(let x=0;x<=680;x+=20) paths+=`<line x1="${x}" y1="0" x2="${x}" y2="680" stroke="${gridCol}" stroke-width="0.5"/>`;
+    for(let y=0;y<=680;y+=20) paths+=`<line x1="0" y1="${y}" x2="680" y2="${y}" stroke="${gridCol}" stroke-width="0.5"/>`;
+  }
+
+  const polyBase=[];
+  for(let i=0;i<n;i++){
+    const ang=2*Math.PI*i/n-Math.PI/2+Math.PI/n;
+    const r=apothem*sc/Math.cos(Math.PI/n);
+    polyBase.push({x:cx+r*Math.cos(ang),y:cy+r*Math.sin(ang)});
+  }
+
+  const baseFill=isDark?'#042c53':'#e6f1fb';
+  const baseStroke=isDark?'#85b7eb':'#185fa5';
+  paths+=`<path d="M${polyBase.map(v=>v.x.toFixed(2)+','+v.y.toFixed(2)).join('L')}Z" fill="${baseFill}" fill-opacity="0.35" stroke="${baseStroke}" stroke-width="1.5"/>`;
+
+  let totalArea=0;
+  for(let i=0;i<n;i++) totalArea+=0.5*edgeLengths[i]*apothem;
+
+  const allPts=[...polyBase.map(p=>({...p}))];
+
+  for(let i=0;i<n;i++){
+    const j=(i+1)%n;
+    const p1=polyBase[i],p2=polyBase[j];
+    const eLen=d2(p1,p2);
+    const sL=slantLengths[i]*sc,sR=slantLengths[j]*sc;
+
+    const dx=p2.x-p1.x,dy=p2.y-p1.y;
+    const nx=-dy/eLen,ny=dx/eLen;
+    const mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2;
+    const outward=((mx-cx)*nx+(my-cy)*ny)>0?1:-1;
+
+    const cosA=(eLen*eLen+sL*sL-sR*sR)/(2*eLen*sL);
+    const sinA=Math.sqrt(Math.max(0,1-cosA*cosA));
+    const along={x:dx/eLen,y:dy/eLen};
+
+    const apex={
+      x:p1.x+along.x*cosA*sL+nx*outward*sinA*sL,
+      y:p1.y+along.y*cosA*sL+ny*outward*sinA*sL
+    };
+    allPts.push(apex);
+
+    const c=CF[i%CF.length];
+    paths+=`<path d="M${p1.x.toFixed(2)},${p1.y.toFixed(2)} L${apex.x.toFixed(2)},${apex.y.toFixed(2)} L${p2.x.toFixed(2)},${p2.y.toFixed(2)} Z" fill="${c.fill}" fill-opacity="0.35" stroke="${c.stroke}" stroke-width="1.2"/>`;
+
+    const triArea=0.5*Math.abs((p2.x-p1.x)*(apex.y-p1.y)-(apex.x-p1.x)*(p2.y-p1.y))/(sc*sc);
+    totalArea+=triArea;
+
+    if(showFold){
+      paths+=`<line x1="${p1.x.toFixed(2)}" y1="${p1.y.toFixed(2)}" x2="${p2.x.toFixed(2)}" y2="${p2.y.toFixed(2)}" stroke="${baseStroke}" stroke-width="1.2" stroke-dasharray="6 4"/>`;
+    }
+
+    if(showTabs){
+      const tabW=10*sc,inset=0.12;
+      const eL={x:apex.x-p1.x,y:apex.y-p1.y};
+      const eLn=Math.sqrt(eL.x**2+eL.y**2);
+      const tnx=-eL.y/eLn,tny=eL.x/eLn;
+      const mid2={x:(p1.x+apex.x)/2,y:(p1.y+apex.y)/2};
+      const tOut=((mid2.x-cx)*tnx+(mid2.y-cy)*tny)>0?1:-1;
+      const t1={x:p1.x+eL.x*inset,y:p1.y+eL.y*inset};
+      const t2={x:p1.x+eL.x*(1-inset),y:p1.y+eL.y*(1-inset)};
+      const tabCol=isDark?'rgba(255,255,255,.2)':'rgba(0,0,0,.18)';
+      paths+=`<path d="M${p1.x.toFixed(2)},${p1.y.toFixed(2)} L${(t1.x+tnx*tabW*tOut).toFixed(2)},${(t1.y+tny*tabW*tOut).toFixed(2)} L${(t2.x+tnx*tabW*tOut).toFixed(2)},${(t2.y+tny*tabW*tOut).toFixed(2)} L${apex.x.toFixed(2)},${apex.y.toFixed(2)}" fill="none" stroke="${tabCol}" stroke-width="0.8" stroke-dasharray="4 3"/>`;
+      allPts.push(
+        {x:t1.x+tnx*tabW*tOut,y:t1.y+tny*tabW*tOut},
+        {x:t2.x+tnx*tabW*tOut,y:t2.y+tny*tabW*tOut}
+      );
+    }
+
+    if(showDims){
+      const lmx=(p1.x+apex.x)/2,lmy=(p1.y+apex.y)/2;
+      const ang=Math.atan2(apex.y-p1.y,apex.x-p1.x)*180/Math.PI;
+      let displayAng=ang;
+      if(displayAng>90) displayAng-=180;
+      if(displayAng<-90) displayAng+=180;
+      const offD=14;
+      paths+=`<text x="${(lmx-ny*outward*offD).toFixed(1)}" y="${(lmy+nx*outward*offD).toFixed(1)}" font-size="11" font-weight="500" fill="${c.dimCol}" text-anchor="middle" dominant-baseline="central" transform="rotate(${displayAng.toFixed(1)},${(lmx-ny*outward*offD).toFixed(1)},${(lmy+nx*outward*offD).toFixed(1)})">${slantLengths[i].toFixed(1)}</text>`;
+
+      if(i===0){
+        const emx=(p1.x+p2.x)/2,emy=(p1.y+p2.y)/2;
+        paths+=`<text x="${(emx+nx*16*outward).toFixed(1)}" y="${(emy+ny*16*outward).toFixed(1)}" font-size="11" font-weight="500" fill="${baseStroke}" text-anchor="middle" dominant-baseline="central">${base}</text>`;
+      }
+    }
+  }
+
+  if(showDims){
+    const dimFg=isDark?'#a09f9a':'#5c5b56';
+    paths+=`<text x="${cx}" y="${cy}" font-size="11" fill="${dimFg}" text-anchor="middle" dominant-baseline="central">base</text>`;
+  }
+
+  if(allPts.length){
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    allPts.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)});
+    const pad=50;
+    const w=maxX-minX+pad*2,ht=maxY-minY+pad*2;
+    const side=Math.max(w,ht);
+    const ox=(side-w)/2,oy=(side-ht)/2;
+    document.getElementById('net').setAttribute('viewBox',`${(minX-pad-ox).toFixed(0)} ${(minY-pad-oy).toFixed(0)} ${side.toFixed(0)} ${side.toFixed(0)}`);
+  }
+
+  document.getElementById('net').innerHTML=paths;
+
+  const skewLabel=(apexOX===0&&apexOY===0)?'Centered':'Offset ('+apexOX+', '+apexOY+')';
+  document.getElementById('stats').innerHTML=
+    `<div class="stat"><div class="label">Apex</div><div class="value">${skewLabel}</div></div>`+
+    `<div class="stat"><div class="label">Slant range</div><div class="value">${Math.min(...slantLengths).toFixed(1)}–${Math.max(...slantLengths).toFixed(1)}</div></div>`+
+    `<div class="stat"><div class="label">Surface area</div><div class="value">${totalArea.toFixed(0)} mm²</div></div>`+
+    `<div class="stat"><div class="label">Apothem</div><div class="value">${apothem.toFixed(1)} mm</div></div>`;
+}
+
+function printNet(){
+  document.body.classList.add('printing');
+  setTimeout(()=>{
+    window.print();
+    document.body.classList.remove('printing');
+  },100);
+}
+
+function downloadSVG(){
+  const svgEl=document.getElementById('net');
+  const svgData=new XMLSerializer().serializeToString(svgEl);
+  const blob=new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${svgData}`],{type:'image/svg+xml'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='pyramid-net.svg';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+draw();
+</script>
+
+</body>
+</html>
