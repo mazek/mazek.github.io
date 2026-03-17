@@ -10,9 +10,10 @@
 #   external    — set to true to open in a new tab (optional)
 
 # Example — a local HTML experiment:
+
 - title: "Local Sovereign AI"
-   url: /projects/article-01-local-llm.html
-   description: "Local Sovereign AI"
+  url: /projects/article-01-local-llm.html
+  description: "Local Sovereign AI"
 
 - title: "Pyramid builder"
   url: /projects/pyramid-builder.html

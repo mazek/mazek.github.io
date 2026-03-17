@@ -7,9 +7,9 @@ layout: default
   <p class="hero-tagline">Product · Technology · Curiosity</p>
 </section>
 
+{% if site.posts.size > 0 %}
 <section class="section" id="writing">
   <h2 class="section-heading">Writing</h2>
-  {% if site.posts.size > 0 %}
   <ul class="post-list">
     {% for post in site.posts %}
       <li class="post-item">
@@ -19,10 +19,8 @@ layout: default
       </li>
     {% endfor %}
   </ul>
-  {% else %}
-  <p class="empty-state">No posts yet — stay tuned.</p>
-  {% endif %}
 </section>
+{% endif %}
 
 <section class="section" id="projects">
   <h2 class="section-heading">Projects</h2>
