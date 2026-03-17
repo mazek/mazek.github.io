@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your First Local LLM — A Complete Setup Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue: #0057B8;
+  --blue-dark: #004494;
+  --blue-light: #EBF2FC;
+  --blue-mid: #3B82F6;
+  --teal: #0891B2;
+  --text: #111827;
+  --text-muted: #6B7280;
+  --text-light: #9CA3AF;
+  --bg: #FFFFFF;
+  --bg-soft: #F9FAFB;
+  --bg-code: #F3F4F6;
+  --border: #E5E7EB;
+  --border-dark: #D1D5DB;
+  --green: #059669;
+  --green-light: #D1FAE5;
+  --amber: #D97706;
+  --amber-light: #FFFBEB;
+  --radius: 6px;
+  --radius-lg: 12px;
+  --max-width: 780px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Albert Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.75;
+  font-size: 17px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── PROGRESS BAR ─── */
+#progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  background: var(--blue);
+  width: 0%;
+  z-index: 1000;
+  transition: width 0.1s linear;
+}
+
+/* ─── HEADER ─── */
+.site-header {
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+}
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--text);
+}
+.header-logo {
+  width: 26px;
+  height: 26px;
+}
+.header-brand-name {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text);
+}
+.header-series {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 400;
+  border-left: 1px solid var(--border);
+  padding-left: 12px;
+  margin-left: 4px;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.header-tag {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--blue);
+  background: var(--blue-light);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.header-article-num {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ─── LAYOUT ─── */
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.article-container {
+  width: 100%;
+  max-width: var(--max-width);
+  padding: 0 2rem 6rem;
+}
+
+/* ─── HERO ─── */
+.hero {
+  padding: 3.5rem 0 2.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 3rem;
+}
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+.hero-series-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+.hero-sep { color: var(--border-dark); font-size: 12px; }
+.hero-num { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+h1 {
+  font-size: clamp(2rem, 5vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+.hero-subtitle {
+  font-size: 18px;
+  color: var(--text-muted);
+  font-weight: 400;
+  line-height: 1.6;
+  max-width: 620px;
+  font-style: italic;
+  margin-bottom: 1.75rem;
+}
+.hero-stats {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.hero-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.hero-stat svg { color: var(--blue); }
+
+/* ─── TIME CALLOUT ─── */
+.time-callout {
+  background: var(--blue-light);
+  border: 1px solid #C7DCFA;
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  margin: 2rem 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.time-callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.time-callout-text { font-size: 14px; color: #1E40AF; line-height: 1.6; }
+.time-callout-text strong { font-weight: 700; }
+.time-steps {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.time-step {
+  background: white;
+  border: 1px solid #BFDBFE;
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1D4ED8;
+  white-space: nowrap;
+}
+.time-arrow { color: #93C5FD; font-size: 14px; }
+
+/* ─── TYPOGRAPHY ─── */
+h2 {
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin: 3rem 0 1rem;
+  color: var(--text);
+  line-height: 1.25;
+  padding-top: 0.5rem;
+  border-top: 2px solid var(--border);
+}
+h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 1.75rem 0 0.5rem;
+  color: var(--text);
+}
+p { margin-bottom: 1.25rem; }
+p:last-child { margin-bottom: 0; }
+strong { font-weight: 700; }
+em { font-style: italic; color: var(--text-muted); }
+a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+a:hover { color: var(--blue-dark); }
+
+/* ─── SECTION DIVIDER ─── */
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2.5rem 0;
+}
+
+/* ─── CALLOUT/NOTE BOXES ─── */
+.callout {
+  border-left: 3px solid var(--blue);
+  background: var(--blue-light);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 0.85rem 1.1rem;
+  margin: 1.5rem 0;
+  font-size: 14.5px;
+  color: #1E3A6E;
+  line-height: 1.6;
+}
+.callout strong { color: #1E3A6E; }
+.callout code { background: rgba(255,255,255,0.6); }
+
+.callout-warning {
+  border-left-color: var(--amber);
+  background: var(--amber-light);
+  color: #78350F;
+}
+.callout-warning strong { color: #78350F; }
+
+.callout-success {
+  border-left-color: var(--green);
+  background: var(--green-light);
+  color: #064E3B;
+}
+
+/* ─── CODE BLOCKS ─── */
+pre {
+  background: #1E1E2E;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  position: relative;
+}
+pre code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #CDD6F4;
+  background: none;
+  padding: 0;
+}
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  background: var(--bg-code);
+  color: #1F2937;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.code-bash code  { color: #A6E3A1; }
+.code-python code { color: #89DCEB; }
+.code-comment { color: #6C7086 !important; }
+
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #181825;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 0.5rem 1rem;
+  margin-bottom: -12px;
+  margin-top: 1.25rem;
+}
+.code-header + pre {
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  margin-top: 0;
+}
+.code-lang {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6C7086;
+  font-family: 'JetBrains Mono', monospace;
+}
+.copy-btn {
+  font-size: 11px;
+  color: #6C7086;
+  background: transparent;
+  border: 1px solid #313244;
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-family: 'Albert Sans', sans-serif;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.copy-btn:hover { color: #CDD6F4; border-color: #45475A; }
+.copy-btn.copied { color: #A6E3A1; border-color: #A6E3A1; }
+
+/* Syntax highlight tokens */
+.kw  { color: #CBA6F7; }
+.str { color: #A6E3A1; }
+.cmt { color: #6C7086; font-style: italic; }
+.fn  { color: #89B4FA; }
+.num { color: #FAB387; }
+.var { color: #CDD6F4; }
+.op  { color: #89DCEB; }
+.cls { color: #F9E2AF; }
+
+/* ─── LISTS ─── */
+ul, ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+li {
+  margin-bottom: 0.4rem;
+  line-height: 1.65;
+}
+li:last-child { margin-bottom: 0; }
+
+/* ─── TABLE ─── */
+.table-wrap { overflow-x: auto; margin: 1.5rem 0; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead { background: var(--bg-soft); }
+th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.5;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg-soft); }
+.perf-good { color: var(--green); font-weight: 600; }
+.perf-ok { color: var(--amber); font-weight: 600; }
+
+/* ─── STEP HEADER ─── */
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 3rem 0 1rem;
+  padding-top: 0.5rem;
+  border-top: 2px solid var(--border);
+}
+.step-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.step-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--text);
+}
+.step-time {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-light);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* ─── PLATFORM TABS ─── */
+.platform-tabs { margin: 1.25rem 0; }
+.tab-buttons {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+.tab-btn {
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Albert Sans', sans-serif;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.15s;
+  margin-bottom: -1px;
+}
+.tab-btn.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+.tab-btn:hover:not(.active) { color: var(--text); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ─── INFOGRAPHIC: DATA FLOW ─── */
+.infographic {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  margin: 2rem 0;
+}
+.infographic-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+/* ─── HARDWARE GRID ─── */
+.hw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 1.5rem 0;
+}
+.hw-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hw-card-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.hw-card-ram {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+.hw-card-model {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue);
+  font-family: 'JetBrains Mono', monospace;
+}
+.hw-card-perf {
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+.perf-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+.perf-dot.slow { background: #FCA5A5; }
+.perf-dot.ok { background: #FCD34D; }
+.perf-dot.good { background: #6EE7B7; }
+.perf-dot.great { background: #34D399; }
+.perf-dot.best { background: var(--green); }
+
+/* ─── MODEL COMPARISON ─── */
+.model-grid {
+  display: grid;
+  gap: 10px;
+  margin: 1.5rem 0;
+}
+.model-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0 14px;
+  align-items: start;
+}
+.model-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.model-body { min-width: 0; }
+.model-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.model-name span {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+.model-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.model-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  align-self: start;
+}
+.tag-general { background: var(--blue-light); color: var(--blue); }
+.tag-speed   { background: #FEF3C7; color: #B45309; }
+.tag-code    { background: #F0FDF4; color: #166534; }
+.tag-small   { background: #F5F3FF; color: #6D28D9; }
+.tag-reason  { background: #FFF1F2; color: #BE123C; }
+
+/* ─── WHAT IT'S GOOD AT ─── */
+.good-bad-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 1.5rem 0;
+}
+.good-bad-card {
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.25rem;
+}
+.good-card { background: var(--green-light); border: 1px solid #A7F3D0; }
+.bad-card  { background: #FFF7ED; border: 1px solid #FDE68A; }
+.good-bad-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+.good-card .good-bad-title { color: #065F46; }
+.bad-card  .good-bad-title { color: #92400E; }
+.good-bad-list { list-style: none; padding: 0; margin: 0; }
+.good-bad-list li {
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 6px;
+  display: flex;
+  gap: 7px;
+  align-items: flex-start;
+}
+.good-bad-list li::before { flex-shrink: 0; margin-top: 1px; }
+.good-card .good-bad-list li::before { content: "✓"; color: var(--green); font-weight: 700; }
+.bad-card  .good-bad-list li::before { content: "△"; color: var(--amber); font-weight: 700; }
+.good-card .good-bad-list li { color: #064E3B; }
+.bad-card  .good-bad-list li { color: #78350F; }
+
+/* ─── TROUBLESHOOT ─── */
+.trouble-list { display: flex; flex-direction: column; gap: 10px; margin: 1.5rem 0; }
+.trouble-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.trouble-q {
+  padding: 0.85rem 1.1rem;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--bg-soft);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+}
+.trouble-q:hover { background: var(--bg-code); }
+.trouble-chevron { color: var(--text-muted); transition: transform 0.2s; font-size: 12px; flex-shrink: 0; }
+.trouble-item.open .trouble-chevron { transform: rotate(180deg); }
+.trouble-a {
+  display: none;
+  padding: 0.85rem 1.1rem;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  border-top: 1px solid var(--border);
+}
+.trouble-item.open .trouble-a { display: block; }
+
+/* ─── NEXT ARTICLE CTA ─── */
+.next-article {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.75rem;
+  margin: 3rem 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.next-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+.next-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.next-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.next-arrow {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  background: var(--blue);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  margin-left: auto;
+}
+
+/* ─── FOOTER ─── */
+.article-footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem 0 0;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.footer-series {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-light);
+  text-decoration: none;
+}
+.footer-brand:hover { color: var(--text-muted); }
+.footer-brand-dot {
+  width: 18px; height: 18px;
+}
+
+/* ─── ARCHITECTURE DIAGRAM ─── */
+.arch-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 1rem 0;
+  overflow-x: auto;
+}
+.arch-box {
+  background: white;
+  border: 1.5px solid var(--border-dark);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1rem;
+  text-align: center;
+  min-width: 110px;
+  flex-shrink: 0;
+}
+.arch-box.highlight {
+  border-color: var(--blue);
+  background: var(--blue-light);
+}
+.arch-box-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.arch-box.highlight .arch-box-title { color: var(--blue); }
+.arch-box-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+.arch-arrow {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px;
+}
+.arch-arrow-line {
+  width: 36px;
+  height: 2px;
+  background: var(--border-dark);
+  position: relative;
+}
+.arch-arrow-line::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -4px;
+  border: 5px solid transparent;
+  border-left-color: var(--border-dark);
+}
+.arch-arrow-label {
+  font-size: 10px;
+  color: var(--text-light);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 640px) {
+  .good-bad-grid { grid-template-columns: 1fr; }
+  .hw-grid { grid-template-columns: 1fr 1fr; }
+  .arch-diagram { flex-wrap: wrap; gap: 8px; }
+  .arch-arrow { display: none; }
+  .site-header .header-series { display: none; }
+  .next-article { flex-direction: column; align-items: flex-start; }
+  .next-arrow { display: none; }
+  .article-footer { flex-direction: column; gap: 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-brand">
+    <!-- Bitropy dot-pattern logo mark -->
+    <svg class="header-logo" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="26" height="26" rx="5" fill="#111827"/>
+      <circle cx="7" cy="7" r="2" fill="white" opacity="1"/>
+      <circle cx="13" cy="7" r="2" fill="white" opacity="0.8"/>
+      <circle cx="19" cy="7" r="2" fill="white" opacity="0.4"/>
+      <circle cx="7" cy="13" r="2" fill="white" opacity="0.8"/>
+      <circle cx="13" cy="13" r="2" fill="white" opacity="1"/>
+      <circle cx="19" cy="13" r="2" fill="white" opacity="0.6"/>
+      <circle cx="7" cy="19" r="2" fill="white" opacity="0.4"/>
+      <circle cx="13" cy="19" r="2" fill="white" opacity="0.6"/>
+      <circle cx="19" cy="19" r="2" fill="white" opacity="1"/>
+    </svg>
+    <span class="header-brand-name">bitropy.</span>
+    <span class="header-series">Local AI Series</span>
+  </div>
+  <div class="header-right">
+    <span class="header-tag">Open Source</span>
+    <span class="header-article-num">Article 1 of 26</span>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="page-wrapper">
+<article class="article-container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-meta">
+      <span class="hero-series-badge">Local Sovereign AI</span>
+      <span class="hero-sep">·</span>
+      <span class="hero-num">Article #1</span>
+    </div>
+    <h1>Your First Local LLM —<br>A Complete Setup Guide</h1>
+    <p class="hero-subtitle">
+      Every prompt you send to ChatGPT or Claude travels over the internet, gets logged on someone else's servers, and potentially contributes to future model training. For anything involving real data, that's a problem worth solving.
+    </p>
+    <div class="hero-stats">
+      <span class="hero-stat">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ~30 min total
+      </span>
+      <span class="hero-stat">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        Beginner–Intermediate
+      </span>
+      <span class="hero-stat">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Zero data leaves your machine
+      </span>
+    </div>
+  </div>
+
+  <!-- TIME CALLOUT -->
+  <div class="time-callout">
+    <span class="time-callout-icon">⏱</span>
+    <div class="time-callout-text">
+      <strong>Time breakdown</strong>
+      <div class="time-steps">
+        <span class="time-step">Install Ollama ~5 min</span>
+        <span class="time-arrow">→</span>
+        <span class="time-step">Model download ~15 min</span>
+        <span class="time-arrow">→</span>
+        <span class="time-step">First run + API ~10 min</span>
+      </div>
+      The majority of the time is waiting for the model file to download.
+    </div>
+  </div>
+
+  <!-- SECTION 1: WHY -->
+  <h2>Why Would You Even Do This?</h2>
+  <p>The case for running a language model locally isn't about being anti-cloud. It's about control.</p>
+  <p>When you use a hosted AI service, you're accepting an implicit deal: you get access to a powerful model, and in exchange, your inputs pass through infrastructure you don't own or control. Most providers have terms of service that limit training on your data, but "limited" and "zero" are different things. Audit trails don't exist. Data residency is often vague. And for companies operating under GDPR, EU AI Act, DORA, or sector-specific regulations, "our vendor promises not to look" isn't a compliance posture.</p>
+  <p>Running a model locally changes the math entirely. The model file lives on your hardware. Inference happens on your CPU or GPU. Nothing leaves your machine — not the prompt, not the response, not the metadata about what you asked. There's no API to go down, no rate limits, no per-token cost. It works on a train with no internet. It works in an air-gapped environment. It works at 3am when OpenAI has an outage.</p>
+
+  <!-- INFOGRAPHIC 1: Cloud vs Local -->
+  <div class="infographic">
+    <div class="infographic-title">Cloud API vs. Local Inference — Where Does Your Data Go?</div>
+    <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:0 auto;">
+      <!-- Cloud side -->
+      <rect x="10" y="20" width="300" height="160" rx="10" fill="#FEF3C7" stroke="#FDE68A" stroke-width="1.5"/>
+      <text x="160" y="48" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="12" font-weight="700" fill="#92400E" letter-spacing="1">CLOUD API</text>
+
+      <rect x="30" y="62" width="120" height="36" rx="6" fill="white" stroke="#FDE68A" stroke-width="1"/>
+      <text x="90" y="82" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="11" font-weight="600" fill="#374151">Your App</text>
+      <text x="90" y="94" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#6B7280">prompt + data</text>
+
+      <line x1="150" y1="80" x2="195" y2="80" stroke="#F59E0B" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrowAmber)"/>
+
+      <rect x="195" y="62" width="100" height="36" rx="6" fill="#FEF9C3" stroke="#FDE68A" stroke-width="1"/>
+      <text x="245" y="78" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="11" font-weight="600" fill="#92400E">Internet</text>
+      <text x="245" y="91" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="10" fill="#B45309">⚠ Logged</text>
+
+      <text x="160" y="128" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="11" fill="#B45309">Data leaves your perimeter</text>
+      <text x="160" y="144" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="11" fill="#B45309">Cost per token · Rate limits · Outages</text>
+      <text x="160" y="160" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="11" fill="#B45309">Residency unclear · Audit trail: none</text>
+
+      <!-- Local side -->
+      <rect x="390" y="20" width="300" height="160" rx="10" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+      <text x="540" y="48" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="12" font-weight="700" fill="#065F46" letter-spacing="1">LOCAL INFERENCE</text>
+
+      <rect x="410" y="62" width="105" height="36" rx="6" fill="white" stroke="#6EE7B7" stroke-width="1"/>
+      <text x="462" y="82" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="11" font-weight="600" fill="#374151">Your App</text>
+      <text x="462" y="94" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#6B7280">prompt + data</text>
+
+      <line x1="515" y1="80" x2="552" y2="80" stroke="#059669" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+      <rect x="552" y="62" width="118" height="36" rx="6" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1"/>
+      <text x="611" y="78" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="11" font-weight="600" fill="#065F46">localhost</text>
+      <text x="611" y="91" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#059669">:11434</text>
+
+      <text x="540" y="128" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="11" fill="#059669">Data stays on your hardware</text>
+      <text x="540" y="144" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="11" fill="#059669">Zero cost per token · No rate limits</text>
+      <text x="540" y="160" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="11" fill="#059669">Works offline · Full audit control</text>
+
+      <!-- VS -->
+      <circle cx="355" cy="100" r="22" fill="#374151"/>
+      <text x="355" y="105" text-anchor="middle" font-family="Albert Sans, sans-serif" font-size="13" font-weight="800" fill="white">VS</text>
+
+      <defs>
+        <marker id="arrowAmber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#F59E0B"/>
+        </marker>
+        <marker id="arrowGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+
+  <p>The honest trade-off: local models are not GPT-4. The best open-source models available today are genuinely impressive, but there is still a capability gap at the frontier. For the majority of real-world use cases — summarization, classification, code explanation, Q&A over provided documents, drafting text — a well-chosen local model is good enough, and the privacy guarantee is worth more than the marginal quality difference.</p>
+
+  <!-- SECTION 2: WHAT LOCAL MEANS -->
+  <h2>What "Local" Actually Means</h2>
+  <p>A language model is fundamentally a large file containing billions of numerical parameters called weights. When you run inference (send a prompt and get a response), you're loading those weights into memory and performing a very large matrix multiplication repeatedly.</p>
+  <p>The file format you'll encounter most often is <strong>GGUF</strong> — a compressed format optimized for consumer hardware. GGUF files use a technique called <strong>quantization</strong>: instead of storing each weight as a 32-bit float, they're compressed to 4-bit or 8-bit integers, with a small but usually acceptable quality trade-off. This allows a model that would otherwise require 40GB to run in 5GB. You'll see this as <code>q4_0</code> or <code>q8_0</code> in model names — lower number = more compression.</p>
+  <p>The critical thing to understand: once that GGUF file is on your disk, the model is entirely self-contained. No license server, no telemetry, no cloud dependency. It's just math running on your hardware.</p>
+
+  <!-- INFOGRAPHIC 2: How Ollama Works -->
+  <div class="infographic">
+    <div class="infographic-title">How Ollama Works — Architecture</div>
+    <div class="arch-diagram">
+      <div class="arch-box">
+        <div class="arch-box-title">Your Code</div>
+        <div class="arch-box-sub">Python / curl</div>
+      </div>
+      <div class="arch-arrow">
+        <div class="arch-arrow-line"></div>
+        <div class="arch-arrow-label">HTTP</div>
+      </div>
+      <div class="arch-box highlight">
+        <div class="arch-box-title">Ollama Server</div>
+        <div class="arch-box-sub">localhost:11434</div>
+      </div>
+      <div class="arch-arrow">
+        <div class="arch-arrow-line"></div>
+        <div class="arch-arrow-label">loads</div>
+      </div>
+      <div class="arch-box">
+        <div class="arch-box-title">GGUF Model</div>
+        <div class="arch-box-sub">~/.ollama/models</div>
+      </div>
+      <div class="arch-arrow">
+        <div class="arch-arrow-line"></div>
+        <div class="arch-arrow-label">inference</div>
+      </div>
+      <div class="arch-box">
+        <div class="arch-box-title">CPU / GPU</div>
+        <div class="arch-box-sub">your hardware</div>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:0.75rem;">Nothing exits this chain. All computation is local.</p>
+  </div>
+
+  <!-- SECTION 3: HARDWARE -->
+  <h2>Hardware Reality Check</h2>
+  <p>Most tutorials skip this section and leave readers confused when things don't work. Let's be direct.</p>
+  <p><strong>Mac users:</strong> Apple Silicon (M1–M4) is excellent for local AI. Unified memory means the full RAM pool is available to the GPU, so a 32GB MacBook Pro can use all 32GB for model weights. If you have 16GB+, you're in good shape.</p>
+  <p><strong>Linux + NVIDIA GPU:</strong> This is the fastest path. An RTX 3080 (10GB) or RTX 4070 (12GB) will run 7–13B models with excellent performance. Ollama auto-detects your GPU.</p>
+  <p><strong>Everyone else:</strong> 16GB RAM on CPU works — expect 5–15 tokens/sec instead of 50+. Slower, but functional for most tasks.</p>
+
+  <!-- Hardware Grid Infographic -->
+  <div class="infographic">
+    <div class="infographic-title">Hardware → Model Size Quick Reference</div>
+    <div class="hw-grid">
+      <div class="hw-card">
+        <div class="hw-card-label">8 GB RAM</div>
+        <div class="hw-card-ram">3–4B</div>
+        <div class="hw-card-model">phi4-mini</div>
+        <div class="hw-card-perf"><span class="perf-dot ok"></span><span style="color:var(--amber);font-size:12px;font-weight:600;">Slow, works</span></div>
+      </div>
+      <div class="hw-card">
+        <div class="hw-card-label">16 GB RAM</div>
+        <div class="hw-card-ram">Up to 8B</div>
+        <div class="hw-card-model">llama3.3:8b</div>
+        <div class="hw-card-perf"><span class="perf-dot good"></span><span style="color:#059669;font-size:12px;font-weight:600;">Usable</span></div>
+      </div>
+      <div class="hw-card">
+        <div class="hw-card-label">32 GB / M1 16GB</div>
+        <div class="hw-card-ram">Up to 13B</div>
+        <div class="hw-card-model">llama3.3:13b</div>
+        <div class="hw-card-perf"><span class="perf-dot great"></span><span style="color:#059669;font-size:12px;font-weight:600;">Good</span></div>
+      </div>
+      <div class="hw-card">
+        <div class="hw-card-label">M2/M3 32 GB+</div>
+        <div class="hw-card-ram">Up to 34B</div>
+        <div class="hw-card-model">llama3.3:34b</div>
+        <div class="hw-card-perf"><span class="perf-dot best"></span><span style="color:#059669;font-size:12px;font-weight:600;">Very good</span></div>
+      </div>
+      <div class="hw-card">
+        <div class="hw-card-label">NVIDIA 8 GB VRAM</div>
+        <div class="hw-card-ram">Up to 8B</div>
+        <div class="hw-card-model">GPU accelerated</div>
+        <div class="hw-card-perf"><span class="perf-dot great"></span><span style="color:#059669;font-size:12px;font-weight:600;">Fast</span></div>
+      </div>
+      <div class="hw-card">
+        <div class="hw-card-label">NVIDIA 24 GB+</div>
+        <div class="hw-card-ram">Up to 34B</div>
+        <div class="hw-card-model">GPU accelerated</div>
+        <div class="hw-card-perf"><span class="perf-dot best"></span><span style="color:#059669;font-size:12px;font-weight:600;">Excellent</span></div>
+      </div>
+    </div>
+  </div>
+
+  <p>One note on Windows: everything below works, but you'll have a smoother experience using WSL2 (Windows Subsystem for Linux). The terminal tooling around local AI is significantly more mature in Linux environments.</p>
+
+  <!-- STEP 1: INSTALL OLLAMA -->
+  <div class="step-header">
+    <div class="step-badge">1</div>
+    <div class="step-title">Install Ollama</div>
+    <div class="step-time">~5 min</div>
+  </div>
+  <p>Ollama handles model downloading, version management, quantization selection, GPU detection, and automatically runs a local REST API server. Think of it as Docker for language models.</p>
+
+  <div class="platform-tabs">
+    <div class="tab-buttons">
+      <button class="tab-btn active" onclick="switchTab(this,'mac')">macOS</button>
+      <button class="tab-btn" onclick="switchTab(this,'linux')">Linux</button>
+      <button class="tab-btn" onclick="switchTab(this,'windows')">Windows</button>
+    </div>
+    <div id="tab-mac" class="tab-panel active">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre class="code-bash"><code>brew install ollama</code></pre>
+      <div class="callout" style="margin-top:0.75rem;">On macOS with Homebrew, Ollama starts automatically as a menu bar app — <strong>do not run <code>ollama serve</code> manually</strong>. If you installed via the .dmg from ollama.com, launch the app from your Applications folder instead.</div>
+    </div>
+    <div id="tab-linux" class="tab-panel">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre class="code-bash"><code>curl -fsSL https://ollama.com/install.sh | sh
+<span class="cmt"># Then start the service:</span>
+ollama serve   <span class="cmt"># leave this terminal open, or configure as systemd</span></code></pre>
+    </div>
+    <div id="tab-windows" class="tab-panel">
+      <div class="callout callout-warning">Download the installer from <a href="https://ollama.com" target="_blank">ollama.com</a>. <strong>Recommended:</strong> Install WSL2 first (Ubuntu via Microsoft Store), then use the Linux command inside WSL2 — most local AI tooling works more reliably in Linux environments.</div>
+    </div>
+  </div>
+
+  <p>Verify it's running in a new terminal:</p>
+  <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+  <pre class="code-bash"><code>ollama --version
+<span class="cmt"># ollama version is 0.x.x</span></code></pre>
+
+  <div class="callout">
+    <strong>What Ollama is actually doing:</strong> When you pull a model, Ollama downloads the GGUF file from its registry (like Docker Hub) and stores it in <code>~/.ollama/models/</code>. It then exposes a REST API on <code>localhost:11434</code>. After the initial download, no internet connection is needed.
+  </div>
+
+  <!-- STEP 2: CHOOSE A MODEL -->
+  <div class="step-header">
+    <div class="step-badge">2</div>
+    <div class="step-title">Choose Your First Model</div>
+    <div class="step-time">~2 min decision</div>
+  </div>
+
+  <div class="callout callout-warning">
+    <strong>A note on versions:</strong> The open-source model ecosystem moves fast — new releases appear weekly. The families below are stable recommendations; specific version numbers change. Always check <code>ollama search &lt;family&gt;</code> or <a href="https://ollama.com/library" target="_blank">ollama.com/library</a> for the current version before pulling.
+  </div>
+
+  <!-- Model Cards Infographic -->
+  <div class="model-grid">
+    <div class="model-card">
+      <div class="model-icon" style="background:#EBF2FC;">🦙</div>
+      <div class="model-body">
+        <div class="model-name">Llama 3.3 <span>(Meta)</span></div>
+        <div class="model-desc">Best all-around general-purpose model. Strong instruction following, 128K context. The 8B version is the sweet spot for most hardware.</div>
+      </div>
+      <span class="model-tag tag-general">General</span>
+    </div>
+    <div class="model-card">
+      <div class="model-icon" style="background:#FEF3C7;">⚡</div>
+      <div class="model-body">
+        <div class="model-name">Mistral Small 3 <span>(Mistral AI)</span></div>
+        <div class="model-desc">Fastest tokens/sec in the 7B class on consumer hardware. Excellent structured output. Apache 2.0 — cleanest commercial license.</div>
+      </div>
+      <span class="model-tag tag-speed">Fast</span>
+    </div>
+    <div class="model-card">
+      <div class="model-icon" style="background:#F0FDF4;">🧑‍💻</div>
+      <div class="model-body">
+        <div class="model-name">Qwen 3 <span>(Alibaba)</span></div>
+        <div class="model-desc">Strongest on coding benchmarks in the 7B class. Best multilingual support. Recommended for non-English content or code-heavy workflows.</div>
+      </div>
+      <span class="model-tag tag-code">Code</span>
+    </div>
+    <div class="model-card">
+      <div class="model-icon" style="background:#F5F3FF;">🔬</div>
+      <div class="model-body">
+        <div class="model-name">Phi-4-mini <span>(Microsoft)</span></div>
+        <div class="model-desc">3.8B parameters, competes with many 7B models on reasoning. MIT license. Best choice for 8GB RAM machines or when you need instant load times.</div>
+      </div>
+      <span class="model-tag tag-small">Small</span>
+    </div>
+    <div class="model-card">
+      <div class="model-icon" style="background:#FFF1F2;">🧠</div>
+      <div class="model-body">
+        <div class="model-name">DeepSeek-R1 <span>(DeepSeek)</span></div>
+        <div class="model-desc">Purpose-built for complex reasoning, debugging, step-by-step problem solving. The 32B version on 24GB GPU genuinely rivals GPT-4 on technical tasks.</div>
+      </div>
+      <span class="model-tag tag-reason">Reasoning</span>
+    </div>
+  </div>
+
+  <p><strong>Simple recommendation by hardware:</strong></p>
+  <div class="code-header"><span class="code-lang">quick reference</span></div>
+  <pre><code>16GB RAM or M1/M2 16GB  →  llama3.3:8b
+8GB RAM                 →  phi4-mini
+32GB+ or M2 Pro/Max     →  llama3.3:8b  (then try larger)
+NVIDIA GPU 12GB+        →  llama3.3:8b  (auto GPU acceleration)
+Primary use case: code  →  qwen3:8b or deepseek-r1:7b</code></pre>
+
+  <!-- STEP 3: PULL AND RUN -->
+  <div class="step-header">
+    <div class="step-badge">3</div>
+    <div class="step-title">Pull and Run Your First Model</div>
+    <div class="step-time">~15 min download</div>
+  </div>
+
+  <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+  <pre class="code-bash"><code>ollama pull llama3.3:8b   <span class="cmt"># ~5GB download, one-time</span>
+ollama run llama3.3:8b</code></pre>
+
+  <p>You'll get a prompt. Try something real:</p>
+  <div class="code-header"><span class="code-lang">example prompts</span></div>
+  <pre><code>>>> Summarize the key differences between GDPR and the EU AI Act in 3 paragraphs.
+>>> Write a Python function that reads a CSV file and returns the top 10 rows by a column.
+>>> Find all users in my PostgreSQL users table who haven't logged in for 90 days.
+>>> /bye</code></pre>
+
+  <p><strong>Immediately verify GPU usage</strong> — many people run on CPU without realising it and think local AI is just slow:</p>
+  <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+  <pre class="code-bash"><code>ollama ps
+<span class="cmt"># NAME              ID    SIZE      PROCESSOR    UNTIL
+# llama3.3:8b       ...   5.0 GB    100% GPU     4 minutes from now</span></code></pre>
+
+  <p>If <code>PROCESSOR</code> shows <code>CPU</code> and you expected GPU: on Apple Silicon the model may be too large for your unified memory (try <code>phi4-mini</code>); on NVIDIA, check that drivers are installed and Ollama detected your GPU at startup.</p>
+
+  <div class="code-header"><span class="code-lang">bash — useful commands</span></div>
+  <pre class="code-bash"><code>ollama list              <span class="cmt"># see downloaded models</span>
+ollama show llama3.3:8b  <span class="cmt"># model details, context length</span>
+ollama rm llama3.3:8b    <span class="cmt"># remove to free disk space</span></code></pre>
+
+  <!-- STEP 4: API -->
+  <div class="step-header">
+    <div class="step-badge">4</div>
+    <div class="step-title">The Local API</div>
+    <div class="step-time">~10 min</div>
+  </div>
+
+  <p>The chat interface is useful for experimenting. The REST API is what makes this genuinely powerful.</p>
+  <p>Ollama automatically exposes an <strong>OpenAI-compatible API</strong> on <code>localhost:11434</code>. Any tool, library, or application built for OpenAI's API works with your local model by changing one configuration line — the base URL. Nothing else.</p>
+
+  <div class="code-header"><span class="code-lang">bash — verify with curl</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+  <pre class="code-bash"><code>curl http://localhost:11434/v1/chat/completions \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "model": "llama3.3:8b",
+    "messages": [{"role": "user", "content": "What is data sovereignty?"}]
+  }'</span></code></pre>
+
+  <p>For scripting and real applications, here's the same call in Python using the OpenAI SDK — which works without modification because the API format is identical:</p>
+
+  <div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+  <pre class="code-python"><code><span class="kw">from</span> <span class="var">openai</span> <span class="kw">import</span> <span class="cls">OpenAI</span>
+
+<span class="var">client</span> = <span class="cls">OpenAI</span>(
+    <span class="var">base_url</span>=<span class="str">"http://localhost:11434/v1"</span>,
+    <span class="var">api_key</span>=<span class="str">"ollama"</span>  <span class="cmt"># required by client, ignored by Ollama</span>
+)
+
+<span class="var">response</span> = <span class="var">client</span>.chat.completions.create(
+    <span class="var">model</span>=<span class="str">"llama3.3:8b"</span>,
+    <span class="var">messages</span>=[
+        {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"You are a helpful assistant."</span>},
+        {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Summarize zero-trust security in 3 points."</span>}
+    ]
+)
+<span class="fn">print</span>(<span class="var">response</span>.choices[<span class="num">0</span>].message.content)</code></pre>
+
+  <p>If you have existing code using the OpenAI SDK, switching to local is two lines:</p>
+  <div class="code-header"><span class="code-lang">python — migration</span></div>
+  <pre class="code-python"><code><span class="cmt"># Before (OpenAI cloud):</span>
+<span class="var">client</span> = <span class="cls">OpenAI</span>(<span class="var">api_key</span>=<span class="str">"sk-..."</span>)
+
+<span class="cmt"># After (local Ollama — everything else stays identical):</span>
+<span class="var">client</span> = <span class="cls">OpenAI</span>(<span class="var">base_url</span>=<span class="str">"http://localhost:11434/v1"</span>, <span class="var">api_key</span>=<span class="str">"ollama"</span>)</code></pre>
+
+  <div class="callout callout-success">
+    <strong>The architectural insight:</strong> The API is the interface, not the vendor. The same application code can route to different models depending on context, data sensitivity, or cost — without being rewritten. This is the foundation the rest of this series builds on.
+  </div>
+
+  <!-- STEP 5: PRACTICAL TEST -->
+  <div class="step-header">
+    <div class="step-badge">5</div>
+    <div class="step-title">Practical Test: Document Summarization</div>
+    <div class="step-time">~5 min</div>
+  </div>
+
+  <p>Here's a complete script that reads a local document and summarizes it — entirely locally, no data leaving your machine. First, if you're working with PDFs, convert them to text:</p>
+
+  <div class="code-header"><span class="code-lang">bash — PDF conversion</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+  <pre class="code-bash"><code><span class="cmt"># macOS:</span>
+brew install poppler
+<span class="cmt"># Linux (Ubuntu/Debian):</span>
+sudo apt install poppler-utils
+
+<span class="cmt"># Convert PDF to text:</span>
+pdftotext internal_report.pdf internal_report.txt</code></pre>
+
+  <div class="code-header"><span class="code-lang">python — summarize.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+  <pre class="code-python"><code><span class="cmt"># summarize.py — run: python summarize.py contract.txt</span>
+<span class="kw">from</span> <span class="var">openai</span> <span class="kw">import</span> <span class="cls">OpenAI</span>
+<span class="kw">import</span> <span class="var">sys</span>
+
+<span class="var">client</span> = <span class="cls">OpenAI</span>(<span class="var">base_url</span>=<span class="str">"http://localhost:11434/v1"</span>, <span class="var">api_key</span>=<span class="str">"ollama"</span>)
+
+<span class="kw">def</span> <span class="fn">summarize_document</span>(<span class="var">filepath</span>: <span class="cls">str</span>) -> <span class="cls">str</span>:
+    <span class="kw">with</span> <span class="fn">open</span>(<span class="var">filepath</span>, <span class="str">"r"</span>, <span class="var">encoding</span>=<span class="str">"utf-8"</span>) <span class="kw">as</span> <span class="var">f</span>:
+        <span class="var">content</span> = <span class="var">f</span>.read()
+
+    <span class="var">max_chars</span> = <span class="num">12000</span>
+    <span class="kw">if</span> <span class="fn">len</span>(<span class="var">content</span>) > <span class="var">max_chars</span>:
+        <span class="var">content</span> = <span class="var">content</span>[:<span class="var">max_chars</span>] + <span class="str">"\n\n[Truncated — see article #3 on RAG for long docs]"</span>
+
+    <span class="var">response</span> = <span class="var">client</span>.chat.completions.create(
+        <span class="var">model</span>=<span class="str">"llama3.3:8b"</span>,
+        <span class="var">messages</span>=[
+            {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"You are a document analyst. Summarize concisely, covering main points, key decisions, and notable details."</span>},
+            {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="var">f</span><span class="str">"Summarize this document:\n\n{content}"</span>}
+        ],
+        <span class="var">temperature</span>=<span class="num">0.3</span>
+    )
+    <span class="kw">return</span> <span class="var">response</span>.choices[<span class="num">0</span>].message.content
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="fn">print</span>(<span class="fn">summarize_document</span>(<span class="var">sys</span>.argv[<span class="num">1</span>] <span class="kw">if</span> <span class="fn">len</span>(<span class="var">sys</span>.argv) > <span class="num">1</span> <span class="kw">else</span> <span class="str">"document.txt"</span>))</code></pre>
+
+  <!-- SECTION: WHAT LOCAL MODELS ARE GOOD AT -->
+  <h2>Honest Assessment: What Local Models Are Good At</h2>
+  <p>Setting accurate expectations is more useful than cheerleading.</p>
+
+  <div class="good-bad-grid">
+    <div class="good-bad-card good-card">
+      <div class="good-bad-title">✓ Handles well</div>
+      <ul class="good-bad-list">
+        <li>Summarization of documents you provide</li>
+        <li>Code explanation and basic generation</li>
+        <li>Drafting text from structured input</li>
+        <li>Classification and extraction tasks</li>
+        <li>Q&amp;A with context provided in prompt</li>
+        <li>Translation for major languages</li>
+      </ul>
+    </div>
+    <div class="good-bad-card bad-card">
+      <div class="good-bad-title">△ Still lags behind frontier</div>
+      <ul class="good-bad-list">
+        <li>Complex multi-step reasoning</li>
+        <li>Highly nuanced creative prose</li>
+        <li>Mathematical reasoning (beyond algebra)</li>
+        <li>Up-to-date world knowledge (cutoff date)</li>
+        <li>Very long documents without RAG</li>
+      </ul>
+    </div>
+  </div>
+
+  <p>For 60–70% of realistic daily AI tasks in a business context, a well-configured local 8B model produces output that is <em>good enough</em>. The remaining 30–40% — tasks that genuinely benefit from GPT-4 class capability — are usually also tasks where external API usage is acceptable or data can be sanitised before sending. That routing decision is exactly what the next article covers.</p>
+
+  <!-- SECTION: TROUBLESHOOTING -->
+  <h2>Troubleshooting Common Issues</h2>
+
+  <div class="trouble-list">
+    <div class="trouble-item">
+      <div class="trouble-q" onclick="toggleTrouble(this)">
+        Model runs but output is very slow (under 3 tokens/sec)
+        <span class="trouble-chevron">▼</span>
+      </div>
+      <div class="trouble-a">
+        Check <code>ollama ps</code> and look at the <code>PROCESSOR</code> column. If it shows <code>CPU</code>: on Apple Silicon, the model is likely too large for unified memory — try <code>phi4-mini</code>. On Linux/Windows, verify NVIDIA drivers are installed and Ollama detected your GPU at startup.
+      </div>
+    </div>
+    <div class="trouble-item">
+      <div class="trouble-q" onclick="toggleTrouble(this)">
+        "Error: model not found"
+        <span class="trouble-chevron">▼</span>
+      </div>
+      <div class="trouble-a">
+        Pull explicitly before running: <code>ollama pull llama3.3:8b</code>. Model names are case-sensitive and must exactly match the Ollama library name.
+      </div>
+    </div>
+    <div class="trouble-item">
+      <div class="trouble-q" onclick="toggleTrouble(this)">
+        Out of memory / process crashes mid-generation
+        <span class="trouble-chevron">▼</span>
+      </div>
+      <div class="trouble-a">
+        The model is too large for your RAM. Try a more aggressively quantized variant: <code>ollama pull llama3.3:8b-q4_0</code> uses less memory than the default at some quality cost.
+      </div>
+    </div>
+    <div class="trouble-item">
+      <div class="trouble-q" onclick="toggleTrouble(this)">
+        macOS: "address already in use" when running ollama serve
+        <span class="trouble-chevron">▼</span>
+      </div>
+      <div class="trouble-a">
+        With the Homebrew install, Ollama is already running as a menu bar app. You don't need <code>ollama serve</code> — use <code>ollama run</code> directly.
+      </div>
+    </div>
+    <div class="trouble-item">
+      <div class="trouble-q" onclick="toggleTrouble(this)">
+        API returns connection refused on port 11434
+        <span class="trouble-chevron">▼</span>
+      </div>
+      <div class="trouble-a">
+        Ollama isn't running. On macOS, check the menu bar icon. On Linux: <code>sudo systemctl enable --now ollama</code> to start and enable as a service.
+      </div>
+    </div>
+    <div class="trouble-item">
+      <div class="trouble-q" onclick="toggleTrouble(this)">
+        Windows: various terminal and path issues
+        <span class="trouble-chevron">▼</span>
+      </div>
+      <div class="trouble-a">
+        Switch to WSL2. Install Ubuntu via the Microsoft Store, then use the Linux install command inside WSL2. This resolves the vast majority of Windows-specific friction with local AI tooling.
+      </div>
+    </div>
+    <div class="trouble-item">
+      <div class="trouble-q" onclick="toggleTrouble(this)">
+        Model gives incoherent or very short responses
+        <span class="trouble-chevron">▼</span>
+      </div>
+      <div class="trouble-a">
+        Add a system prompt that clearly defines the task. Local models are more sensitive to prompt quality than frontier models — being explicit about the task format and expected output length improves results significantly.
+      </div>
+    </div>
+  </div>
+
+  <!-- WHAT YOU HAVE NOW + NEXT -->
+  <h2>What You Have Now</h2>
+  <p>You have a working local LLM that runs entirely on your hardware, costs nothing per token, exposes an OpenAI-compatible API on localhost, handles your data without it leaving your machine, and works offline. That's a real foundation.</p>
+  <p>But the moment you try to use this seriously — multiple models for different tasks, teammates sharing the same setup, switching between local and cloud based on data sensitivity, tracking what's actually being used — you've outgrown talking directly to Ollama. Those are infrastructure problems, and they need a gateway layer.</p>
+
+  <!-- NEXT ARTICLE CTA -->
+  <div class="next-article">
+    <div>
+      <div class="next-label">Up next · Article #2</div>
+      <div class="next-title">LiteLLM as Your Local AI Gateway</div>
+      <div class="next-desc">A unified gateway in front of all your models — local and cloud — with routing rules, cost tracking, access control, and fallback logic. The layer that turns "I have a model running" into "I have AI infrastructure."</div>
+    </div>
+    <div class="next-arrow">→</div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="article-footer">
+    <div class="footer-series">
+      Part of the <strong>Local Sovereign AI</strong> series — 26 articles on building local AI infrastructure<br>
+      using open-source tools, from model serving to production-grade agentic workflows.
+    </div>
+    <a href="https://bitropy.io" target="_blank" class="footer-brand">
+      <svg class="footer-brand-dot" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="18" height="18" rx="4" fill="#111827"/>
+        <circle cx="5" cy="5" r="1.4" fill="white" opacity="1"/>
+        <circle cx="9" cy="5" r="1.4" fill="white" opacity="0.7"/>
+        <circle cx="13" cy="5" r="1.4" fill="white" opacity="0.35"/>
+        <circle cx="5" cy="9" r="1.4" fill="white" opacity="0.7"/>
+        <circle cx="9" cy="9" r="1.4" fill="white" opacity="1"/>
+        <circle cx="13" cy="9" r="1.4" fill="white" opacity="0.5"/>
+        <circle cx="5" cy="13" r="1.4" fill="white" opacity="0.35"/>
+        <circle cx="9" cy="13" r="1.4" fill="white" opacity="0.5"/>
+        <circle cx="13" cy="13" r="1.4" fill="white" opacity="1"/>
+      </svg>
+      bitropy.io
+    </a>
+  </div>
+
+</article>
+</div>
+
+<script>
+// Progress bar
+window.addEventListener('scroll', () => {
+  const doc = document.documentElement;
+  const scrollTop = doc.scrollTop || document.body.scrollTop;
+  const scrollHeight = doc.scrollHeight - doc.clientHeight;
+  const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+});
+
+// Platform tabs
+function switchTab(btn, id) {
+  const tabs = btn.parentElement;
+  tabs.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const container = tabs.parentElement;
+  container.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+// Copy to clipboard
+function copyCode(btn) {
+  const pre = btn.closest('.code-header').nextElementSibling;
+  const text = pre ? pre.innerText : '';
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Troubleshoot accordion
+function toggleTrouble(el) {
+  el.parentElement.classList.toggle('open');
+}
+</script>
+</body>
+</html>
