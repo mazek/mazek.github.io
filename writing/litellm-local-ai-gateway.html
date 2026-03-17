@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LiteLLM as Your Local AI Gateway — One API to Rule Them All</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#0057B8;--blue-dark:#004494;--blue-light:#EBF2FC;--teal:#0891B2;
+  --text:#111827;--text-muted:#6B7280;--text-light:#9CA3AF;
+  --bg:#FFFFFF;--bg-soft:#F9FAFB;--bg-code:#F3F4F6;
+  --border:#E5E7EB;--border-dark:#D1D5DB;--green:#059669;--green-light:#D1FAE5;
+  --amber:#D97706;--amber-light:#FFFBEB;--purple:#7C3AED;--purple-light:#F5F3FF;
+  --radius:6px;--radius-lg:12px;--max-width:780px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Albert Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  line-height:1.75;font-size:17px;-webkit-font-smoothing:antialiased}
+#progress-bar{position:fixed;top:0;left:0;height:2px;background:var(--blue);width:0%;
+  z-index:1000;transition:width 0.1s linear}
+.site-header{border-bottom:1px solid var(--border);padding:0 2rem;height:56px;display:flex;
+  align-items:center;justify-content:space-between;position:sticky;top:0;
+  background:rgba(255,255,255,0.97);backdrop-filter:blur(8px);z-index:100}
+.header-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
+.header-brand-name{font-size:14px;font-weight:700;letter-spacing:-0.3px}
+.header-series{font-size:12px;color:var(--text-muted);font-weight:400;
+  border-left:1px solid var(--border);padding-left:12px;margin-left:4px}
+.header-right{display:flex;align-items:center;gap:16px}
+.header-tag{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--blue);background:var(--blue-light);padding:3px 8px;border-radius:4px}
+.header-article-num{font-size:12px;color:var(--text-muted);font-weight:500}
+.page-wrapper{display:flex;flex-direction:column;align-items:center}
+.article-container{width:100%;max-width:var(--max-width);padding:0 2rem 6rem}
+</style>
+<style>
+.hero{padding:3.5rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:3rem}
+.hero-meta{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
+.hero-series-badge{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue)}
+.hero-sep{color:var(--border-dark);font-size:12px}
+.hero-num{font-size:12px;color:var(--text-muted);font-weight:500}
+h1{font-size:clamp(2rem,5vw,2.6rem);font-weight:800;line-height:1.15;letter-spacing:-0.03em;
+  color:var(--text);margin-bottom:1rem}
+.hero-subtitle{font-size:18px;color:var(--text-muted);font-weight:400;line-height:1.6;
+  max-width:620px;font-style:italic;margin-bottom:1.75rem}
+.hero-stats{display:flex;gap:1.5rem;flex-wrap:wrap}
+.hero-stat{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted)}
+.hero-stat svg{color:var(--blue)}
+.time-callout{background:var(--blue-light);border:1px solid #C7DCFA;border-radius:var(--radius-lg);
+  padding:1rem 1.25rem;margin:2rem 0;display:flex;align-items:flex-start;gap:12px}
+.time-callout-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.time-callout-text{font-size:14px;color:#1E40AF;line-height:1.6}
+.time-callout-text strong{font-weight:700}
+.time-steps{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.time-step{background:white;border:1px solid #BFDBFE;border-radius:4px;padding:3px 10px;
+  font-size:13px;font-weight:600;color:#1D4ED8;white-space:nowrap}
+.time-arrow{color:#93C5FD;font-size:14px}
+h2{font-size:1.55rem;font-weight:800;letter-spacing:-0.025em;margin:3rem 0 1rem;
+  color:var(--text);line-height:1.25;padding-top:0.5rem;border-top:2px solid var(--border)}
+h3{font-size:1.1rem;font-weight:700;margin:1.75rem 0 0.5rem;color:var(--text)}
+p{margin-bottom:1.25rem} p:last-child{margin-bottom:0}
+strong{font-weight:700} em{font-style:italic;color:var(--text-muted)}
+a{color:var(--blue);text-decoration:underline;text-underline-offset:3px}
+a:hover{color:var(--blue-dark)}
+</style>
+<style>
+.callout{border-left:3px solid var(--blue);background:var(--blue-light);
+  border-radius:0 var(--radius) var(--radius) 0;padding:0.85rem 1.1rem;margin:1.5rem 0;
+  font-size:14.5px;color:#1E3A6E;line-height:1.6}
+.callout strong{color:#1E3A6E}
+.callout-warning{border-left-color:var(--amber);background:var(--amber-light);color:#78350F}
+.callout-warning strong{color:#78350F}
+.callout-success{border-left-color:var(--green);background:var(--green-light);color:#064E3B}
+pre{background:#1E1E2E;border-radius:var(--radius-lg);padding:1.25rem 1.5rem;
+  overflow-x:auto;margin:1.25rem 0;position:relative}
+pre code{font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.65;
+  color:#CDD6F4;background:none;padding:0;border:none;border-radius:0}
+code{font-family:'JetBrains Mono',monospace;font-size:0.85em;background:var(--bg-code);
+  color:#1F2937;padding:2px 6px;border-radius:4px;border:1px solid var(--border)}
+.code-header{display:flex;justify-content:space-between;align-items:center;
+  background:#181825;border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  padding:0.5rem 1rem;margin-bottom:-12px;margin-top:1.25rem}
+.code-header+pre{border-radius:0 0 var(--radius-lg) var(--radius-lg);margin-top:0}
+.code-lang{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+  color:#6C7086;font-family:'JetBrains Mono',monospace}
+.copy-btn{font-size:11px;color:#6C7086;background:transparent;border:1px solid #313244;
+  border-radius:4px;padding:2px 8px;cursor:pointer;font-family:'Albert Sans',sans-serif;
+  font-weight:500;transition:all 0.15s}
+.copy-btn:hover{color:#CDD6F4;border-color:#45475A}
+.copy-btn.copied{color:#A6E3A1;border-color:#A6E3A1}
+.kw{color:#CBA6F7}.str{color:#A6E3A1}.cmt{color:#6C7086;font-style:italic}
+.fn{color:#89B4FA}.num{color:#FAB387}.var{color:#CDD6F4}.cls{color:#F9E2AF}
+ul,ol{padding-left:1.5rem;margin-bottom:1.25rem}
+li{margin-bottom:0.4rem;line-height:1.65}
+</style>
+<style>
+.step-header{display:flex;align-items:center;gap:14px;margin:3rem 0 1rem;
+  padding-top:0.5rem;border-top:2px solid var(--border)}
+.step-badge{width:34px;height:34px;border-radius:50%;background:var(--blue);color:white;
+  font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-title{font-size:1.45rem;font-weight:800;letter-spacing:-0.025em;color:var(--text)}
+.step-time{font-size:12px;font-weight:500;color:var(--text-light);margin-left:auto;white-space:nowrap}
+.infographic{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:1.75rem;margin:2rem 0}
+.infographic-title{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--text-muted);margin-bottom:1.25rem;text-align:center}
+.trouble-list{display:flex;flex-direction:column;gap:10px;margin:1.5rem 0}
+.trouble-item{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.trouble-q{padding:0.85rem 1.1rem;font-size:14px;font-weight:700;color:var(--text);
+  background:var(--bg-soft);cursor:pointer;display:flex;justify-content:space-between;
+  align-items:center;gap:10px;user-select:none}
+.trouble-q:hover{background:var(--bg-code)}
+.trouble-chevron{color:var(--text-muted);transition:transform 0.2s;font-size:12px;flex-shrink:0}
+.trouble-item.open .trouble-chevron{transform:rotate(180deg)}
+.trouble-a{display:none;padding:0.85rem 1.1rem;font-size:14px;color:var(--text-muted);
+  line-height:1.65;border-top:1px solid var(--border)}
+.trouble-item.open .trouble-a{display:block}
+.next-article{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:1.5rem 1.75rem;margin:3rem 0 1rem;display:flex;align-items:center;gap:1.25rem}
+.next-label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--text-muted);margin-bottom:5px}
+.next-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px}
+.next-desc{font-size:13px;color:var(--text-muted);line-height:1.5}
+.next-arrow{flex-shrink:0;width:36px;height:36px;background:var(--blue);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:white;font-size:16px;margin-left:auto}
+.article-footer{border-top:1px solid var(--border);padding:2rem 0 0;margin-top:1rem;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.footer-series{font-size:13px;color:var(--text-muted);line-height:1.6}
+.footer-brand{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-light);text-decoration:none}
+.footer-brand:hover{color:var(--text-muted)}
+@media(max-width:640px){
+  .site-header .header-series{display:none}
+  .next-article{flex-direction:column;align-items:flex-start}
+  .next-arrow{display:none}
+  .article-footer{flex-direction:column;gap:0.75rem}
+}
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<header class="site-header">
+  <div class="header-brand">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="26" height="26" rx="5" fill="#111827"/>
+      <circle cx="7" cy="7" r="2" fill="white" opacity="1"/>
+      <circle cx="13" cy="7" r="2" fill="white" opacity="0.8"/>
+      <circle cx="19" cy="7" r="2" fill="white" opacity="0.4"/>
+      <circle cx="7" cy="13" r="2" fill="white" opacity="0.8"/>
+      <circle cx="13" cy="13" r="2" fill="white" opacity="1"/>
+      <circle cx="19" cy="13" r="2" fill="white" opacity="0.6"/>
+      <circle cx="7" cy="19" r="2" fill="white" opacity="0.4"/>
+      <circle cx="13" cy="19" r="2" fill="white" opacity="0.6"/>
+      <circle cx="19" cy="19" r="2" fill="white" opacity="1"/>
+    </svg>
+    <span class="header-brand-name">bitropy.</span>
+    <span class="header-series">Local AI Series</span>
+  </div>
+  <div class="header-right">
+    <span class="header-tag">Open Source</span>
+    <span class="header-article-num">Article 2 of 26</span>
+  </div>
+</header>
+<div class="page-wrapper">
+<article class="article-container">
+<div class="hero">
+  <div class="hero-meta">
+    <span class="hero-series-badge">Local Sovereign AI</span>
+    <span class="hero-sep">·</span>
+    <span class="hero-num">Article #2</span>
+  </div>
+  <h1>LiteLLM as Your Local AI Gateway —<br>One API to Rule Them All</h1>
+  <p class="hero-subtitle">You have a local model running. Now you need multiple models, cost tracking, cloud fallbacks, and team access — without rewriting your application each time. That's what a gateway layer is for.</p>
+  <div class="hero-stats">
+    <span class="hero-stat">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      ~45 min total
+    </span>
+    <span class="hero-stat">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      Intermediate
+    </span>
+    <span class="hero-stat">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Requires: Ollama from Article #1
+    </span>
+  </div>
+</div>
+<div class="time-callout">
+  <span class="time-callout-icon">⏱</span>
+  <div class="time-callout-text">
+    <strong>Time breakdown</strong>
+    <div class="time-steps">
+      <span class="time-step">Install LiteLLM ~5 min</span>
+      <span class="time-arrow">→</span>
+      <span class="time-step">First config ~10 min</span>
+      <span class="time-arrow">→</span>
+      <span class="time-step">Cloud fallback ~10 min</span>
+      <span class="time-arrow">→</span>
+      <span class="time-step">Docker deploy ~20 min</span>
+    </div>
+    Ollama from Article #1 must be running before you start.
+  </div>
+</div>
+<h2>The Problem With Talking Directly to Models</h2>
+<p>After getting Ollama running, the natural next step is to wire it into something useful. A script that summarizes documents. An internal chatbot. A code assistant for your team. And this is where things get complicated faster than expected.</p>
+<p>You start with one model. Then you realize some tasks need something stronger, so you pull a second. Then a colleague wants to use the setup, so now you're thinking about networking. Then you start wondering how many tokens you're actually using. Then a task comes in that your local model handles poorly, and you want to route it to a cloud API — but only for that type of query, not for anything containing sensitive data.</p>
+<p>Suddenly what was "a model running on localhost" has become an infrastructure problem. You need:</p>
+<ul>
+  <li>A single endpoint your applications can target, regardless of which model handles the request</li>
+  <li>The ability to switch or add models without changing application code</li>
+  <li>Routing logic — send this request to the local model, that one to the cloud</li>
+  <li>Token counting and cost tracking, even for local models that don't charge per token</li>
+  <li>Rate limiting and load balancing if multiple people or processes use the same setup</li>
+  <li>A unified logging layer so you can see what's being asked and what responses are generated</li>
+</ul>
+<p>This is exactly what an <strong>LLM gateway</strong> does. And LiteLLM is the best open-source implementation of one.</p>
+<h2>What LiteLLM Actually Is</h2>
+<p>LiteLLM is a Python library and proxy server that presents a single, unified, OpenAI-compatible API in front of over 100 different LLM providers — including local models via Ollama. You point your applications at LiteLLM instead of directly at any specific model or provider. LiteLLM handles routing, API format translation, retry logic, cost tracking, and logging.</p>
+<p><strong>Provider abstraction:</strong> Every model — Ollama local, OpenAI, Anthropic, Mistral, AWS Bedrock, Azure — speaks a slightly different API dialect. LiteLLM normalizes all of them into a single OpenAI-compatible interface. Your application code never needs to know which provider is actually serving the request.</p>
+<p><strong>Fully self-hostable:</strong> LiteLLM runs as a Docker container or a plain Python process on your own infrastructure. No data passes through LiteLLM's servers. The proxy runs locally, calls your local Ollama instance locally, and everything stays inside your perimeter.</p>
+<p><strong>OpenAI-compatible output:</strong> If you already have code using the OpenAI SDK, switching to LiteLLM proxy is one configuration line. The response format is identical.</p>
+<p><strong>Built-in observability:</strong> Every request gets logged with model name, token counts, latency, and estimated cost — even for local models where the cost is $0. This becomes important when comparing local versus cloud usage patterns.</p>
+<p>What LiteLLM is <em>not</em>: it's not a model itself, doesn't store your data by default, and is not a replacement for Ollama. It sits in front of Ollama as a routing and management layer. Ollama continues to do the actual inference.</p>
+<h2>Architecture Overview</h2>
+<p>Before installation, it helps to see what we're building:</p>
+<!-- INFOGRAPHIC 1: Architecture -->
+<div class="infographic">
+  <div class="infographic-title">Gateway Architecture — How Requests Flow</div>
+  <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:0 auto">
+    <!-- App -->
+    <rect x="275" y="10" width="150" height="50" rx="8" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+    <text x="350" y="32" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="13" font-weight="700" fill="#111827">Your Application</text>
+    <text x="350" y="48" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#6B7280">Python / curl / SDK</text>
+    <!-- Arrow down -->
+    <line x1="350" y1="60" x2="350" y2="88" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr1)"/>
+    <text x="365" y="78" font-family="Albert Sans,sans-serif" font-size="10" fill="#9CA3AF">HTTP OpenAI-compatible</text>
+    <!-- LiteLLM box -->
+    <rect x="175" y="95" width="350" height="60" rx="10" fill="#EBF2FC" stroke="#0057B8" stroke-width="2"/>
+    <text x="350" y="120" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="14" font-weight="800" fill="#0057B8">LiteLLM Proxy</text>
+    <text x="350" y="138" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#1E40AF">localhost:4000 · Routing · Cost tracking · Rate limiting · Auth</text>
+    <!-- Three arrows down -->
+    <line x1="240" y1="155" x2="185" y2="190" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr1)"/>
+    <line x1="350" y1="155" x2="350" y2="190" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr1)"/>
+    <line x1="460" y1="155" x2="515" y2="190" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr1)"/>
+    <!-- Local box 1 -->
+    <rect x="100" y="195" width="140" height="50" rx="8" fill="white" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="170" y="217" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#065F46">Ollama</text>
+    <text x="170" y="232" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#059669">llama3.3:8b</text>
+    <!-- Local box 2 -->
+    <rect x="280" y="195" width="140" height="50" rx="8" fill="white" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="350" y="217" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#065F46">Ollama</text>
+    <text x="350" y="232" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#059669">mistral-small3</text>
+    <!-- Cloud box -->
+    <rect x="460" y="195" width="140" height="50" rx="8" fill="white" stroke="#FDE68A" stroke-width="1.5"/>
+    <text x="530" y="217" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#92400E">OpenAI / Anthropic</text>
+    <text x="530" y="232" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#B45309">cloud fallback only</text>
+    <!-- Labels -->
+    <text x="170" y="257" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#059669">Local</text>
+    <text x="350" y="257" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#059669">Local</text>
+    <text x="530" y="257" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#B45309">Cloud (explicit only)</text>
+    <defs>
+      <marker id="arr1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#9CA3AF"/>
+      </marker>
+    </defs>
+  </svg>
+  <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:0.75rem">Your application speaks only to LiteLLM. It never needs to know which backend handles the request.</p>
+</div>
+<!-- STEP 1: INSTALL -->
+<div class="step-header">
+  <div class="step-badge">1</div>
+  <div class="step-title">Installation</div>
+  <div class="step-time">~5 min</div>
+</div>
+<p>LiteLLM requires Python 3.8+. Check your version, then install with the proxy extras:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>python3 --version
+pip install 'litellm[proxy]'
+litellm --version</code></pre>
+<p>No Docker required to get started — LiteLLM is a Python process you run alongside Ollama. Make sure Ollama is already running before proceeding:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="cmt"># macOS: Ollama runs as menu bar app automatically</span>
+<span class="cmt"># Linux: start if not running</span>
+ollama serve
+<span class="cmt"># Pull a model if you haven't already (from Article #1)</span>
+ollama pull llama3.3:8b</code></pre>
+
+<!-- STEP 2: CONFIG -->
+<div class="step-header">
+  <div class="step-badge">2</div>
+  <div class="step-title">Your First Configuration File</div>
+  <div class="step-time">~10 min</div>
+</div>
+<p>LiteLLM is configured via a YAML file. This is where you define which models are available, how they map to provider backends, and what the routing rules are.</p>
+<p>Create a file called <code>litellm_config.yaml</code>:</p>
+<div class="code-header"><span class="code-lang">yaml — litellm_config.yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>model_list:
+  - model_name: llama3       <span class="cmt"># The name your apps will use</span>
+    litellm_params:
+      model: ollama/llama3.3:8b          <span class="cmt"># How LiteLLM routes it</span>
+      api_base: http://localhost:11434   <span class="cmt"># Your local Ollama instance</span>
+
+  - model_name: mistral
+    litellm_params:
+      model: ollama/mistral-small3
+      api_base: http://localhost:11434
+
+litellm_settings:
+  drop_params: true          <span class="cmt"># Ignore unsupported params instead of erroring</span>
+  request_timeout: 600       <span class="cmt"># 10 min timeout for slow local inference</span></code></pre>
+<p>Start the proxy:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>litellm --config litellm_config.yaml --port 4000</code></pre>
+<p>Leave this running. Test it immediately:</p>
+<div class="code-header"><span class="code-lang">bash — test</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>curl http://localhost:4000/v1/chat/completions \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -H <span class="str">"Authorization: Bearer anything"</span> \
+  -d <span class="str">'{"model":"llama3","messages":[{"role":"user","content":"Are you running locally?"}]}'</span></code></pre>
+<div class="callout">The <code>Authorization: Bearer anything</code> header is required by the OpenAI client format, but LiteLLM ignores the value by default. Real API key enforcement is covered in Step 8.</div>
+
+<!-- STEP 3: CODE -->
+<div class="step-header">
+  <div class="step-badge">3</div>
+  <div class="step-title">Using LiteLLM From Your Code</div>
+  <div class="step-time">~5 min</div>
+</div>
+<p>Your Python code now targets LiteLLM on port 4000 instead of Ollama directly:</p>
+<div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="kw">from</span> <span class="var">openai</span> <span class="kw">import</span> <span class="cls">OpenAI</span>
+
+<span class="var">client</span> = <span class="cls">OpenAI</span>(
+    <span class="var">base_url</span>=<span class="str">"http://localhost:4000/v1"</span>,
+    <span class="var">api_key</span>=<span class="str">"anything"</span>  <span class="cmt"># ignored by LiteLLM in dev mode</span>
+)
+
+<span class="var">response</span> = <span class="var">client</span>.chat.completions.create(
+    <span class="var">model</span>=<span class="str">"llama3"</span>,
+    <span class="var">messages</span>=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Summarize zero-trust security in 3 points."</span>}]
+)
+<span class="fn">print</span>(<span class="var">response</span>.choices[<span class="num">0</span>].message.content)</code></pre>
+<p>Switch models without changing any other code:</p>
+<div class="code-header"><span class="code-lang">python — switch model</span></div>
+<pre><code><span class="cmt"># Same client, same code — just a different model name</span>
+<span class="var">response</span> = <span class="var">client</span>.chat.completions.create(
+    <span class="var">model</span>=<span class="str">"mistral"</span>,  <span class="cmt"># LiteLLM routes this to your local Ollama mistral instance</span>
+    <span class="var">messages</span>=[...]
+)</code></pre>
+<div class="callout callout-success"><strong>The key insight:</strong> The application doesn't know or care that both models are running locally via Ollama. It just asks for a model by name and LiteLLM handles where that request actually goes.</div>
+<!-- STEP 4: CLOUD FALLBACK -->
+<div class="step-header">
+  <div class="step-badge">4</div>
+  <div class="step-title">Adding a Cloud Fallback</div>
+  <div class="step-time">~10 min</div>
+</div>
+<p>This is where the gateway pattern becomes genuinely powerful. Some queries are too complex for your local model. Some are completely safe to send to a cloud API. You want to handle both from the same codebase — without your application needing any logic about which model to use when.</p>
+<p>Update your <code>litellm_config.yaml</code>:</p>
+<div class="code-header"><span class="code-lang">yaml — with cloud fallback</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>model_list:
+  - model_name: llama3
+    litellm_params:
+      model: ollama/llama3.3:8b
+      api_base: http://localhost:11434
+
+  - model_name: mistral
+    litellm_params:
+      model: ollama/mistral-small3
+      api_base: http://localhost:11434
+
+  <span class="cmt"># Cloud — only used when explicitly requested</span>
+  - model_name: gpt-4o
+    litellm_params:
+      model: gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-4-6
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  <span class="cmt"># "auto" — tries local first, falls back to cloud on error</span>
+  - model_name: auto
+    litellm_params:
+      model: ollama/llama3.3:8b
+      api_base: http://localhost:11434</code></pre>
+<pre><code>router_settings:
+  routing_strategy: least-busy
+
+litellm_settings:
+  drop_params: true
+  request_timeout: 600
+  fallbacks:
+    - model: auto
+      fallback_models: [<span class="str">"gpt-4o"</span>]   <span class="cmt"># if local fails, fall back to cloud</span></code></pre>
+<p>Set your API keys as environment variables — never hardcode them:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>export OPENAI_API_KEY="sk-..."
+export ANTHROPIC_API_KEY="sk-ant-..."</code></pre>
+<p>Now your application can make a deliberate routing choice per request:</p>
+<div class="code-header"><span class="code-lang">python — explicit routing</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="cmt"># Sensitive internal data — always local, never leaves your machine</span>
+<span class="var">response</span> = <span class="var">client</span>.chat.completions.create(
+    <span class="var">model</span>=<span class="str">"llama3"</span>,
+    <span class="var">messages</span>=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="var">sensitive_internal_query</span>}]
+)
+
+<span class="cmt"># Public content where quality matters — explicit cloud</span>
+<span class="var">response</span> = <span class="var">client</span>.chat.completions.create(
+    <span class="var">model</span>=<span class="str">"gpt-4o"</span>,
+    <span class="var">messages</span>=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="var">marketing_copy_query</span>}]
+)
+
+<span class="cmt"># Let the gateway decide — try local, fall back if it struggles</span>
+<span class="var">response</span> = <span class="var">client</span>.chat.completions.create(
+    <span class="var">model</span>=<span class="str">"auto"</span>,
+    <span class="var">messages</span>=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="var">ambiguous_query</span>}]
+)</code></pre>
+<!-- INFOGRAPHIC 2: Routing Decision -->
+<div class="infographic">
+  <div class="infographic-title">Routing Logic — Where Does Each Request Go?</div>
+  <svg viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;display:block;margin:0 auto">
+    <rect x="10" y="10" width="130" height="44" rx="7" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+    <text x="75" y="30" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#111827">model="llama3"</text>
+    <text x="75" y="46" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">sensitive data</text>
+    <rect x="10" y="88" width="130" height="44" rx="7" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+    <text x="75" y="108" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#111827">model="gpt-4o"</text>
+    <text x="75" y="124" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">public content</text>
+    <rect x="10" y="166" width="130" height="44" rx="7" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+    <text x="75" y="186" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#111827">model="auto"</text>
+    <text x="75" y="202" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">smart routing</text>
+    <line x1="140" y1="32" x2="215" y2="100" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a2)"/>
+    <line x1="140" y1="110" x2="215" y2="110" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a2)"/>
+    <line x1="140" y1="188" x2="215" y2="120" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a2)"/>
+    <rect x="220" y="83" width="130" height="54" rx="10" fill="#EBF2FC" stroke="#0057B8" stroke-width="2"/>
+    <text x="285" y="107" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="13" font-weight="800" fill="#0057B8">LiteLLM</text>
+    <text x="285" y="124" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#1E40AF">:4000</text>
+    <line x1="350" y1="100" x2="410" y2="60" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
+    <line x1="350" y1="110" x2="410" y2="110" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#aa)"/>
+    <line x1="350" y1="120" x2="410" y2="60" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
+    <rect x="415" y="30" width="135" height="54" rx="8" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="482" y="54" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#065F46">Ollama (Local)</text>
+    <text x="482" y="72" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#059669">localhost:11434</text>
+    <rect x="415" y="88" width="135" height="54" rx="8" fill="#FEF3C7" stroke="#FDE68A" stroke-width="1.5"/>
+    <text x="482" y="112" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#92400E">Cloud API</text>
+    <text x="482" y="130" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#B45309">explicit only</text>
+    <line x1="350" y1="110" x2="410" y2="115" stroke="#059669" stroke-width="1" stroke-dasharray="2,2"/>
+    <text x="360" y="80" font-family="Albert Sans,sans-serif" font-size="10" fill="#059669" font-weight="600">local</text>
+    <text x="360" y="128" font-family="Albert Sans,sans-serif" font-size="10" fill="#B45309" font-weight="600">cloud</text>
+    <line x1="550" y1="57" x2="600" y2="57" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
+    <line x1="550" y1="115" x2="600" y2="115" stroke="#F59E0B" stroke-width="1.5" marker-end="url(#aa)"/>
+    <rect x="605" y="30" width="65" height="54" rx="6" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+    <text x="637" y="54" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" font-weight="600" fill="#059669">✓ Private</text>
+    <text x="637" y="70" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">$0 / token</text>
+    <rect x="605" y="88" width="65" height="54" rx="6" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+    <text x="637" y="112" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" font-weight="600" fill="#B45309">⚠ External</text>
+    <text x="637" y="128" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">cost / token</text>
+    <defs>
+      <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9CA3AF"/></marker>
+      <marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/></marker>
+      <marker id="aa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#F59E0B"/></marker>
+    </defs>
+  </svg>
+  <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:0.75rem">Routing logic lives in YAML config — never in application code. Change policy without touching your app.</p>
+</div>
+<!-- STEP 5: COST TRACKING -->
+<div class="step-header">
+  <div class="step-badge">5</div>
+  <div class="step-title">Cost Tracking and Logging</div>
+  <div class="step-time">~5 min</div>
+</div>
+<p>One of the most underappreciated features of a gateway is immediate visibility into what's happening across all AI calls. LiteLLM logs every request with model, token counts, latency, and estimated cost.</p>
+<p>For local models, the cost is $0 — but token counting still matters. It tells you how a workflow would scale, whether you're hitting context window limits, and how it compares if you ever route it to a cloud model.</p>
+<p>Enable basic logging:</p>
+<div class="code-header"><span class="code-lang">yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>litellm_settings:
+  drop_params: true
+  request_timeout: 600
+  set_verbose: true    <span class="cmt"># log all requests to console</span>
+  log_file: ./litellm_logs.json   <span class="cmt"># optional: write to file</span></code></pre>
+<p>For a structured UI dashboard, start with:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>litellm --config litellm_config.yaml --port 4000 --ui
+<span class="cmt"># Dashboard available at http://localhost:4000/ui</span></code></pre>
+<p>Here's what a log entry looks like — even for a free local model:</p>
+<div class="code-header"><span class="code-lang">json — sample log entry</span></div>
+<pre><code>{
+  <span class="str">"model"</span>: <span class="str">"llama3"</span>,
+  <span class="str">"provider"</span>: <span class="str">"ollama"</span>,
+  <span class="str">"total_tokens"</span>: <span class="num">847</span>,
+  <span class="str">"prompt_tokens"</span>: <span class="num">312</span>,
+  <span class="str">"completion_tokens"</span>: <span class="num">535</span>,
+  <span class="str">"response_time_ms"</span>: <span class="num">4823</span>,
+  <span class="str">"estimated_cost"</span>: <span class="num">0.0</span>,
+  <span class="str">"success"</span>: <span class="kw">true</span>
+}</code></pre>
+<!-- INFOGRAPHIC 3: Observability panel -->
+<div class="infographic">
+  <div class="infographic-title">What You See in the Logs — Even for Free Local Models</div>
+  <svg viewBox="0 0 680 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;display:block;margin:0 auto">
+    <rect x="10" y="10" width="148" height="140" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+    <text x="84" y="32" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" font-weight="700" fill="#6B7280" letter-spacing="1">MODEL</text>
+    <text x="84" y="58" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="16" font-weight="700" fill="#0057B8">llama3</text>
+    <text x="84" y="78" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#059669">● ollama / local</text>
+    <line x1="20" y1="92" x2="148" y2="92" stroke="#F3F4F6" stroke-width="1"/>
+    <text x="84" y="112" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" font-weight="600" fill="#6B7280">COST</text>
+    <text x="84" y="138" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="22" font-weight="800" fill="#059669">$0.00</text>
+
+    <rect x="170" y="10" width="148" height="140" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+    <text x="244" y="32" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" font-weight="700" fill="#6B7280" letter-spacing="1">TOKENS</text>
+    <text x="244" y="60" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="22" font-weight="800" fill="#111827">847</text>
+    <text x="244" y="78" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">312 prompt + 535 completion</text>
+    <line x1="180" y1="92" x2="308" y2="92" stroke="#F3F4F6" stroke-width="1"/>
+    <rect x="190" y="104" width="40" height="8" rx="4" fill="#EBF2FC"/>
+    <rect x="190" y="104" width="14" height="8" rx="4" fill="#0057B8"/>
+    <text x="244" y="126" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">37% prompt / 63% completion</text>
+    <text x="244" y="142" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#9CA3AF">context window: 2.1%</text>
+
+    <rect x="330" y="10" width="148" height="140" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+    <text x="404" y="32" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" font-weight="700" fill="#6B7280" letter-spacing="1">LATENCY</text>
+    <text x="404" y="60" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="22" font-weight="800" fill="#111827">4.8s</text>
+    <text x="404" y="78" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">~111 tok/sec on M2</text>
+    <line x1="340" y1="92" x2="468" y2="92" stroke="#F3F4F6" stroke-width="1"/>
+    <text x="404" y="112" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" font-weight="600" fill="#6B7280">STATUS</text>
+    <text x="404" y="138" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="14" font-weight="700" fill="#059669">✓ success</text>
+
+    <rect x="490" y="10" width="180" height="140" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+    <text x="580" y="32" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" font-weight="700" fill="#6B7280" letter-spacing="1">EQUIVALENT CLOUD COST</text>
+    <text x="580" y="58" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="13" fill="#111827">Same request on GPT-4o:</text>
+    <text x="580" y="78" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="18" font-weight="800" fill="#DC2626">~$0.013</text>
+    <line x1="500" y1="92" x2="660" y2="92" stroke="#F3F4F6" stroke-width="1"/>
+    <text x="580" y="112" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">At 10,000 req/day:</text>
+    <text x="580" y="130" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="13" font-weight="700" fill="#DC2626">$130/day saved</text>
+    <text x="580" y="148" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#9CA3AF">by staying local</text>
+  </svg>
+</div>
+<!-- STEP 6: LOAD BALANCING -->
+<div class="step-header">
+  <div class="step-badge">6</div>
+  <div class="step-title">Load Balancing Multiple Local Instances</div>
+  <div class="step-time">~5 min config</div>
+</div>
+<p>If you're running Ollama on several machines or a server with multiple GPUs, LiteLLM can load balance across them automatically. Use the same <code>model_name</code> for multiple backends — LiteLLM treats them as a pool:</p>
+<div class="code-header"><span class="code-lang">yaml — load balancing</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>model_list:
+  - model_name: llama3   <span class="cmt"># same name...</span>
+    litellm_params:
+      model: ollama/llama3.3:8b
+      api_base: http://gpu-server-1:11434
+
+  - model_name: llama3   <span class="cmt"># ...LiteLLM load balances across all three</span>
+    litellm_params:
+      model: ollama/llama3.3:8b
+      api_base: http://gpu-server-2:11434
+
+  - model_name: llama3
+    litellm_params:
+      model: ollama/llama3.3:8b
+      api_base: http://gpu-server-3:11434
+
+router_settings:
+  routing_strategy: least-busy   <span class="cmt"># or: latency-based, simple-shuffle</span></code></pre>
+<div class="callout">From the application's perspective nothing changes — it still calls <code>model="llama3"</code> at <code>localhost:4000</code>. This is the pattern that scales a single developer's local setup into shared team infrastructure.</div>
+
+<!-- STEP 7: DOCKER -->
+<div class="step-header">
+  <div class="step-badge">7</div>
+  <div class="step-title">Running as a Docker Container</div>
+  <div class="step-time">~20 min</div>
+</div>
+<p>For sharing with a team or running as a persistent service, Docker is the right deployment model.</p>
+<p>Create a <code>docker-compose.yaml</code>:</p>
+<div class="code-header"><span class="code-lang">yaml — docker-compose.yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>services:
+  ollama:
+    image: ollama/ollama
+    volumes:
+      - ollama_models:/root/.ollama
+    ports:
+      - <span class="str">"11434:11434"</span>
+    restart: unless-stopped
+    <span class="cmt"># GPU support on Linux — uncomment to enable:</span>
+    <span class="cmt"># deploy:</span>
+    <span class="cmt">#   resources:</span>
+    <span class="cmt">#     reservations:</span>
+    <span class="cmt">#       devices:</span>
+    <span class="cmt">#         - capabilities: [gpu]</span>
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    ports:
+      - <span class="str">"4000:4000"</span>
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+    command: [<span class="str">"--config"</span>, <span class="str">"/app/config.yaml"</span>, <span class="str">"--port"</span>, <span class="str">"4000"</span>]
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_models:</code></pre>
+<div class="callout callout-warning"><strong>Note:</strong> The <code>version:</code> key in docker-compose files is deprecated in modern Docker Compose (v2+) — omit it entirely as shown above.</div>
+<p>Update your <code>litellm_config.yaml</code> to use the Docker service name for Ollama:</p>
+<div class="code-header"><span class="code-lang">yaml — Docker Ollama URL</span></div>
+<pre><code>litellm_params:
+  model: ollama/llama3.3:8b
+  api_base: http://ollama:11434   <span class="cmt"># Docker service name, NOT localhost</span></code></pre>
+<p>Start everything and pull models:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>docker compose up -d
+docker compose exec ollama ollama pull llama3.3:8b</code></pre>
+<!-- STEP 8: SECURITY -->
+<div class="step-header">
+  <div class="step-badge">8</div>
+  <div class="step-title">Securing the Gateway</div>
+  <div class="step-time">~5 min</div>
+</div>
+<p>By default, LiteLLM accepts any request without authentication. Fine for local development, not for team deployments. Add API key validation to your config:</p>
+<div class="code-header"><span class="code-lang">yaml — master key</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY   <span class="cmt"># load from env, never hardcode</span></code></pre>
+<p>For more granular control, LiteLLM supports virtual keys — different keys per team, application, or use case, each with configurable limits:</p>
+<div class="code-header"><span class="code-lang">bash — generate virtual key</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>curl -X POST http://localhost:4000/key/generate \
+  -H <span class="str">"Authorization: Bearer $LITELLM_MASTER_KEY"</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "models": ["llama3", "mistral"],
+    "max_budget": 10,
+    "duration": "30d"
+  }'</span></code></pre>
+<!-- INFOGRAPHIC 4: Virtual Keys -->
+<div class="infographic">
+  <div class="infographic-title">Virtual Keys — Per-Team Access Control</div>
+  <svg viewBox="0 0 680 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;display:block;margin:0 auto">
+    <rect x="10" y="30" width="120" height="110" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1.5"/>
+    <text x="70" y="52" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" font-weight="700" fill="#6B7280" letter-spacing="1">MASTER KEY</text>
+    <text x="70" y="78" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#111827">sk-master</text>
+    <text x="70" y="95" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">admin only</text>
+    <text x="70" y="115" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#059669">all models</text>
+    <text x="70" y="132" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#059669">no budget cap</text>
+    <line x1="130" y1="85" x2="175" y2="55" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#av)"/>
+    <line x1="130" y1="85" x2="175" y2="85" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#av)"/>
+    <line x1="130" y1="85" x2="175" y2="115" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#av)"/>
+    <rect x="180" y="20" width="145" height="50" rx="7" fill="#EBF2FC" stroke="#BFDBFE" stroke-width="1"/>
+    <text x="252" y="40" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#1D4ED8">Engineering team</text>
+    <text x="252" y="56" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#3B82F6">llama3, qwen-coder</text>
+    <text x="252" y="68" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">no budget cap · 30d</text>
+    <rect x="180" y="80" width="145" height="50" rx="7" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1"/>
+    <text x="252" y="100" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#166534">Marketing team</text>
+    <text x="252" y="116" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#059669">gpt-4o only</text>
+    <text x="252" y="128" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">$50 budget · 30d</text>
+    <rect x="180" y="140" width="145" height="20" rx="7" fill="#FEF3C7" stroke="#FDE68A" stroke-width="1"/>
+    <text x="252" y="154" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#92400E">Data Science: llama3 + auto · $200 · 90d</text>
+    <line x1="325" y1="45" x2="400" y2="80" stroke="#9CA3AF" stroke-width="1" stroke-dasharray="3,2"/>
+    <line x1="325" y1="105" x2="400" y2="100" stroke="#9CA3AF" stroke-width="1" stroke-dasharray="3,2"/>
+    <rect x="405" y="60" width="145" height="70" rx="8" fill="#EBF2FC" stroke="#0057B8" stroke-width="2"/>
+    <text x="477" y="84" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="13" font-weight="800" fill="#0057B8">LiteLLM</text>
+    <text x="477" y="102" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#1E40AF">enforces model access</text>
+    <text x="477" y="118" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#1E40AF">tracks spend per key</text>
+    <text x="477" y="134" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#1E40AF">blocks over-budget</text>
+    <line x1="550" y1="95" x2="610" y2="70" stroke="#059669" stroke-width="1.5" marker-end="url(#ag2)"/>
+    <line x1="550" y1="100" x2="610" y2="120" stroke="#FCA5A5" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#ar)"/>
+    <text x="630" y="74" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#059669">✓ allowed</text>
+    <text x="630" y="124" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#DC2626">✗ blocked</text>
+    <defs>
+      <marker id="av" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9CA3AF"/></marker>
+      <marker id="ag2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/></marker>
+      <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#DC2626"/></marker>
+    </defs>
+  </svg>
+</div>
+<!-- PRODUCTION CONFIG -->
+<h2>Putting It Together: A Production-Ready Config</h2>
+<p>Here's a complete <code>litellm_config.yaml</code> reflecting a realistic setup — local models as default, cloud as a deliberate choice, observability and security configured:</p>
+<div class="code-header"><span class="code-lang">yaml — complete config</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>model_list:
+  <span class="cmt"># Primary local models</span>
+  - model_name: llama3
+    litellm_params:
+      model: ollama/llama3.3:8b
+      api_base: http://localhost:11434
+
+  - model_name: mistral
+    litellm_params:
+      model: ollama/mistral-small3
+      api_base: http://localhost:11434
+
+  - model_name: qwen-coder
+    litellm_params:
+      model: ollama/qwen3:8b
+      api_base: http://localhost:11434
+
+  <span class="cmt"># Cloud models — available but require explicit selection</span>
+  - model_name: gpt-4o
+    litellm_params:
+      model: gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-4-6
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  <span class="cmt"># Smart routing — local first, cloud fallback</span>
+  - model_name: auto
+    litellm_params:
+      model: ollama/llama3.3:8b
+      api_base: http://localhost:11434
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+
+router_settings:
+  routing_strategy: least-busy
+  num_retries: 3
+  timeout: 600
+
+litellm_settings:
+  drop_params: true
+  fallbacks:
+    - model: auto
+      fallback_models: [<span class="str">"gpt-4o"</span>]
+  success_callback: [<span class="str">"langfuse"</span>]   <span class="cmt"># optional: full observability (article #6)</span>
+  failure_callback: [<span class="str">"langfuse"</span>]
+  set_verbose: false</code></pre>
+<!-- WHAT YOU'VE BUILT -->
+<h2>What You've Built</h2>
+<p>You now have a proper AI gateway that provides a single endpoint for all AI calls regardless of which model handles them, routing different request types without changing application code, local-first inference with optional cloud fallback, token counting and cost tracking across all models, load balancing across Ollama instances, API key authentication with per-team budget caps, and Docker deployment for shared team infrastructure.</p>
+<p>More importantly, you've established the pattern the rest of this series builds on. The gateway is the control point. Everything that matters — routing decisions, access control, observability, cost management — flows through this single layer. Adding a model means adding a config entry. Changing a routing rule means editing YAML. Your application code stays clean.</p>
+
+<!-- TROUBLESHOOTING -->
+<h2>Common Issues</h2>
+<div class="trouble-list">
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">LiteLLM starts but returns "model not found" errors<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">Check that the model name in your request exactly matches <code>model_name</code> in your config (case-sensitive). Verify Ollama has the model pulled: <code>ollama list</code>.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">Requests time out on large prompts<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">Increase <code>request_timeout</code> in <code>litellm_settings</code>. Local inference is slower than cloud APIs, especially on CPU. 600 seconds (10 minutes) is a reasonable upper bound for long-context tasks.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">Fallback to cloud isn't triggering<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">Fallback triggers on errors (5xx responses, timeouts) — not on slow responses. If your local model is responding slowly but not erroring, LiteLLM considers it successful. Test by temporarily pointing the primary model at a non-existent endpoint.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">Docker: LiteLLM can't reach Ollama<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">In Docker Compose, services communicate by service name, not <code>localhost</code>. Your config must use <code>http://ollama:11434</code>, not <code>http://localhost:11434</code>.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">"Invalid API key" errors in cloud fallbacks<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">LiteLLM reads <code>os.environ/OPENAI_API_KEY</code> by looking for the <code>OPENAI_API_KEY</code> environment variable. Run <code>echo $OPENAI_API_KEY</code> to confirm it's set in your shell before starting LiteLLM.</div>
+  </div>
+</div>
+<!-- NEXT -->
+<div class="next-article">
+  <div>
+    <div class="next-label">Up next · Article #3</div>
+    <div class="next-title">RAG on Your Own Data — Without Sending Anything to the Cloud</div>
+    <div class="next-desc">Connect your local LLM to your own documents, databases, and files using a fully local vector database and embedding model. Every component — retrieval, embeddings, generation — stays inside your perimeter.</div>
+  </div>
+  <div class="next-arrow">→</div>
+</div>
+
+<!-- FOOTER -->
+<div class="article-footer">
+  <div class="footer-series">
+    Part of the <strong>Local Sovereign AI</strong> series — 26 articles on building local AI infrastructure<br>
+    using open-source tools, from model serving to production-grade agentic workflows.
+  </div>
+  <a href="https://bitropy.io" target="_blank" class="footer-brand">
+    <svg class="footer-brand-dot" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="18" height="18" rx="4" fill="#111827"/>
+      <circle cx="5" cy="5" r="1.4" fill="white" opacity="1"/>
+      <circle cx="9" cy="5" r="1.4" fill="white" opacity="0.7"/>
+      <circle cx="13" cy="5" r="1.4" fill="white" opacity="0.35"/>
+      <circle cx="5" cy="9" r="1.4" fill="white" opacity="0.7"/>
+      <circle cx="9" cy="9" r="1.4" fill="white" opacity="1"/>
+      <circle cx="13" cy="9" r="1.4" fill="white" opacity="0.5"/>
+      <circle cx="5" cy="13" r="1.4" fill="white" opacity="0.35"/>
+      <circle cx="9" cy="13" r="1.4" fill="white" opacity="0.5"/>
+      <circle cx="13" cy="13" r="1.4" fill="white" opacity="1"/>
+    </svg>
+    bitropy.io
+  </a>
+</div>
+
+</article>
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  const doc = document.documentElement;
+  const pct = (doc.scrollTop / (doc.scrollHeight - doc.clientHeight)) * 100;
+  document.getElementById('progress-bar').style.width = Math.min(pct, 100) + '%';
+});
+function copyCode(btn) {
+  const pre = btn.closest('.code-header').nextElementSibling;
+  navigator.clipboard.writeText(pre ? pre.innerText : '').then(() => {
+    btn.textContent = 'copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function toggleTrouble(el) { el.parentElement.classList.toggle('open'); }
+</script>
+</body>
+</html>
