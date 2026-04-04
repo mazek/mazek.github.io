@@ -1003,19 +1003,19 @@ tr:hover td { background: var(--bg-soft); }
       <div class="hw-card">
         <div class="hw-card-label">16 GB RAM</div>
         <div class="hw-card-ram">Up to 8B</div>
-        <div class="hw-card-model">llama3.3:8b</div>
+        <div class="hw-card-model">llama3.1:8b</div>
         <div class="hw-card-perf"><span class="perf-dot good"></span><span style="color:#059669;font-size:12px;font-weight:600;">Usable</span></div>
       </div>
       <div class="hw-card">
         <div class="hw-card-label">32 GB / M1 16GB</div>
         <div class="hw-card-ram">Up to 13B</div>
-        <div class="hw-card-model">llama3.3:13b</div>
+        <div class="hw-card-model">mistral-small3</div>
         <div class="hw-card-perf"><span class="perf-dot great"></span><span style="color:#059669;font-size:12px;font-weight:600;">Good</span></div>
       </div>
       <div class="hw-card">
         <div class="hw-card-label">M2/M3 32 GB+</div>
         <div class="hw-card-ram">Up to 34B</div>
-        <div class="hw-card-model">llama3.3:34b</div>
+        <div class="hw-card-model">llama3.1:70b</div>
         <div class="hw-card-perf"><span class="perf-dot best"></span><span style="color:#059669;font-size:12px;font-weight:600;">Very good</span></div>
       </div>
       <div class="hw-card">
@@ -1082,7 +1082,7 @@ ollama serve   <span class="cmt"># leave this terminal open, or configure as sys
   </div>
 
   <div class="callout callout-warning">
-    <strong>A note on versions:</strong> The open-source model ecosystem moves fast — new releases appear weekly. The families below are stable recommendations; specific version numbers change. Always check <code>ollama search &lt;family&gt;</code> or <a href="https://ollama.com/library" target="_blank">ollama.com/library</a> for the current version before pulling.
+    <strong>A note on versions:</strong> The open-source model ecosystem moves fast — new releases appear weekly. The families below are stable recommendations; specific version numbers change. Always check <a href="https://ollama.com/library" target="_blank">ollama.com/library</a> directly for the current version of each family before pulling.
   </div>
 
   <!-- Model Cards Infographic -->
@@ -1131,10 +1131,10 @@ ollama serve   <span class="cmt"># leave this terminal open, or configure as sys
 
   <p><strong>Simple recommendation by hardware:</strong></p>
   <div class="code-header"><span class="code-lang">quick reference</span></div>
-  <pre><code>16GB RAM or M1/M2 16GB  →  llama3.3:8b
+  <pre><code>16GB RAM or M1/M2 16GB  →  llama3.1:8b
 8GB RAM                 →  phi4-mini
-32GB+ or M2 Pro/Max     →  llama3.3:8b  (then try larger)
-NVIDIA GPU 12GB+        →  llama3.3:8b  (auto GPU acceleration)
+32GB+ or M2 Pro/Max     →  llama3.1:8b  (then try larger)
+NVIDIA GPU 12GB+        →  llama3.1:8b  (auto GPU acceleration)
 Primary use case: code  →  qwen3:8b or deepseek-r1:7b</code></pre>
 
   <!-- STEP 3: PULL AND RUN -->
@@ -1145,8 +1145,8 @@ Primary use case: code  →  qwen3:8b or deepseek-r1:7b</code></pre>
   </div>
 
   <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
-  <pre class="code-bash"><code>ollama pull llama3.3:8b   <span class="cmt"># ~5GB download, one-time</span>
-ollama run llama3.3:8b</code></pre>
+  <pre class="code-bash"><code>ollama pull llama3.1:8b   <span class="cmt"># ~5GB download, one-time</span>
+ollama run llama3.1:8b</code></pre>
 
   <p>You'll get a prompt. Try something real:</p>
   <div class="code-header"><span class="code-lang">example prompts</span></div>
@@ -1159,14 +1159,14 @@ ollama run llama3.3:8b</code></pre>
   <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
   <pre class="code-bash"><code>ollama ps
 <span class="cmt"># NAME              ID    SIZE      PROCESSOR    UNTIL
-# llama3.3:8b       ...   5.0 GB    100% GPU     4 minutes from now</span></code></pre>
+# llama3.1:8b       ...   5.0 GB    100% GPU     4 minutes from now</span></code></pre>
 
   <p>If <code>PROCESSOR</code> shows <code>CPU</code> and you expected GPU: on Apple Silicon the model may be too large for your unified memory (try <code>phi4-mini</code>); on NVIDIA, check that drivers are installed and Ollama detected your GPU at startup.</p>
 
   <div class="code-header"><span class="code-lang">bash — useful commands</span></div>
   <pre class="code-bash"><code>ollama list              <span class="cmt"># see downloaded models</span>
-ollama show llama3.3:8b  <span class="cmt"># model details, context length</span>
-ollama rm llama3.3:8b    <span class="cmt"># remove to free disk space</span></code></pre>
+ollama show llama3.1:8b  <span class="cmt"># model details, context length</span>
+ollama rm llama3.1:8b    <span class="cmt"># remove to free disk space</span></code></pre>
 
   <!-- STEP 4: API -->
   <div class="step-header">
@@ -1182,7 +1182,7 @@ ollama rm llama3.3:8b    <span class="cmt"># remove to free disk space</span></c
   <pre class="code-bash"><code>curl http://localhost:11434/v1/chat/completions \
   -H <span class="str">"Content-Type: application/json"</span> \
   -d <span class="str">'{
-    "model": "llama3.3:8b",
+    "model": "llama3.1:8b",
     "messages": [{"role": "user", "content": "What is data sovereignty?"}]
   }'</span></code></pre>
 
@@ -1197,7 +1197,7 @@ ollama rm llama3.3:8b    <span class="cmt"># remove to free disk space</span></c
 )
 
 <span class="var">response</span> = <span class="var">client</span>.chat.completions.create(
-    <span class="var">model</span>=<span class="str">"llama3.3:8b"</span>,
+    <span class="var">model</span>=<span class="str">"llama3.1:8b"</span>,
     <span class="var">messages</span>=[
         {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"You are a helpful assistant."</span>},
         {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Summarize zero-trust security in 3 points."</span>}
@@ -1251,7 +1251,7 @@ pdftotext internal_report.pdf internal_report.txt</code></pre>
         <span class="var">content</span> = <span class="var">content</span>[:<span class="var">max_chars</span>] + <span class="str">"\n\n[Truncated — see article #3 on RAG for long docs]"</span>
 
     <span class="var">response</span> = <span class="var">client</span>.chat.completions.create(
-        <span class="var">model</span>=<span class="str">"llama3.3:8b"</span>,
+        <span class="var">model</span>=<span class="str">"llama3.1:8b"</span>,
         <span class="var">messages</span>=[
             {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"You are a document analyst. Summarize concisely, covering main points, key decisions, and notable details."</span>},
             {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="var">f</span><span class="str">"Summarize this document:\n\n{content}"</span>}
@@ -1312,7 +1312,7 @@ pdftotext internal_report.pdf internal_report.txt</code></pre>
         <span class="trouble-chevron">▼</span>
       </div>
       <div class="trouble-a">
-        Pull explicitly before running: <code>ollama pull llama3.3:8b</code>. Model names are case-sensitive and must exactly match the Ollama library name.
+        Pull explicitly before running: <code>ollama pull llama3.1:8b</code>. Model names are case-sensitive and must exactly match the Ollama library name.
       </div>
     </div>
     <div class="trouble-item">
@@ -1321,7 +1321,7 @@ pdftotext internal_report.pdf internal_report.txt</code></pre>
         <span class="trouble-chevron">▼</span>
       </div>
       <div class="trouble-a">
-        The model is too large for your RAM. Try a more aggressively quantized variant: <code>ollama pull llama3.3:8b-q4_0</code> uses less memory than the default at some quality cost.
+        The model is too large for your RAM. Try a more aggressively quantized variant: <code>ollama pull llama3.1:8b-q4_0</code> uses less memory than the default at some quality cost.
       </div>
     </div>
     <div class="trouble-item">
