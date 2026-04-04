@@ -11,9 +11,13 @@
 
 # Example — a local HTML experiment:
 
-- title: "Local Sovereign AI"
+- title: "Local Sovereign AI #1 — Running Local LLMs"
   url: /projects/article-01-local-llm.html
-  description: "Local Sovereign AI"
+  description: "How to run open-source LLMs locally with Ollama — privacy, cost, and control."
+
+- title: "Local Sovereign AI #2 — LiteLLM as Your Local AI Gateway"
+  url: /projects/article-02-litellm-gateway.html
+  description: "A unified gateway in front of all your models — local and cloud — with routing, cost tracking, and fallback logic."
 
 - title: "Pyramid builder"
   url: /projects/pyramid-builder.html

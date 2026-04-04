@@ -663,6 +663,13 @@ tr:hover td { background: var(--bg-soft); }
   display: flex;
   align-items: center;
   gap: 1.25rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.next-article:hover {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
 }
 .next-label {
   font-size: 11px;
@@ -1368,14 +1375,14 @@ pdftotext internal_report.pdf internal_report.txt</code></pre>
   <p>But the moment you try to use this seriously — multiple models for different tasks, teammates sharing the same setup, switching between local and cloud based on data sensitivity, tracking what's actually being used — you've outgrown talking directly to Ollama. Those are infrastructure problems, and they need a gateway layer.</p>
 
   <!-- NEXT ARTICLE CTA -->
-  <div class="next-article">
+  <a class="next-article" href="/projects/article-02-litellm-gateway.html">
     <div>
       <div class="next-label">Up next · Article #2</div>
       <div class="next-title">LiteLLM as Your Local AI Gateway</div>
       <div class="next-desc">A unified gateway in front of all your models — local and cloud — with routing rules, cost tracking, access control, and fallback logic. The layer that turns "I have a model running" into "I have AI infrastructure."</div>
     </div>
     <div class="next-arrow">→</div>
-  </div>
+  </a>
 
   <!-- FOOTER -->
   <div class="article-footer">
