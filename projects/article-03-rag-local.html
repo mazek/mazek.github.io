@@ -225,75 +225,94 @@ code{font-family:'JetBrains Mono',monospace;font-size:0.85em;background:var(--bg
 <!-- INFOGRAPHIC 1: How RAG works -->
 <div class="infographic">
   <div class="infographic-title">How RAG Works — Two Distinct Phases</div>
-  <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:0 auto">
+  <svg viewBox="0 0 660 390" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:660px;display:block;margin:0 auto">
     <defs>
       <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#9CA3AF"/></marker>
-      <marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0057B8"/></marker>
       <marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#059669"/></marker>
     </defs>
-    <!-- Phase 1 header -->
-    <rect x="10" y="10" width="320" height="24" rx="6" fill="#EBF2FC"/>
-    <text x="170" y="26" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#0057B8">PHASE 1 — INDEXING (run once)</text>
-    <!-- Phase 1 steps -->
-    <rect x="10"  y="44" width="68" height="44" rx="7" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
-    <text x="44" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#111827">Documents</text>
-    <text x="44" y="79"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">PDF/TXT/DOCX</text>
-    <line x1="78" y1="66" x2="100" y2="66" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
-    <rect x="102" y="44" width="68" height="44" rx="7" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
-    <text x="136" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#111827">Chunking</text>
-    <text x="136" y="79"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">~1000 chars</text>
-    <line x1="170" y1="66" x2="192" y2="66" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
-    <rect x="194" y="44" width="68" height="44" rx="7" fill="#EBF2FC" stroke="#0057B8" stroke-width="1.5"/>
-    <text x="228" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#0057B8">Embed</text>
-    <text x="228" y="79"  text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#1E40AF">nomic-embed</text>
-    <line x1="262" y1="66" x2="284" y2="66" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
-    <rect x="286" y="44" width="42" height="44" rx="7" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
-    <text x="307" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#7C3AED">Store</text>
-    <text x="307" y="79"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6D28D9">Qdrant</text>
-    <!-- Phase 1 label -->
-    <text x="170" y="108" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#6B7280">Each chunk becomes a vector — a semantic fingerprint stored in Qdrant.</text>
 
-    <!-- Phase 2 header -->
-    <rect x="370" y="10" width="320" height="24" rx="6" fill="#D1FAE5"/>
-    <text x="530" y="26" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#059669">PHASE 2 — RETRIEVAL (every query)</text>
-    <!-- Phase 2 steps -->
-    <rect x="370" y="44" width="62" height="44" rx="7" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
-    <text x="401" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#111827">Question</text>
-    <text x="401" y="79"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">user input</text>
-    <line x1="432" y1="66" x2="448" y2="66" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
-    <rect x="450" y="44" width="62" height="44" rx="7" fill="#EBF2FC" stroke="#0057B8" stroke-width="1.5"/>
-    <text x="481" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#0057B8">Embed</text>
-    <text x="481" y="79"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#1E40AF">same model</text>
-    <line x1="512" y1="66" x2="528" y2="66" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
-    <rect x="530" y="44" width="62" height="44" rx="7" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
-    <text x="561" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#7C3AED">Search</text>
-    <text x="561" y="79"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6D28D9">top-K chunks</text>
-    <line x1="592" y1="66" x2="608" y2="66" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
-    <rect x="610" y="44" width="76" height="44" rx="7" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
-    <text x="648" y="60"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#065F46">LLM</text>
-    <text x="648" y="75"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#059669">answer</text>
-    <!-- Phase 2 label -->
-    <text x="530" y="108" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#6B7280">Semantically similar chunks retrieved — even without exact keyword match.</text>
+    <!-- ── PHASE 1 ── -->
+    <rect x="8" y="8" width="644" height="22" rx="6" fill="#EBF2FC"/>
+    <text x="330" y="23" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#0057B8">PHASE 1 — INDEXING (run once)</text>
 
-    <!-- divider -->
-    <line x1="350" y1="10" x2="350" y2="120" stroke="#E5E7EB" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <!-- Phase 1 boxes: evenly spaced across full width -->
+    <rect x="8"   y="40" width="120" height="48" rx="8" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+    <text x="68"  y="61" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#111827">Documents</text>
+    <text x="68"  y="78" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">PDF / TXT / DOCX</text>
 
-    <!-- Key insight box -->
-    <rect x="10" y="130" width="680" height="120" rx="10" fill="white" stroke="#E5E7EB" stroke-width="1"/>
-    <text x="350" y="152" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#111827">Why vector search finds semantically related content</text>
-    <!-- Example -->
-    <rect x="30"  y="165" width="180" height="36" rx="6" fill="#FEF3C7" stroke="#FDE68A" stroke-width="1"/>
-    <text x="120" y="181" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#92400E">Query: "vacation policy"</text>
-    <text x="120" y="195" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#B45309">→ vector [0.21, -0.87, ...]</text>
-    <line x1="210" y1="183" x2="250" y2="183" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
-    <rect x="252" y="160" width="196" height="46" rx="6" fill="#EBF2FC" stroke="#BFDBFE" stroke-width="1"/>
-    <text x="350" y="178" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#1D4ED8">Cosine similarity search</text>
-    <text x="350" y="194" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#3B82F6">finds vectors mathematically close</text>
-    <line x1="448" y1="183" x2="488" y2="183" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
-    <rect x="490" y="165" width="200" height="36" rx="6" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1"/>
-    <text x="590" y="181" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#065F46">Finds: "annual leave entitlements"</text>
-    <text x="590" y="195" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#059669">→ vector [0.19, -0.91, ...]</text>
-    <text x="350" y="238" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#6B7280">Different words, same semantic space — no keyword overlap required.</text>
+    <line x1="128" y1="64" x2="152" y2="64" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+
+    <rect x="154"  y="40" width="120" height="48" rx="8" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+    <text x="214"  y="61" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#111827">Chunking</text>
+    <text x="214"  y="78" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">~1000 chars each</text>
+
+    <line x1="274" y1="64" x2="298" y2="64" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+
+    <rect x="300"  y="40" width="140" height="48" rx="8" fill="#EBF2FC" stroke="#0057B8" stroke-width="1.5"/>
+    <text x="370"  y="61" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#0057B8">Embed</text>
+    <text x="370"  y="78" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#1E40AF">nomic-embed-text</text>
+
+    <line x1="440" y1="64" x2="464" y2="64" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+
+    <rect x="466"  y="40" width="126" height="48" rx="8" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+    <text x="529"  y="61" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#7C3AED">Store in Qdrant</text>
+    <text x="529"  y="78" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6D28D9">vector database</text>
+
+    <text x="330" y="108" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#6B7280">Each chunk becomes a vector — a semantic fingerprint stored locally in Qdrant.</text>
+
+    <!-- Divider -->
+    <line x1="8" y1="120" x2="652" y2="120" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="4,3"/>
+
+    <!-- ── PHASE 2 ── -->
+    <rect x="8" y="130" width="644" height="22" rx="6" fill="#D1FAE5"/>
+    <text x="330" y="145" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#059669">PHASE 2 — RETRIEVAL (every query)</text>
+
+    <!-- Phase 2 boxes: evenly spaced across full width -->
+    <rect x="8"   y="162" width="120" height="48" rx="8" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+    <text x="68"  y="183" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#111827">Question</text>
+    <text x="68"  y="200" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">user input</text>
+
+    <line x1="128" y1="186" x2="152" y2="186" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
+
+    <rect x="154"  y="162" width="140" height="48" rx="8" fill="#EBF2FC" stroke="#0057B8" stroke-width="1.5"/>
+    <text x="224"  y="183" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#0057B8">Embed</text>
+    <text x="224"  y="200" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#1E40AF">same model!</text>
+
+    <line x1="294" y1="186" x2="318" y2="186" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
+
+    <rect x="320"  y="162" width="140" height="48" rx="8" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+    <text x="390"  y="183" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#7C3AED">Search Qdrant</text>
+    <text x="390"  y="200" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6D28D9">top-K closest chunks</text>
+
+    <line x1="460" y1="186" x2="484" y2="186" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
+
+    <rect x="486"  y="162" width="106" height="48" rx="8" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="539"  y="183" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#065F46">LLM</text>
+    <text x="539"  y="200" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#059669">generates answer</text>
+
+    <text x="330" y="228" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#6B7280">Semantically similar chunks retrieved — even without exact keyword match.</text>
+
+    <!-- ── KEY INSIGHT BOX ── -->
+    <rect x="8" y="240" width="644" height="142" rx="10" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+    <text x="330" y="264" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#111827">Why vector search finds semantically related content</text>
+
+    <rect x="24"   y="278" width="178" height="52" rx="6" fill="#FEF3C7" stroke="#FDE68A" stroke-width="1"/>
+    <text x="113"  y="299" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#92400E">Query: "vacation policy"</text>
+    <text x="113"  y="317" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#B45309">vector [0.21, -0.87, ...]</text>
+
+    <line x1="202" y1="304" x2="234" y2="304" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+
+    <rect x="236"  y="272" width="190" height="64" rx="6" fill="#EBF2FC" stroke="#BFDBFE" stroke-width="1"/>
+    <text x="331"  y="295" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#1D4ED8">Cosine similarity search</text>
+    <text x="331"  y="313" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#3B82F6">finds mathematically close vectors</text>
+
+    <line x1="426" y1="304" x2="458" y2="304" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+
+    <rect x="460"  y="278" width="186" height="52" rx="6" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1"/>
+    <text x="553"  y="299" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#065F46">Finds: "annual leave entitlements"</text>
+    <text x="553"  y="317" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#059669">vector [0.19, -0.91, ...]</text>
+
+    <text x="330" y="362" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#6B7280">Different words, same semantic space — no keyword overlap required.</text>
   </svg>
 </div>
 
@@ -528,14 +547,28 @@ python index_documents.py</code></pre>
   <div class="step-title">Build the RAG Query Pipeline</div>
   <div class="step-time">~15 min</div>
 </div>
-<p>This script connects to your indexed Qdrant collection, retrieves relevant chunks for a query, and sends them to your local LLM for synthesis. Note the corrected import paths — all from <code>langchain_core</code>, not the old <code>langchain.schema</code>:</p>
+<p>This script connects to your indexed Qdrant collection, retrieves relevant chunks for a query, and sends them to your local LLM for synthesis.</p>
+<div class="callout callout-warning">
+  <strong>LangChain import paths changed — this is a common source of errors.</strong><br>
+  Many tutorials on the internet still use the old paths which no longer work on current LangChain versions:
+  <br><br>
+  <code>from langchain.schema.runnable import RunnablePassthrough</code> &nbsp;✗ old, broken<br>
+  <code>from langchain.schema.output_parser import StrOutputParser</code> &nbsp;✗ old, broken<br>
+  <code>from langchain.prompts import ChatPromptTemplate</code> &nbsp;✗ old, broken<br>
+  <br>
+  The correct current paths — all in <code>langchain_core</code>:<br>
+  <br>
+  <code>from langchain_core.runnables import RunnablePassthrough</code> &nbsp;✓<br>
+  <code>from langchain_core.output_parsers import StrOutputParser</code> &nbsp;✓<br>
+  <code>from langchain_core.prompts import ChatPromptTemplate</code> &nbsp;✓
+</div>
 <div class="code-header"><span class="code-lang">python — query.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
 <pre><code><span class="cmt"># query.py</span>
 <span class="kw">from</span> <span class="var">langchain_ollama</span> <span class="kw">import</span> <span class="cls">OllamaEmbeddings</span>, <span class="cls">ChatOllama</span>
 <span class="kw">from</span> <span class="var">langchain_qdrant</span> <span class="kw">import</span> <span class="cls">QdrantVectorStore</span>
-<span class="kw">from</span> <span class="var">langchain_core.prompts</span> <span class="kw">import</span> <span class="cls">ChatPromptTemplate</span>       <span class="cmt"># ← langchain_core, not langchain</span>
-<span class="kw">from</span> <span class="var">langchain_core.runnables</span> <span class="kw">import</span> <span class="cls">RunnablePassthrough</span>    <span class="cmt"># ← langchain_core, not langchain.schema</span>
-<span class="kw">from</span> <span class="var">langchain_core.output_parsers</span> <span class="kw">import</span> <span class="cls">StrOutputParser</span>   <span class="cmt"># ← langchain_core, not langchain.schema</span>
+<span class="kw">from</span> <span class="var">langchain_core.prompts</span> <span class="kw">import</span> <span class="cls">ChatPromptTemplate</span>
+<span class="kw">from</span> <span class="var">langchain_core.runnables</span> <span class="kw">import</span> <span class="cls">RunnablePassthrough</span>
+<span class="kw">from</span> <span class="var">langchain_core.output_parsers</span> <span class="kw">import</span> <span class="cls">StrOutputParser</span>
 <span class="kw">from</span> <span class="var">qdrant_client</span> <span class="kw">import</span> <span class="cls">QdrantClient</span>
 
 QDRANT_URL = <span class="str">"http://localhost:6333"</span>
