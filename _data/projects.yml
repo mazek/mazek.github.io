@@ -23,6 +23,10 @@
   url: /projects/article-03-rag-local.html
   description: "Retrieval Augmented Generation running entirely locally — query your documents without sending anything to the cloud."
 
+- title: "Local Sovereign AI #4 — MCP Protocol Explained"
+  url: /projects/article-04-mcp-protocol.html
+  description: "The open standard that gives AI agents controlled, auditable access to live data sources — databases, APIs, file systems — without bespoke integrations."
+
 - title: "Pyramid builder"
   url: /projects/pyramid-builder.html
   description: "Pyramid builder."
