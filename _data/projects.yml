@@ -19,6 +19,10 @@
   url: /projects/article-02-litellm-gateway.html
   description: "A unified gateway in front of all your models — local and cloud — with routing, cost tracking, and fallback logic."
 
+- title: "Local Sovereign AI #3 — RAG on Your Own Data"
+  url: /projects/article-03-rag-local.html
+  description: "Retrieval Augmented Generation running entirely locally — query your documents without sending anything to the cloud."
+
 - title: "Pyramid builder"
   url: /projects/pyramid-builder.html
   description: "Pyramid builder."
