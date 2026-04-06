@@ -19,11 +19,6 @@
   url: /projects/article-02-litellm-gateway.html
   description: "A unified gateway in front of all your models — local and cloud — with routing, cost tracking, and fallback logic."
 
-- title: "Local Sovereign AI — Article Series"
-  url: /writing/your-first-local-llm.html
-  description: "26-part technical series on building local AI infrastructure using open-source tools. Ollama, LiteLLM, RAG, MCP, LangChain — all running on your own hardware, zero data leaving your machine."
-
-
 - title: "Pyramid builder"
   url: /projects/pyramid-builder.html
   description: "Pyramid builder."
