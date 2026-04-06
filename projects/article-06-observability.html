@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local AI Observability — You Can't Trust What You Can't See</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#0057B8;--blue-dark:#004494;--blue-light:#EBF2FC;
+  --text:#111827;--text-muted:#6B7280;--text-light:#9CA3AF;
+  --bg:#FFFFFF;--bg-soft:#F9FAFB;--bg-code:#F3F4F6;
+  --border:#E5E7EB;--border-dark:#D1D5DB;
+  --green:#059669;--green-light:#D1FAE5;
+  --amber:#D97706;--amber-light:#FFFBEB;
+  --purple:#7C3AED;--purple-light:#F5F3FF;
+  --red:#DC2626;--red-light:#FEF2F2;
+  --radius:6px;--radius-lg:12px;--max-width:780px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Albert Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  line-height:1.75;font-size:17px;-webkit-font-smoothing:antialiased}
+#progress-bar{position:fixed;top:0;left:0;height:2px;background:var(--blue);
+  width:0%;z-index:1000;transition:width 0.1s linear}
+.site-header{border-bottom:1px solid var(--border);padding:0 2rem;height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;background:rgba(255,255,255,0.97);
+  backdrop-filter:blur(8px);z-index:100}
+.header-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
+.header-brand-name{font-size:14px;font-weight:700;letter-spacing:-0.3px}
+.header-series{font-size:12px;color:var(--text-muted);border-left:1px solid var(--border);
+  padding-left:12px;margin-left:4px}
+.header-right{display:flex;align-items:center;gap:16px}
+.header-tag{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--blue);background:var(--blue-light);padding:3px 8px;border-radius:4px}
+.header-num{font-size:12px;color:var(--text-muted);font-weight:500}
+.page-wrapper{display:flex;flex-direction:column;align-items:center}
+.article-container{width:100%;max-width:var(--max-width);padding:0 2rem 6rem}
+.hero{padding:3.5rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:3rem}
+.hero-meta{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
+.hero-series-badge{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue)}
+.hero-sep{color:var(--border-dark)}
+.hero-num{font-size:12px;color:var(--text-muted);font-weight:500}
+h1{font-size:clamp(2rem,5vw,2.6rem);font-weight:800;line-height:1.15;letter-spacing:-0.03em;margin-bottom:1rem}
+.hero-subtitle{font-size:18px;color:var(--text-muted);font-style:italic;line-height:1.6;max-width:620px;margin-bottom:1.75rem}
+.hero-stats{display:flex;gap:1.5rem;flex-wrap:wrap}
+.hero-stat{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted)}
+.hero-stat svg{color:var(--blue);flex-shrink:0}
+.time-callout{background:var(--blue-light);border:1px solid #C7DCFA;border-radius:var(--radius-lg);
+  padding:1rem 1.25rem;margin:2rem 0;display:flex;align-items:flex-start;gap:12px}
+.time-callout-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.time-callout-text{font-size:14px;color:#1E40AF;line-height:1.6}
+.time-callout-text strong{font-weight:700}
+.time-steps{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.time-step{background:white;border:1px solid #BFDBFE;border-radius:4px;padding:3px 10px;
+  font-size:13px;font-weight:600;color:#1D4ED8;white-space:nowrap}
+.time-arrow{color:#93C5FD}
+h2{font-size:1.55rem;font-weight:800;letter-spacing:-0.025em;margin:3rem 0 1rem;
+  line-height:1.25;padding-top:0.5rem;border-top:2px solid var(--border)}
+h3{font-size:1.1rem;font-weight:700;margin:1.75rem 0 0.5rem}
+p{margin-bottom:1.25rem} p:last-child{margin-bottom:0}
+strong{font-weight:700} em{font-style:italic;color:var(--text-muted)}
+a{color:var(--blue);text-decoration:underline;text-underline-offset:3px}
+a:hover{color:var(--blue-dark)}
+ul,ol{padding-left:1.5rem;margin-bottom:1.25rem}
+li{margin-bottom:0.4rem;line-height:1.65}
+.callout{border-left:3px solid var(--blue);background:var(--blue-light);
+  border-radius:0 var(--radius) var(--radius) 0;padding:0.85rem 1.1rem;
+  margin:1.5rem 0;font-size:14.5px;color:#1E3A6E;line-height:1.6}
+.callout strong{color:#1E3A6E}
+.callout code{background:rgba(255,255,255,0.6);border-color:#BFDBFE}
+.callout-warning{border-left-color:var(--amber);background:var(--amber-light);color:#78350F}
+.callout-warning strong{color:#78350F}
+.callout-success{border-left-color:var(--green);background:var(--green-light);color:#064E3B}
+.callout-success strong{color:#064E3B}
+pre{background:#1E1E2E;border-radius:var(--radius-lg);padding:1.25rem 1.5rem;overflow-x:auto;margin:1.25rem 0}
+pre code{font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.65;
+  color:#CDD6F4;background:none;padding:0;border:none;border-radius:0}
+code{font-family:'JetBrains Mono',monospace;font-size:0.85em;background:var(--bg-code);
+  color:#1F2937;padding:2px 6px;border-radius:4px;border:1px solid var(--border)}
+.code-header{display:flex;justify-content:space-between;align-items:center;
+  background:#181825;border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  padding:0.5rem 1rem;margin-top:1.25rem}
+.code-header+pre{border-radius:0 0 var(--radius-lg) var(--radius-lg);margin-top:0}
+.code-lang{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+  color:#6C7086;font-family:'JetBrains Mono',monospace}
+.copy-btn{font-size:11px;color:#6C7086;background:transparent;border:1px solid #313244;
+  border-radius:4px;padding:2px 8px;cursor:pointer;font-family:'Albert Sans',sans-serif;
+  font-weight:500;transition:all 0.15s}
+.copy-btn:hover{color:#CDD6F4;border-color:#45475A}
+.copy-btn.copied{color:#A6E3A1;border-color:#A6E3A1}
+.kw{color:#CBA6F7}.str{color:#A6E3A1}.cmt{color:#6C7086;font-style:italic}
+.fn{color:#89B4FA}.num{color:#FAB387}.var{color:#CDD6F4}.cls{color:#F9E2AF}
+.dec{color:#F38BA8}.key{color:#89DCEB}
+.step-header{display:flex;align-items:center;gap:14px;margin:3rem 0 1rem;
+  padding-top:0.5rem;border-top:2px solid var(--border)}
+.step-badge{width:34px;height:34px;border-radius:50%;background:var(--blue);
+  color:white;font-size:14px;font-weight:800;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0}
+.step-title{font-size:1.45rem;font-weight:800;letter-spacing:-0.025em}
+.step-time{font-size:12px;font-weight:500;color:var(--text-light);margin-left:auto;white-space:nowrap}
+.infographic{background:var(--bg-soft);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:1.75rem;margin:2rem 0}
+.infographic-title{font-size:11px;font-weight:700;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--text-muted);margin-bottom:1.25rem;text-align:center}
+.signals-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:1.5rem 0}
+.signal-card{border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;background:white}
+.signal-icon{font-size:22px;margin-bottom:6px}
+.signal-title{font-size:13px;font-weight:800;margin-bottom:4px}
+.signal-desc{font-size:12.5px;color:var(--text-muted);line-height:1.5}
+.trouble-list{display:flex;flex-direction:column;gap:10px;margin:1.5rem 0}
+.trouble-item{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.trouble-q{padding:0.85rem 1.1rem;font-size:14px;font-weight:700;color:var(--text);
+  background:var(--bg-soft);cursor:pointer;display:flex;justify-content:space-between;
+  align-items:center;gap:10px;user-select:none}
+.trouble-q:hover{background:var(--bg-code)}
+.trouble-chevron{color:var(--text-muted);transition:transform 0.2s;font-size:12px}
+.trouble-item.open .trouble-chevron{transform:rotate(180deg)}
+.trouble-a{display:none;padding:0.85rem 1.1rem;font-size:14px;color:var(--text-muted);
+  line-height:1.65;border-top:1px solid var(--border)}
+.trouble-item.open .trouble-a{display:block}
+.next-article{background:var(--bg-soft);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:1.5rem 1.75rem;margin:3rem 0 1rem;
+  display:flex;align-items:center;gap:1.25rem}
+.next-label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--text-muted);margin-bottom:5px}
+.next-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.next-desc{font-size:13px;color:var(--text-muted);line-height:1.5}
+.next-arrow{flex-shrink:0;width:36px;height:36px;background:var(--blue);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:white;font-size:16px;margin-left:auto}
+.article-footer{border-top:1px solid var(--border);padding:2rem 0 0;margin-top:1rem;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.footer-series{font-size:13px;color:var(--text-muted);line-height:1.6}
+.footer-brand{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-light);text-decoration:none}
+.footer-brand:hover{color:var(--text-muted)}
+@media(max-width:640px){
+  .site-header .header-series{display:none}
+  .signals-grid{grid-template-columns:1fr}
+  .next-article{flex-direction:column;align-items:flex-start}
+  .next-arrow{display:none}
+  .article-footer{flex-direction:column;gap:.75rem}
+}
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+
+<header class="site-header">
+  <div class="header-brand">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <rect width="26" height="26" rx="5" fill="#111827"/>
+      <circle cx="7"  cy="7"  r="2" fill="white" opacity="1"/>
+      <circle cx="13" cy="7"  r="2" fill="white" opacity="0.8"/>
+      <circle cx="19" cy="7"  r="2" fill="white" opacity="0.4"/>
+      <circle cx="7"  cy="13" r="2" fill="white" opacity="0.8"/>
+      <circle cx="13" cy="13" r="2" fill="white" opacity="1"/>
+      <circle cx="19" cy="13" r="2" fill="white" opacity="0.6"/>
+      <circle cx="7"  cy="19" r="2" fill="white" opacity="0.4"/>
+      <circle cx="13" cy="19" r="2" fill="white" opacity="0.6"/>
+      <circle cx="19" cy="19" r="2" fill="white" opacity="1"/>
+    </svg>
+    <span class="header-brand-name">bitropy.</span>
+    <span class="header-series">Local AI Series</span>
+  </div>
+  <div class="header-right">
+    <span class="header-tag">Open Source</span>
+    <span class="header-num">Article 6 of 26</span>
+  </div>
+</header>
+
+<div class="page-wrapper">
+<article class="article-container">
+
+<div class="hero">
+  <div class="hero-meta">
+    <span class="hero-series-badge">Local Sovereign AI</span>
+    <span class="hero-sep">·</span>
+    <span class="hero-num">Article #6</span>
+  </div>
+  <h1>Local AI Observability —<br>You Can't Trust What You Can't See</h1>
+  <p class="hero-subtitle">Your LLM returns HTTP 200 and the output looks fine. But is it actually correct? Did retrieval find the right documents? Are prompts drifting? Is latency creeping up? Without observability, you're flying blind — and AI systems fail silently in ways traditional monitoring completely misses.</p>
+  <div class="hero-stats">
+    <span class="hero-stat">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      ~50 min
+    </span>
+    <span class="hero-stat">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      Intermediate
+    </span>
+    <span class="hero-stat">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013 12.07a19.79 19.79 0 01-3.07-8.67A2 2 0 011.95 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.8a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+      LiteLLM from Article #2 helpful but not required
+    </span>
+  </div>
+</div>
+
+<div class="time-callout">
+  <span class="time-callout-icon">⏱</span>
+  <div class="time-callout-text">
+    <strong>Time breakdown</strong>
+    <div class="time-steps">
+      <span class="time-step">Langfuse setup ~15 min</span>
+      <span class="time-arrow">→</span>
+      <span class="time-step">LiteLLM integration ~5 min</span>
+      <span class="time-arrow">→</span>
+      <span class="time-step">Python instrumentation ~15 min</span>
+      <span class="time-arrow">→</span>
+      <span class="time-step">LangChain tracing ~15 min</span>
+    </div>
+    Docker required. Langfuse runs as a local Docker service — all data stays on your machine.
+  </div>
+</div>
+
+<!-- WHY DIFFERENT -->
+<h2>Why AI Observability Is Different From Regular Monitoring</h2>
+<p>Traditional application monitoring — uptime checks, error rates, latency percentiles — tells you whether your infrastructure is healthy. It doesn't tell you whether your AI is working.</p>
+<p>An LLM can return HTTP 200 with a plausible-sounding response that is completely wrong. It can hallucinate facts confidently. A prompt change from two days ago can silently degrade output quality across every user request without any server error. A RAG pipeline can start returning irrelevant document chunks — again, no error, just quietly bad answers. A cost spike can accumulate for days before anyone notices the token counts are 10x higher than expected.</p>
+<p>These failures have no equivalent in traditional APM. The model "worked" — it generated tokens. But the output was useless. Catching this requires a different kind of observability: one that captures <strong>what went into the model</strong>, <strong>what came out</strong>, and <strong>what happened in between</strong> — at every request, across every user session, in a searchable, queryable form.</p>
+
+<!-- WHAT TO INSTRUMENT -->
+<h2>The Five Signals That Matter</h2>
+<div class="signals-grid">
+  <div class="signal-card">
+    <div class="signal-icon">⏱</div>
+    <div class="signal-title">Latency — broken down</div>
+    <div class="signal-desc">Not just total response time, but time-to-first-token vs. generation time vs. retrieval time. Slow retrieval is a different problem than a slow model.</div>
+  </div>
+  <div class="signal-card">
+    <div class="signal-icon">🔢</div>
+    <div class="signal-title">Token usage per request</div>
+    <div class="signal-desc">Input tokens + output tokens, per model, per user, over time. Token creep — prompts slowly growing — is invisible without tracking this. Cost is derived directly from token counts.</div>
+  </div>
+  <div class="signal-card">
+    <div class="signal-icon">📝</div>
+    <div class="signal-title">Full prompt + response pairs</div>
+    <div class="signal-desc">The exact prompt sent to the model and the exact response received. Debugging a bad output without seeing the prompt is guesswork. This is the most important thing to capture.</div>
+  </div>
+  <div class="signal-card">
+    <div class="signal-icon">🔧</div>
+    <div class="signal-title">Tool calls and retrieval steps</div>
+    <div class="signal-desc">For agents and RAG: which tools were called, with what inputs, and what came back. Did retrieval return relevant chunks? Did the agent use the right tool? These are separate observable events.</div>
+  </div>
+  <div class="signal-card">
+    <div class="signal-icon">❌</div>
+    <div class="signal-title">Errors and retries</div>
+    <div class="signal-desc">Model errors, timeouts, context-length exceeded, guardrail rejections, invalid tool calls. Error rates per model and endpoint identify flaky configurations before users notice.</div>
+  </div>
+  <div class="signal-card">
+    <div class="signal-icon">👤</div>
+    <div class="signal-title">Sessions and user attribution</div>
+    <div class="signal-desc">Group traces into conversations. Attribute requests to users. When a user reports "the bot gave me wrong information", you need to find that exact session and trace it.</div>
+  </div>
+</div>
+
+<!-- TOOL: LANGFUSE -->
+<h2>The Tool: Langfuse</h2>
+<p><strong>Langfuse</strong> is an open-source LLM observability platform that covers all five signals above, can be self-hosted completely, and integrates with everything in our stack: LiteLLM, LangChain, and direct Python code via a decorator. It stores your traces in Postgres and ClickHouse — both running locally in Docker — and provides a web UI at <code>localhost:3000</code>.</p>
+<p>The critical point for a data-sovereign stack: when self-hosted, your prompts, responses, and user data never leave your machine. The cloud version of Langfuse sends data to their servers. Self-hosting keeps it local.</p>
+
+<div class="infographic">
+  <div class="infographic-title">How Langfuse Fits Into the Stack</div>
+  <svg viewBox="0 0 660 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:660px;display:block;margin:0 auto">
+    <defs>
+      <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#9CA3AF"/></marker>
+      <marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0057B8"/></marker>
+    </defs>
+
+    <!-- Your App -->
+    <rect x="8" y="55" width="110" height="60" rx="8" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+    <text x="63" y="80" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#111827">Your App</text>
+    <text x="63" y="97" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">LangChain / API</text>
+
+    <!-- Arrow app → LiteLLM -->
+    <line x1="118" y1="85" x2="155" y2="85" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+
+    <!-- LiteLLM -->
+    <rect x="157" y="45" width="120" height="80" rx="8" fill="#EBF2FC" stroke="#0057B8" stroke-width="1.5"/>
+    <text x="217" y="72" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#0057B8">LiteLLM</text>
+    <text x="217" y="89" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#1E40AF">Gateway</text>
+    <text x="217" y="106" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#1E40AF">:4000</text>
+
+    <!-- Arrow LiteLLM → Ollama/vLLM -->
+    <line x1="277" y1="85" x2="314" y2="85" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+
+    <!-- Ollama/vLLM -->
+    <rect x="316" y="55" width="120" height="60" rx="8" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="376" y="80" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#065F46">Ollama / vLLM</text>
+    <text x="376" y="97" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#059669">:11434 / :8000</text>
+
+    <!-- Langfuse arrow from LiteLLM (down) -->
+    <line x1="217" y1="125" x2="217" y2="148" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#ap)"/>
+
+    <defs>
+      <marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7C3AED"/></marker>
+    </defs>
+
+    <!-- Langfuse label -->
+    <rect x="140" y="148" width="154" height="18" rx="4" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1"/>
+    <text x="217" y="161" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#7C3AED">Langfuse :3000  (traces)</text>
+
+    <!-- Also direct from app to Langfuse -->
+    <path d="M63 115 Q63 155 140 157" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="3,3" fill="none" marker-end="url(#ap)"/>
+    <text x="63" y="132" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="9" fill="#9CA3AF">@observe()</text>
+
+    <!-- Zero cloud label -->
+    <rect x="470" y="60" width="180" height="50" rx="8" fill="#FEF9C3" stroke="#FDE68A" stroke-width="1"/>
+    <text x="560" y="80" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#92400E">Everything local</text>
+    <text x="560" y="97" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#B45309">No data leaves your machine</text>
+  </svg>
+</div>
+
+<!-- STEP 1: INSTALL LANGFUSE -->
+<div class="step-header">
+  <div class="step-badge">1</div>
+  <div class="step-title">Self-Host Langfuse</div>
+  <div class="step-time">~15 min</div>
+</div>
+<p>Langfuse runs as a set of Docker containers: a web UI + API server, an async worker, Postgres, ClickHouse (for trace storage), Redis, and MinIO (for event uploads). The official docker-compose handles all of it:</p>
+
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="cmt"># Clone Langfuse and start it — takes ~2-3 minutes on first run</span>
+git clone https://github.com/langfuse/langfuse.git
+cd langfuse
+docker compose up -d</code></pre>
+
+<p>Wait until you see <code>langfuse-web-1</code> log <em>"Ready"</em>. Then open <code>http://localhost:3000</code> in your browser, create an account, create an organization, and create a project. Copy the <strong>Public Key</strong> and <strong>Secret Key</strong> from Settings → API Keys — you'll need them in the next steps.</p>
+
+<div class="callout callout-warning">
+  <strong>Change the default secrets before exposing to a network.</strong> The official <code>docker-compose.yml</code> marks several lines with <code># CHANGEME</code>: <code>NEXTAUTH_SECRET</code>, <code>SALT</code>, <code>CLICKHOUSE_PASSWORD</code>, and the MinIO secret key. For local-only use they're fine, but if the machine is accessible on your network, update them first.
+</div>
+
+<p>To update Langfuse later:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>docker compose pull && docker compose up -d</code></pre>
+
+<!-- STEP 2: LITELLM INTEGRATION -->
+<div class="step-header">
+  <div class="step-badge">2</div>
+  <div class="step-title">Connect LiteLLM — Zero Code Required</div>
+  <div class="step-time">~5 min</div>
+</div>
+<p>If you have the LiteLLM gateway from Article #2 running, connecting Langfuse requires adding exactly four lines to your <code>litellm_config.yaml</code>. Every request that passes through the gateway will be automatically traced — no changes to any client code:</p>
+
+<div class="code-header"><span class="code-lang">yaml — litellm_config.yaml (add the success_callback section)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>model_list:
+  - model_name: smart
+    litellm_params:
+      model: ollama/llama3.1:8b
+      api_base: http://localhost:11434
+
+<span class="cmt"># Add this block to enable Langfuse tracing:</span>
+litellm_settings:
+  success_callback: [<span class="str">"langfuse"</span>]
+  failure_callback: [<span class="str">"langfuse"</span>]
+
+<span class="cmt"># Set these environment variables before starting LiteLLM:</span>
+<span class="cmt"># LANGFUSE_PUBLIC_KEY=pk-lf-your-public-key</span>
+<span class="cmt"># LANGFUSE_SECRET_KEY=sk-lf-your-secret-key</span>
+<span class="cmt"># LANGFUSE_HOST=http://localhost:3000</span></code></pre>
+
+<div class="code-header"><span class="code-lang">bash — start LiteLLM with Langfuse env vars</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>export LANGFUSE_PUBLIC_KEY=<span class="str">"pk-lf-your-key"</span>
+export LANGFUSE_SECRET_KEY=<span class="str">"sk-lf-your-key"</span>
+export LANGFUSE_HOST=<span class="str">"http://localhost:3000"</span>
+
+litellm --config litellm_config.yaml --port 4000</code></pre>
+
+<p>Make a test request through LiteLLM, then open Langfuse at <code>http://localhost:3000</code> → your project → Traces. You should see the request appear within a few seconds with the full prompt, response, model name, latency, and token counts — all automatically captured.</p>
+
+<div class="callout callout-success">
+  <strong>This is the fastest win in this article.</strong> If LiteLLM is already your gateway, you get full observability for every model request — Ollama, vLLM, OpenAI, Anthropic, anything — with five lines of config and zero application code changes.
+</div>
+
+<!-- STEP 3: PYTHON INSTRUMENTATION -->
+<div class="step-header">
+  <div class="step-badge">3</div>
+  <div class="step-title">Direct Python Instrumentation</div>
+  <div class="step-time">~15 min</div>
+</div>
+<p>For code that doesn't go through LiteLLM — standalone scripts, custom pipelines, direct Ollama calls — instrument with the Langfuse Python SDK. The <code>@observe()</code> decorator creates a trace for any function automatically:</p>
+
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>pip install langfuse</code></pre>
+
+<div class="code-header"><span class="code-lang">python — basic instrumentation with @observe()</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="kw">import</span> <span class="var">os</span>
+<span class="kw">from</span> <span class="var">langfuse</span> <span class="kw">import</span> <span class="fn">get_client</span>, <span class="fn">observe</span>
+<span class="kw">from</span> <span class="var">langchain_ollama</span> <span class="kw">import</span> <span class="cls">ChatOllama</span>
+
+<span class="cmt"># Configure Langfuse — point at your local instance</span>
+<span class="var">os</span>.environ[<span class="str">"LANGFUSE_PUBLIC_KEY"</span>]  = <span class="str">"pk-lf-your-key"</span>
+<span class="var">os</span>.environ[<span class="str">"LANGFUSE_SECRET_KEY"</span>]  = <span class="str">"sk-lf-your-key"</span>
+<span class="var">os</span>.environ[<span class="str">"LANGFUSE_HOST"</span>]         = <span class="str">"http://localhost:3000"</span>
+
+<span class="var">langfuse</span> = <span class="fn">get_client</span>()
+<span class="var">llm</span> = <span class="cls">ChatOllama</span>(<span class="var">model</span>=<span class="str">"llama3.1:8b"</span>, <span class="var">base_url</span>=<span class="str">"http://localhost:11434"</span>)
+
+
+<span class="dec">@observe</span>()  <span class="cmt"># Creates a trace for every call to this function</span>
+<span class="kw">def</span> <span class="fn">answer_question</span>(<span class="var">question</span>: <span class="cls">str</span>, <span class="var">user_id</span>: <span class="cls">str</span> = <span class="str">"anonymous"</span>) -> <span class="cls">str</span>:
+    <span class="cmt"># Add metadata to the current trace</span>
+    <span class="var">langfuse</span>.update_current_trace(
+        <span class="var">user_id</span>=<span class="var">user_id</span>,
+        <span class="var">session_id</span>=<span class="var">f</span><span class="str">"session-{user_id}"</span>,
+        <span class="var">tags</span>=[<span class="str">"qa-pipeline"</span>],
+    )
+
+    <span class="var">messages</span> = [{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="var">question</span>}]
+    <span class="var">response</span> = <span class="var">llm</span>.invoke(<span class="var">messages</span>)
+    <span class="kw">return</span> <span class="var">response</span>.content
+
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="var">answer</span> = <span class="fn">answer_question</span>(<span class="str">"What is data sovereignty?"</span>, <span class="var">user_id</span>=<span class="str">"marcin"</span>)
+    <span class="fn">print</span>(<span class="var">answer</span>)
+
+    <span class="cmt"># IMPORTANT: flush pending traces before script exits</span>
+    <span class="cmt"># Langfuse sends traces asynchronously — without flush(), short-lived</span>
+    <span class="cmt"># scripts may exit before all traces are sent</span>
+    <span class="var">langfuse</span>.flush()</code></pre>
+
+<p>The <code>@observe()</code> decorator automatically captures the function's inputs, outputs, and execution time. Nested <code>@observe()</code> functions create nested spans — the trace tree mirrors your call stack.</p>
+
+<p>For more granular control — manually marking specific steps, recording token counts, or tracking costs — use the span context manager directly:</p>
+<div class="code-header"><span class="code-lang">python — manual spans for multi-step pipelines</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="dec">@observe</span>()
+<span class="kw">def</span> <span class="fn">rag_pipeline</span>(<span class="var">question</span>: <span class="cls">str</span>) -> <span class="cls">str</span>:
+    <span class="cmt"># Step 1: retrieval — tracked as a separate span</span>
+    <span class="kw">with</span> <span class="var">langfuse</span>.start_as_current_observation(
+        <span class="var">as_type</span>=<span class="str">"span"</span>, <span class="var">name</span>=<span class="str">"retrieve-context"</span>
+    ) <span class="kw">as</span> <span class="var">retrieval_span</span>:
+        <span class="var">chunks</span> = <span class="fn">retrieve_from_qdrant</span>(<span class="var">question</span>)
+        <span class="var">retrieval_span</span>.update(<span class="var">output</span>={<span class="str">"chunks_found"</span>: <span class="fn">len</span>(<span class="var">chunks</span>)})
+
+    <span class="cmt"># Step 2: generation — tracked as a generation span with token metadata</span>
+    <span class="kw">with</span> <span class="var">langfuse</span>.start_as_current_observation(
+        <span class="var">as_type</span>=<span class="str">"generation"</span>,
+        <span class="var">name</span>=<span class="str">"llm-response"</span>,
+        <span class="var">model</span>=<span class="str">"llama3.1:8b"</span>,
+    ) <span class="kw">as</span> <span class="var">gen_span</span>:
+        <span class="var">prompt</span> = <span class="fn">build_prompt</span>(<span class="var">question</span>, <span class="var">chunks</span>)
+        <span class="var">response</span> = <span class="var">llm</span>.invoke(<span class="var">prompt</span>)
+        <span class="var">gen_span</span>.update(
+            <span class="var">input</span>=<span class="var">prompt</span>,
+            <span class="var">output</span>=<span class="var">response</span>.content,
+            <span class="var">usage</span>={
+                <span class="str">"input"</span>: <span class="var">response</span>.response_metadata.get(<span class="str">"prompt_eval_count"</span>, <span class="num">0</span>),
+                <span class="str">"output"</span>: <span class="var">response</span>.response_metadata.get(<span class="str">"eval_count"</span>, <span class="num">0</span>),
+            }
+        )
+    <span class="kw">return</span> <span class="var">response</span>.content</code></pre>
+
+<!-- STEP 4: LANGCHAIN -->
+<div class="step-header">
+  <div class="step-badge">4</div>
+  <div class="step-title">LangChain Integration</div>
+  <div class="step-time">~10 min</div>
+</div>
+<p>For LangChain-based pipelines, Langfuse provides a <code>CallbackHandler</code> that automatically captures every LLM call, retrieval step, tool invocation, and chain execution — with their full inputs and outputs, nested in the correct trace hierarchy:</p>
+
+<div class="code-header"><span class="code-lang">python — LangChain + Langfuse callback</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="kw">from</span> <span class="var">langfuse.langchain</span> <span class="kw">import</span> <span class="cls">CallbackHandler</span>
+<span class="kw">from</span> <span class="var">langchain_ollama</span> <span class="kw">import</span> <span class="cls">ChatOllama</span>
+<span class="kw">from</span> <span class="var">langchain_core.prompts</span> <span class="kw">import</span> <span class="cls">ChatPromptTemplate</span>
+<span class="kw">from</span> <span class="var">langchain_core.output_parsers</span> <span class="kw">import</span> <span class="cls">StrOutputParser</span>
+
+<span class="cmt"># Create the Langfuse callback handler — configure once, pass everywhere</span>
+<span class="var">langfuse_handler</span> = <span class="cls">CallbackHandler</span>()
+
+<span class="var">llm</span> = <span class="cls">ChatOllama</span>(<span class="var">model</span>=<span class="str">"llama3.1:8b"</span>, <span class="var">base_url</span>=<span class="str">"http://localhost:11434"</span>)
+<span class="var">prompt</span> = <span class="cls">ChatPromptTemplate</span>.from_template(<span class="str">"Answer briefly: {question}"</span>)
+<span class="var">chain</span> = <span class="var">prompt</span> | <span class="var">llm</span> | <span class="cls">StrOutputParser</span>()
+
+<span class="cmt"># Pass the callback in config — every step in the chain is traced automatically</span>
+<span class="var">result</span> = <span class="var">chain</span>.invoke(
+    {<span class="str">"question"</span>: <span class="str">"What is PagedAttention?"</span>},
+    <span class="var">config</span>={<span class="str">"callbacks"</span>: [<span class="var">langfuse_handler</span>]}
+)
+<span class="fn">print</span>(<span class="var">result</span>)</code></pre>
+
+<p>For the RAG pipeline from Article #3, add the callback to the chain invocation:</p>
+<div class="code-header"><span class="code-lang">python — RAG chain with tracing</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="cmt"># In query.py from Article #3, update the ask() function:</span>
+<span class="kw">from</span> <span class="var">langfuse.langchain</span> <span class="kw">import</span> <span class="cls">CallbackHandler</span>
+
+<span class="var">langfuse_handler</span> = <span class="cls">CallbackHandler</span>()
+
+<span class="kw">def</span> <span class="fn">ask</span>(<span class="var">question</span>: <span class="cls">str</span>, <span class="var">rag_chain</span>, <span class="var">retriever</span>, <span class="var">user_id</span>: <span class="cls">str</span> = <span class="str">"user"</span>):
+    <span class="var">answer</span> = <span class="var">rag_chain</span>.invoke(
+        <span class="var">question</span>,
+        <span class="var">config</span>={
+            <span class="str">"callbacks"</span>: [<span class="var">langfuse_handler</span>],
+            <span class="cmt"># metadata passed to trace:</span>
+            <span class="str">"metadata"</span>: {<span class="str">"user_id"</span>: <span class="var">user_id</span>, <span class="str">"pipeline"</span>: <span class="str">"rag-v1"</span>}
+        }
+    )
+    <span class="kw">return</span> <span class="var">answer</span></code></pre>
+
+<p>In Langfuse's UI, you'll see a nested trace for every RAG query: the top-level chain → the retrieval step with the returned document chunks → the prompt construction → the LLM call with prompt and response. You can click any step to see its exact input and output.</p>
+
+<!-- WHAT LANGFUSE SHOWS YOU -->
+<h2>What to Actually Look At in Langfuse</h2>
+<p>Having traces is only useful if you know what to monitor. Here are the specific views and metrics that matter for a local AI stack:</p>
+
+<h3>Trace list and search</h3>
+<p>The main view. Filter by user, time range, model, tags, or latency. When a user reports a problem, search by their user ID and time. Find the exact trace. See the exact prompt and response. This is the most valuable debugging tool you'll have.</p>
+
+<h3>Token usage over time</h3>
+<p>Navigate to Metrics → Token Usage. Watch for upward trends. If average input token count per request is growing, your prompts are getting longer — often silently, due to growing conversation history or retrieved context. Catching this early prevents runaway costs if you're also routing to paid API providers via LiteLLM.</p>
+
+<h3>Latency breakdown</h3>
+<p>Metrics → Latency. Look at P50, P95, and P99. The gap between P50 and P99 tells you how predictable your system is. A P99 that's 10x the P50 means occasional requests are hanging — often due to model loading time, queue buildup, or a slow retrieval step. The per-step breakdown shows you whether latency is in the LLM or in retrieval.</p>
+
+<h3>Error rates per model</h3>
+<p>Filter traces by "error" status. Group by model. If one model is failing more than others — context window exceeded, timeouts, parsing errors — this shows it immediately. Silent errors (model returns a response but the chain fails downstream) also surface here when you use the <code>failure_callback</code> in LiteLLM.</p>
+
+<h3>Session replay</h3>
+<p>Click any trace → Session. See the entire multi-turn conversation that request was part of. When debugging a bad output, context from earlier in the conversation often explains it — the model was given contradictory information five turns ago. Without session replay, this is invisible.</p>
+
+<!-- ADDING SCORES -->
+<h2>Adding Quality Scores — Moving Beyond Latency</h2>
+<p>Latency and token counts are infrastructure metrics. Quality is the harder problem — was the answer actually correct? Langfuse supports three ways to attach quality scores to traces:</p>
+
+<p><strong>User feedback:</strong> If your application has a thumbs up/down button, post the feedback to Langfuse via the API. Every trace then carries a user satisfaction signal.</p>
+<div class="code-header"><span class="code-lang">python — recording user feedback on a trace</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="kw">from</span> <span class="var">langfuse</span> <span class="kw">import</span> <span class="fn">get_client</span>
+
+<span class="var">langfuse</span> = <span class="fn">get_client</span>()
+
+<span class="cmt"># After the user rates the response (called from your application's feedback handler):</span>
+<span class="kw">def</span> <span class="fn">record_feedback</span>(<span class="var">trace_id</span>: <span class="cls">str</span>, <span class="var">thumbs_up</span>: <span class="cls">bool</span>):
+    <span class="var">langfuse</span>.score(
+        <span class="var">trace_id</span>=<span class="var">trace_id</span>,
+        <span class="var">name</span>=<span class="str">"user-feedback"</span>,
+        <span class="var">value</span>=<span class="num">1</span> <span class="kw">if</span> <span class="var">thumbs_up</span> <span class="kw">else</span> <span class="num">0</span>,
+        <span class="var">comment</span>=<span class="str">"thumbs up"</span> <span class="kw">if</span> <span class="var">thumbs_up</span> <span class="kw">else</span> <span class="str">"thumbs down"</span>
+    )
+    <span class="var">langfuse</span>.flush()</code></pre>
+
+<p><strong>Automated LLM-as-judge:</strong> For factual Q&A or RAG, use a second (potentially smaller and faster) model to evaluate whether the answer is supported by the retrieved context. Langfuse has built-in evaluation templates for this.</p>
+
+<p><strong>Manual labeling:</strong> The Langfuse UI has a labeling queue — route low-confidence or flagged traces there for human review. Useful for compliance scenarios where a human needs to sign off on AI outputs.</p>
+
+<!-- TROUBLE -->
+<h2>Common Issues</h2>
+<div class="trouble-list">
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">Langfuse containers start but UI shows no traces<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">Two common causes: (1) The worker container isn't running — check <code>docker compose ps</code> and ensure <code>langfuse-worker-1</code> is Up. It processes events asynchronously; without it, traces are queued but never ingested. (2) Your API keys don't match — the Public Key and Secret Key in your app environment must match the keys shown in Langfuse UI → Settings → API Keys for the correct project.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">LiteLLM callback throws "Connection refused" to Langfuse<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">LiteLLM is running outside of Docker but trying to reach Langfuse at <code>localhost:3000</code>. Set <code>LANGFUSE_HOST=http://localhost:3000</code> explicitly. If LiteLLM is running inside Docker in the same compose network, use the container hostname instead: <code>http://langfuse-web:3000</code>. Check with <code>docker compose logs litellm</code> for the exact error.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">Traces appear in Langfuse but token counts show 0<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">Ollama doesn't always include token usage in its response metadata by default. Token counts in Langfuse traces come from the model's response metadata. For Ollama, check that <code>response.response_metadata</code> contains <code>prompt_eval_count</code> and <code>eval_count</code> — if not, these aren't being returned. You can manually set them via <code>gen_span.update(usage={...})</code> as shown in the manual spans example above.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">Short Python scripts complete but no traces appear in Langfuse<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">Langfuse sends traces asynchronously in a background thread. If your script exits before the background thread flushes, traces are lost. Always call <code>langfuse.flush()</code> at the end of short-lived scripts. In long-running services (FastAPI, etc.), the background flush happens automatically and you don't need to call flush explicitly.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">Langfuse is consuming too much disk space<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">ClickHouse stores all trace data and can grow quickly for high-volume usage. Check disk usage with <code>docker system df</code>. You can configure trace retention in Langfuse Settings → Data Retention. For development, you can periodically purge traces: in the UI, go to Settings → Danger Zone → Delete all traces. For production, set a retention policy from day one.</div>
+  </div>
+</div>
+
+<!-- WHAT YOU'VE BUILT -->
+<h2>What You've Built</h2>
+<p>You now have a complete observability layer for your local AI stack. Every LLM request — whether it comes through LiteLLM, a LangChain pipeline, or direct Python code — is captured with its prompt, response, latency, token counts, and user context. You can search, filter, and replay any trace. You can see quality scores and user feedback alongside infrastructure metrics.</p>
+<p>More importantly: you're no longer flying blind. When something goes wrong, you have the data to understand what happened. When a user reports a bad response, you can find it in under 30 seconds. When latency creeps up, you can pinpoint which step in the pipeline is responsible.</p>
+
+<div class="next-article">
+  <div>
+    <div class="next-label">Up next · Article #7</div>
+    <div class="next-title">Fine-Tuning a Local Model on Your Own Data — A Practical Guide</div>
+    <div class="next-desc">When prompting isn't enough. How to fine-tune an open-source model on your domain-specific data using LoRA and Unsloth — training that runs on a single consumer GPU without sending your data anywhere.</div>
+  </div>
+  <div class="next-arrow">→</div>
+</div>
+
+<div class="article-footer">
+  <div class="footer-series">
+    Part of the <strong>Local Sovereign AI</strong> series — 26 articles on building local AI infrastructure<br>
+    using open-source tools, from model serving to production-grade agentic workflows.
+  </div>
+  <a href="https://bitropy.io" target="_blank" class="footer-brand">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect width="18" height="18" rx="4" fill="#111827"/>
+      <circle cx="5"  cy="5"  r="1.4" fill="white" opacity="1"/>
+      <circle cx="9"  cy="5"  r="1.4" fill="white" opacity="0.7"/>
+      <circle cx="13" cy="5"  r="1.4" fill="white" opacity="0.35"/>
+      <circle cx="5"  cy="9"  r="1.4" fill="white" opacity="0.7"/>
+      <circle cx="9"  cy="9"  r="1.4" fill="white" opacity="1"/>
+      <circle cx="13" cy="9"  r="1.4" fill="white" opacity="0.5"/>
+      <circle cx="5"  cy="13" r="1.4" fill="white" opacity="0.35"/>
+      <circle cx="9"  cy="13" r="1.4" fill="white" opacity="0.5"/>
+      <circle cx="13" cy="13" r="1.4" fill="white" opacity="1"/>
+    </svg>
+    bitropy.io
+  </a>
+</div>
+
+</article>
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  const pct = (d.scrollTop / (d.scrollHeight - d.clientHeight)) * 100;
+  document.getElementById('progress-bar').style.width = Math.min(pct,100) + '%';
+});
+function copyCode(btn) {
+  const pre = btn.closest('.code-header').nextElementSibling;
+  navigator.clipboard.writeText(pre ? pre.innerText : '').then(() => {
+    btn.textContent = 'copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function toggleTrouble(el) { el.parentElement.classList.toggle('open'); }
+</script>
+</body>
+</html>

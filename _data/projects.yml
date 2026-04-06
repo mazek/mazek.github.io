@@ -31,6 +31,10 @@
   url: /projects/article-05-inference-engines.html
   description: "vLLM vs. Ollama vs. LM Studio — when Ollama isn't enough and what to reach for when you have real throughput requirements."
 
+- title: "Local Sovereign AI #6 — Local AI Observability"
+  url: /projects/article-06-observability.html
+  description: "Tracing, logging, and monitoring for local LLMs — because AI systems fail silently in ways traditional monitoring completely misses."
+
 - title: "Pyramid builder"
   url: /projects/pyramid-builder.html
   description: "Pyramid builder."
