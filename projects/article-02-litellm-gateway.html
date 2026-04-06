@@ -322,19 +322,32 @@ code{font-family:'JetBrains Mono',monospace;font-size:0.85em;background:var(--bg
   <div class="step-title">Installation</div>
   <div class="step-time">~5 min</div>
 </div>
-<p>LiteLLM requires Python 3.8+. Install with the proxy extras:</p>
-<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
-<pre><code>python3 --version
-pip install <span class="str">'litellm[proxy]'</span>
+<p>LiteLLM requires Python 3.8+. We'll install it in a virtual environment — this keeps LiteLLM and its dependencies isolated from your system Python and any other projects.</p>
+<div class="code-header"><span class="code-lang">bash — create and activate virtual environment</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="cmt"># Check Python version first (need 3.8+)</span>
+python3 --version
+
+<span class="cmt"># Create a project folder and virtual environment</span>
+mkdir litellm-gateway &amp;&amp; cd litellm-gateway
+python3 -m venv .venv
+
+<span class="cmt"># Activate — macOS / Linux:</span>
+source .venv/bin/activate
+<span class="cmt"># Windows (WSL2): source .venv/Scripts/activate</span></code></pre>
+<p>Your prompt will change to show <code>(.venv)</code> — confirming the environment is active. Now install LiteLLM with the proxy extras inside it:</p>
+<div class="code-header"><span class="code-lang">bash — install LiteLLM</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>pip install <span class="str">'litellm[proxy]'</span>
 litellm --version</code></pre>
-<p>No Docker required to get started. LiteLLM is a Python process you run alongside Ollama. Make sure Ollama is already running:</p>
-<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
-<pre><code><span class="cmt"># macOS: Ollama runs as menu bar app automatically</span>
-<span class="cmt"># Linux: start if not already running</span>
+<div class="callout"><strong>Always activate the venv before use.</strong> Each time you open a new terminal, run <code>source .venv/bin/activate</code> from the project folder before running <code>litellm</code> or any Python scripts. Deactivate with <code>deactivate</code> when done.</div>
+<p>No Docker required to get started. LiteLLM is a Python process you run alongside Ollama. Make sure Ollama is running and has a model pulled:</p>
+<div class="code-header"><span class="code-lang">bash — start Ollama and pull the model</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="cmt"># macOS: Ollama runs as menu bar app automatically — skip ollama serve</span>
+<span class="cmt"># Linux: start the service if not already running</span>
 ollama serve
 
-<span class="cmt"># Pull a model if you don't have one yet (from Article #1)</span>
-ollama pull llama3.1:8b</code></pre>
+<span class="cmt"># Pull the models we'll use throughout this article</span>
+ollama pull llama3.1:8b
+ollama pull mistral</code></pre>
 
 <!-- STEP 2: CONFIG -->
 <div class="step-header">
@@ -400,6 +413,7 @@ litellm_settings:
     <span class="var">messages</span>=[...]
 )</code></pre>
 <div class="callout callout-success"><strong>The key insight:</strong> The application doesn't know or care that both models are running locally via Ollama. It asks for a model by name and LiteLLM handles where that request actually goes.</div>
+<div class="callout"><strong>Save your dependencies:</strong> Run <code>pip freeze &gt; requirements.txt</code> to snapshot the environment. Anyone else can reproduce it with <code>pip install -r requirements.txt</code> inside their own venv.</div>
 
 <!-- STEP 4: CLOUD FALLBACK -->
 <div class="step-header">
@@ -534,10 +548,13 @@ export ANTHROPIC_API_KEY=<span class="str">"sk-ant-..."</span></code></pre>
   drop_params: true
   request_timeout: 600
   set_verbose: true    <span class="cmt"># log all requests to console</span></code></pre>
-<p>For a structured UI dashboard, start with:</p>
+<p>The UI dashboard starts automatically alongside the proxy — no extra flags needed. Just open your browser after starting:</p>
 <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
-<pre><code>litellm --config litellm_config.yaml --port 4000 --ui
-<span class="cmt"># Dashboard at http://localhost:4000/ui</span></code></pre>
+<pre><code><span class="cmt"># The proxy start command is the same as always</span>
+litellm --config litellm_config.yaml --port 4000
+
+<span class="cmt"># UI is available automatically at:</span>
+<span class="cmt"># http://localhost:4000/ui  (log in with your LITELLM_MASTER_KEY)</span></code></pre>
 <p>Here's what a log entry looks like — even for a free local model:</p>
 <div class="code-header"><span class="code-lang">json — sample log entry</span></div>
 <pre><code>{
@@ -621,7 +638,9 @@ router_settings:
   <div class="step-title">Running as a Docker Container</div>
   <div class="step-time">~20 min</div>
 </div>
-<p>For sharing with a team or running as a persistent service, Docker is the right deployment model. Create a <code>docker-compose.yaml</code>:</p>
+<p>For sharing with a team or running as a persistent service, Docker is the right deployment model. This step requires <strong>two separate files</strong> in the same folder — <code>docker-compose.yaml</code> for Docker and <code>litellm_config.yaml</code> for LiteLLM. Do not mix their contents into one file.</p>
+<div class="callout callout-warning"><strong>Prerequisite: Docker Desktop must be installed and running.</strong> On macOS, <code>docker compose</code> is part of Docker Desktop — the CLI alone is not enough. Install it with <code>brew install --cask docker</code> and launch the app before proceeding. You should see the whale icon in your menu bar. Alternatively, use <a href="https://github.com/abiosoft/colima" target="_blank">Colima</a> (<code>brew install colima docker docker-compose &amp;&amp; colima start</code>) as a lightweight GUI-free alternative.</div>
+<p>Create a <code>docker-compose.yaml</code>:</p>
 <div class="code-header"><span class="code-lang">yaml — docker-compose.yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
 <pre><code>services:
   ollama:
@@ -661,10 +680,16 @@ volumes:
 <pre><code>litellm_params:
   model: ollama/llama3.1:8b
   api_base: http://ollama:11434   <span class="cmt"># Docker service name, NOT localhost</span></code></pre>
+<p>Your folder should look like this before running:</p>
+<div class="code-header"><span class="code-lang">bash — expected folder structure</span></div>
+<pre><code>litellm-playground/
+├── docker-compose.yaml      <span class="cmt"># Docker only — services, ports, volumes</span>
+└── litellm_config.yaml      <span class="cmt"># LiteLLM only — model_list, settings</span></code></pre>
 <p>Start everything and pull models:</p>
 <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
 <pre><code>docker compose up -d
-docker compose exec ollama ollama pull llama3.1:8b</code></pre>
+docker compose exec ollama ollama pull llama3.1:8b
+docker compose exec ollama ollama pull mistral</code></pre>
 
 <!-- STEP 8: SECURITY -->
 <div class="step-header">
@@ -816,6 +841,10 @@ litellm_settings:
   <div class="trouble-item">
     <div class="trouble-q" onclick="toggleTrouble(this)">"command not found: docker-compose"<span class="trouble-chevron">▼</span></div>
     <div class="trouble-a">Use <code>docker compose</code> (with a space) — Docker Compose v2 is built into Docker Desktop and modern Docker installations. The old standalone <code>docker-compose</code> binary is deprecated.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">docker compose up -d: "additional properties 'model_list', 'litellm_settings' not allowed"<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">You mixed the contents of both config files into one. <code>docker-compose.yaml</code> must contain only Docker service definitions. <code>litellm_config.yaml</code> must contain only LiteLLM config (<code>model_list</code>, <code>litellm_settings</code>, etc.). They are two separate files in the same folder — Docker Compose mounts the LiteLLM config into the container via the <code>volumes</code> section.</div>
   </div>
 </div>
 
