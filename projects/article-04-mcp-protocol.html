@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Protocol Explained — How AI Agents Securely Access Your Data</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#0057B8;--blue-dark:#004494;--blue-light:#EBF2FC;
+  --text:#111827;--text-muted:#6B7280;--text-light:#9CA3AF;
+  --bg:#FFFFFF;--bg-soft:#F9FAFB;--bg-code:#F3F4F6;
+  --border:#E5E7EB;--border-dark:#D1D5DB;
+  --green:#059669;--green-light:#D1FAE5;
+  --amber:#D97706;--amber-light:#FFFBEB;
+  --purple:#7C3AED;--purple-light:#F5F3FF;
+  --red:#DC2626;--red-light:#FEF2F2;
+  --radius:6px;--radius-lg:12px;--max-width:780px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Albert Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  line-height:1.75;font-size:17px;-webkit-font-smoothing:antialiased}
+#progress-bar{position:fixed;top:0;left:0;height:2px;background:var(--blue);
+  width:0%;z-index:1000;transition:width 0.1s linear}
+.site-header{border-bottom:1px solid var(--border);padding:0 2rem;height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;background:rgba(255,255,255,0.97);
+  backdrop-filter:blur(8px);z-index:100}
+.header-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
+.header-brand-name{font-size:14px;font-weight:700;letter-spacing:-0.3px}
+.header-series{font-size:12px;color:var(--text-muted);border-left:1px solid var(--border);
+  padding-left:12px;margin-left:4px}
+.header-right{display:flex;align-items:center;gap:16px}
+.header-tag{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--blue);background:var(--blue-light);padding:3px 8px;border-radius:4px}
+.header-num{font-size:12px;color:var(--text-muted);font-weight:500}
+.page-wrapper{display:flex;flex-direction:column;align-items:center}
+.article-container{width:100%;max-width:var(--max-width);padding:0 2rem 6rem}
+.hero{padding:3.5rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:3rem}
+.hero-meta{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
+.hero-series-badge{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue)}
+.hero-sep{color:var(--border-dark)}
+.hero-num{font-size:12px;color:var(--text-muted);font-weight:500}
+h1{font-size:clamp(2rem,5vw,2.6rem);font-weight:800;line-height:1.15;letter-spacing:-0.03em;margin-bottom:1rem}
+.hero-subtitle{font-size:18px;color:var(--text-muted);font-style:italic;line-height:1.6;max-width:620px;margin-bottom:1.75rem}
+.hero-stats{display:flex;gap:1.5rem;flex-wrap:wrap}
+.hero-stat{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted)}
+.hero-stat svg{color:var(--blue);flex-shrink:0}
+.time-callout{background:var(--blue-light);border:1px solid #C7DCFA;border-radius:var(--radius-lg);
+  padding:1rem 1.25rem;margin:2rem 0;display:flex;align-items:flex-start;gap:12px}
+.time-callout-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.time-callout-text{font-size:14px;color:#1E40AF;line-height:1.6}
+.time-callout-text strong{font-weight:700}
+.time-steps{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.time-step{background:white;border:1px solid #BFDBFE;border-radius:4px;padding:3px 10px;
+  font-size:13px;font-weight:600;color:#1D4ED8;white-space:nowrap}
+.time-arrow{color:#93C5FD}
+h2{font-size:1.55rem;font-weight:800;letter-spacing:-0.025em;margin:3rem 0 1rem;
+  line-height:1.25;padding-top:0.5rem;border-top:2px solid var(--border)}
+h3{font-size:1.1rem;font-weight:700;margin:1.75rem 0 0.5rem}
+p{margin-bottom:1.25rem} p:last-child{margin-bottom:0}
+strong{font-weight:700} em{font-style:italic;color:var(--text-muted)}
+a{color:var(--blue);text-decoration:underline;text-underline-offset:3px}
+a:hover{color:var(--blue-dark)}
+ul,ol{padding-left:1.5rem;margin-bottom:1.25rem}
+li{margin-bottom:0.4rem;line-height:1.65}
+.callout{border-left:3px solid var(--blue);background:var(--blue-light);
+  border-radius:0 var(--radius) var(--radius) 0;padding:0.85rem 1.1rem;
+  margin:1.5rem 0;font-size:14.5px;color:#1E3A6E;line-height:1.6}
+.callout strong{color:#1E3A6E}
+.callout code{background:rgba(255,255,255,0.6);border-color:#BFDBFE}
+.callout-warning{border-left-color:var(--amber);background:var(--amber-light);color:#78350F}
+.callout-warning strong{color:#78350F}
+.callout-success{border-left-color:var(--green);background:var(--green-light);color:#064E3B}
+.callout-success strong{color:#064E3B}
+.callout-danger{border-left-color:var(--red);background:var(--red-light);color:#991B1B}
+.callout-danger strong{color:#991B1B}
+pre{background:#1E1E2E;border-radius:var(--radius-lg);padding:1.25rem 1.5rem;overflow-x:auto;margin:1.25rem 0}
+pre code{font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.65;
+  color:#CDD6F4;background:none;padding:0;border:none;border-radius:0}
+code{font-family:'JetBrains Mono',monospace;font-size:0.85em;background:var(--bg-code);
+  color:#1F2937;padding:2px 6px;border-radius:4px;border:1px solid var(--border)}
+.code-header{display:flex;justify-content:space-between;align-items:center;
+  background:#181825;border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  padding:0.5rem 1rem;margin-top:1.25rem}
+.code-header+pre{border-radius:0 0 var(--radius-lg) var(--radius-lg);margin-top:0}
+.code-lang{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+  color:#6C7086;font-family:'JetBrains Mono',monospace}
+.copy-btn{font-size:11px;color:#6C7086;background:transparent;border:1px solid #313244;
+  border-radius:4px;padding:2px 8px;cursor:pointer;font-family:'Albert Sans',sans-serif;
+  font-weight:500;transition:all 0.15s}
+.copy-btn:hover{color:#CDD6F4;border-color:#45475A}
+.copy-btn.copied{color:#A6E3A1;border-color:#A6E3A1}
+.kw{color:#CBA6F7}.str{color:#A6E3A1}.cmt{color:#6C7086;font-style:italic}
+.fn{color:#89B4FA}.num{color:#FAB387}.var{color:#CDD6F4}.cls{color:#F9E2AF}
+.dec{color:#F38BA8}.key{color:#89DCEB}
+.step-header{display:flex;align-items:center;gap:14px;margin:3rem 0 1rem;
+  padding-top:0.5rem;border-top:2px solid var(--border)}
+.step-badge{width:34px;height:34px;border-radius:50%;background:var(--blue);
+  color:white;font-size:14px;font-weight:800;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0}
+.step-title{font-size:1.45rem;font-weight:800;letter-spacing:-0.025em}
+.step-time{font-size:12px;font-weight:500;color:var(--text-light);margin-left:auto;white-space:nowrap}
+.infographic{background:var(--bg-soft);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:1.75rem;margin:2rem 0}
+.infographic-title{font-size:11px;font-weight:700;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--text-muted);margin-bottom:1.25rem;text-align:center}
+.primitives-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:1.5rem 0}
+.primitive-card{border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem 1.25rem;background:white}
+.primitive-icon{font-size:24px;margin-bottom:8px}
+.primitive-title{font-size:14px;font-weight:800;margin-bottom:4px}
+.primitive-subtitle{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--text-light);margin-bottom:8px}
+.primitive-desc{font-size:13px;color:var(--text-muted);line-height:1.5}
+.primitive-analogy{font-size:12px;font-weight:600;margin-top:8px;padding:4px 8px;
+  border-radius:4px;display:inline-block}
+.trouble-list{display:flex;flex-direction:column;gap:10px;margin:1.5rem 0}
+.trouble-item{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.trouble-q{padding:0.85rem 1.1rem;font-size:14px;font-weight:700;color:var(--text);
+  background:var(--bg-soft);cursor:pointer;display:flex;justify-content:space-between;
+  align-items:center;gap:10px;user-select:none}
+.trouble-q:hover{background:var(--bg-code)}
+.trouble-chevron{color:var(--text-muted);transition:transform 0.2s;font-size:12px}
+.trouble-item.open .trouble-chevron{transform:rotate(180deg)}
+.trouble-a{display:none;padding:0.85rem 1.1rem;font-size:14px;color:var(--text-muted);
+  line-height:1.65;border-top:1px solid var(--border)}
+.trouble-item.open .trouble-a{display:block}
+.next-article{background:var(--bg-soft);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:1.5rem 1.75rem;margin:3rem 0 1rem;
+  display:flex;align-items:center;gap:1.25rem}
+.next-label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--text-muted);margin-bottom:5px}
+.next-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.next-desc{font-size:13px;color:var(--text-muted);line-height:1.5}
+.next-arrow{flex-shrink:0;width:36px;height:36px;background:var(--blue);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:white;font-size:16px;margin-left:auto}
+.article-footer{border-top:1px solid var(--border);padding:2rem 0 0;margin-top:1rem;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.footer-series{font-size:13px;color:var(--text-muted);line-height:1.6}
+.footer-brand{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-light);text-decoration:none}
+.footer-brand:hover{color:var(--text-muted)}
+@media(max-width:640px){
+  .site-header .header-series{display:none}
+  .primitives-grid{grid-template-columns:1fr}
+  .next-article{flex-direction:column;align-items:flex-start}
+  .next-arrow{display:none}
+  .article-footer{flex-direction:column;gap:.75rem}
+}
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+
+<header class="site-header">
+  <div class="header-brand">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <rect width="26" height="26" rx="5" fill="#111827"/>
+      <circle cx="7"  cy="7"  r="2" fill="white" opacity="1"/>
+      <circle cx="13" cy="7"  r="2" fill="white" opacity="0.8"/>
+      <circle cx="19" cy="7"  r="2" fill="white" opacity="0.4"/>
+      <circle cx="7"  cy="13" r="2" fill="white" opacity="0.8"/>
+      <circle cx="13" cy="13" r="2" fill="white" opacity="1"/>
+      <circle cx="19" cy="13" r="2" fill="white" opacity="0.6"/>
+      <circle cx="7"  cy="19" r="2" fill="white" opacity="0.4"/>
+      <circle cx="13" cy="19" r="2" fill="white" opacity="0.6"/>
+      <circle cx="19" cy="19" r="2" fill="white" opacity="1"/>
+    </svg>
+    <span class="header-brand-name">bitropy.</span>
+    <span class="header-series">Local AI Series</span>
+  </div>
+  <div class="header-right">
+    <span class="header-tag">Open Source</span>
+    <span class="header-num">Article 4 of 26</span>
+  </div>
+</header>
+
+<div class="page-wrapper">
+<article class="article-container">
+
+<div class="hero">
+  <div class="hero-meta">
+    <span class="hero-series-badge">Local Sovereign AI</span>
+    <span class="hero-sep">·</span>
+    <span class="hero-num">Article #4</span>
+  </div>
+  <h1>MCP Protocol Explained —<br>How AI Agents Securely Access Your Data</h1>
+  <p class="hero-subtitle">RAG is great for static documents. But what about your live database, your internal API, your file system? MCP is the open standard that gives AI agents controlled, auditable access to real data sources — without bespoke integrations for every combination of model and tool.</p>
+  <div class="hero-stats">
+    <span class="hero-stat">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      ~50 min total
+    </span>
+    <span class="hero-stat">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      Intermediate
+    </span>
+    <span class="hero-stat">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Ollama from Article #1 required
+    </span>
+  </div>
+</div>
+
+<div class="time-callout">
+  <span class="time-callout-icon">⏱</span>
+  <div class="time-callout-text">
+    <strong>Time breakdown</strong>
+    <div class="time-steps">
+      <span class="time-step">Concepts ~10 min</span>
+      <span class="time-arrow">→</span>
+      <span class="time-step">First server ~15 min</span>
+      <span class="time-arrow">→</span>
+      <span class="time-step">Practical tools ~15 min</span>
+      <span class="time-arrow">→</span>
+      <span class="time-step">Testing ~10 min</span>
+    </div>
+    Python 3.10+ and Node.js (for MCP Inspector) required.
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<h2>The Problem RAG Doesn't Solve</h2>
+<p>After Articles #1–3, you have a local LLM that can answer questions about your documents. That's genuinely useful. But it has a fundamental limitation: it only knows what you indexed at indexing time.</p>
+<p>Ask it "What is the current balance in our marketing budget?" and it retrieves whatever was in the last document you indexed — which might be from three months ago. Ask it to "Create a ticket for this bug in our project tracker" and it can't — RAG is read-only, and the document index is just a snapshot.</p>
+<p>What you actually want is an AI agent that can:</p>
+<ul>
+  <li>Query a live database and get current data</li>
+  <li>Read and write files on your file system</li>
+  <li>Call internal APIs with proper authentication</li>
+  <li>Create records in your CRM, issue tracker, or any other system</li>
+  <li>Do all of this with a clear audit trail and explicit permission model</li>
+</ul>
+<p>Before MCP, every team solved this independently — writing custom tool integrations for each combination of model and service. Brittle, duplicated, not portable across models. MCP standardizes the solution.</p>
+
+<!-- WHAT IS MCP -->
+<h2>What MCP Actually Is</h2>
+<p>Model Context Protocol (MCP) is an open standard released by Anthropic in November 2024 that defines how AI applications connect to external tools, data sources, and services. Think of it as a USB-C port for AI — a single standardized connector that works regardless of which model or which data source you're using.</p>
+<p>By mid-2025, MCP had been adopted by OpenAI (Agents SDK and ChatGPT Desktop), Google DeepMind (Gemini ecosystem), and Microsoft (Copilot Studio). It's now the de facto connectivity standard for agentic AI applications, not just an Anthropic thing.</p>
+<p>Technically: MCP is a client-server protocol built on JSON-RPC 2.0. An <strong>MCP server</strong> exposes capabilities (tools, data, templates) to an <strong>MCP client</strong> (Claude Desktop, your Python agent, any LLM application). The server defines what the AI can do; the client decides when and whether to do it.</p>
+<p>The critical design decision: <strong>the MCP server controls what the AI can access, not the other way around</strong>. You write the server, you define the boundaries. The AI can only do what the server explicitly exposes.</p>
+
+<!-- ARCHITECTURE INFOGRAPHIC -->
+<div class="infographic">
+  <div class="infographic-title">MCP Architecture — How Client, Server, and Data Connect</div>
+  <svg viewBox="0 0 660 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:660px;display:block;margin:0 auto">
+    <defs>
+      <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#9CA3AF"/></marker>
+      <marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0057B8"/></marker>
+      <marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#059669"/></marker>
+      <marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7C3AED"/></marker>
+    </defs>
+    <!-- MCP Client -->
+    <rect x="8" y="90" width="140" height="80" rx="10" fill="#EBF2FC" stroke="#0057B8" stroke-width="2"/>
+    <text x="78" y="120" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="13" font-weight="800" fill="#0057B8">MCP Client</text>
+    <text x="78" y="138" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#1E40AF">Claude Desktop</text>
+    <text x="78" y="154" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#1E40AF">Your Python agent</text>
+    <!-- label -->
+    <text x="78" y="188" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">decides WHEN to call</text>
+
+    <!-- arrows client <-> server -->
+    <line x1="148" y1="122" x2="198" y2="122" stroke="#0057B8" stroke-width="1.5" marker-end="url(#ab)"/>
+    <text x="173" y="116" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="9" fill="#3B82F6">call tool</text>
+    <line x1="198" y1="138" x2="148" y2="138" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
+    <text x="173" y="152" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="9" fill="#059669">result</text>
+
+    <!-- MCP Server -->
+    <rect x="200" y="55" width="200" height="150" rx="10" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+    <text x="300" y="82" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="13" font-weight="800" fill="#7C3AED">MCP Server</text>
+    <text x="300" y="100" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#6D28D9">your Python code</text>
+
+    <rect x="218" y="112" width="164" height="28" rx="6" fill="white" stroke="#DDD6FE" stroke-width="1"/>
+    <text x="300" y="130" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="600" fill="#7C3AED">🔧 Tools  (actions)</text>
+
+    <rect x="218" y="148" width="164" height="28" rx="6" fill="white" stroke="#DDD6FE" stroke-width="1"/>
+    <text x="300" y="166" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="600" fill="#7C3AED">📄 Resources  (data)</text>
+
+    <rect x="218" y="184" width="164" height="14" rx="5" fill="white" stroke="#DDD6FE" stroke-width="1"/>
+    <text x="300" y="194" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" font-weight="600" fill="#9CA3AF">💬 Prompts  (templates)</text>
+    <!-- label -->
+    <text x="300" y="220" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">defines WHAT is accessible</text>
+
+    <!-- arrows server -> data sources -->
+    <line x1="400" y1="105" x2="446" y2="80" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+    <line x1="400" y1="130" x2="446" y2="130" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+    <line x1="400" y1="155" x2="446" y2="180" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+
+    <!-- Data sources -->
+    <rect x="448" y="52" width="140" height="50" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1.5"/>
+    <text x="518" y="74" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#111827">File System</text>
+    <text x="518" y="90" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">read / write files</text>
+
+    <rect x="448" y="112" width="140" height="50" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1.5"/>
+    <text x="518" y="134" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#111827">Database</text>
+    <text x="518" y="150" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">SQL queries, writes</text>
+
+    <rect x="448" y="172" width="140" height="50" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1.5"/>
+    <text x="518" y="194" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#111827">Internal APIs</text>
+    <text x="518" y="210" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">CRM, ticketing, etc.</text>
+
+    <!-- Security label -->
+    <text x="300" y="248" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#7C3AED">The server is your security boundary — the AI only accesses what you explicitly expose.</text>
+  </svg>
+</div>
+
+<!-- THREE PRIMITIVES -->
+<h2>The Three Primitives</h2>
+<p>Every MCP server exposes capabilities through three building blocks. Understanding the distinction matters — they have different semantics and different use cases:</p>
+
+<div class="primitives-grid">
+  <div class="primitive-card">
+    <div class="primitive-icon">🔧</div>
+    <div class="primitive-title">Tools</div>
+    <div class="primitive-subtitle">Actions / side effects</div>
+    <div class="primitive-desc">Functions the AI can call to do things — query a database, write a file, send a request, create a record. Like POST endpoints. The AI decides when to call them based on context.</div>
+    <span class="primitive-analogy" style="background:#EBF2FC;color:#0057B8">like a POST endpoint</span>
+  </div>
+  <div class="primitive-card">
+    <div class="primitive-icon">📄</div>
+    <div class="primitive-title">Resources</div>
+    <div class="primitive-subtitle">Data / context</div>
+    <div class="primitive-desc">Read-only data the AI can load into its context — a file's contents, a database row, a config value. Like GET endpoints. Used to provide information without side effects.</div>
+    <span class="primitive-analogy" style="background:#D1FAE5;color:#065F46">like a GET endpoint</span>
+  </div>
+  <div class="primitive-card">
+    <div class="primitive-icon">💬</div>
+    <div class="primitive-title">Prompts</div>
+    <div class="primitive-subtitle">Reusable templates</div>
+    <div class="primitive-desc">Pre-written interaction templates that users can invoke by name — a code review prompt, a summarization template. Shown in the client UI as slash commands or shortcuts.</div>
+    <span class="primitive-analogy" style="background:#F5F3FF;color:#6D28D9">like a slash command</span>
+  </div>
+</div>
+
+<p>In practice, most MCP servers you'll build focus on <strong>Tools</strong> — that's where the interesting work happens. Resources are useful for large, stable data that benefits from being loaded into context separately. Prompts are more relevant for user-facing AI applications than for programmatic agent use.</p>
+
+<!-- TRANSPORT -->
+<h2>stdio vs HTTP — Which Transport to Use</h2>
+<p>MCP servers communicate with clients over a "transport" layer. There are two main options, and the choice matters for your use case:</p>
+
+<div class="infographic">
+  <div class="infographic-title">Transport Comparison — stdio vs HTTP</div>
+  <svg viewBox="0 0 660 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:660px;display:block;margin:0 auto">
+    <rect x="8" y="10" width="312" height="178" rx="10" fill="white" stroke="#E5E7EB" stroke-width="1.5"/>
+    <text x="164" y="36" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="13" font-weight="800" fill="#111827">stdio transport</text>
+    <text x="164" y="54" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#6B7280">Client spawns server as subprocess</text>
+    <text x="30" y="80"  font-family="Albert Sans,sans-serif" font-size="11" fill="#059669">✓ Zero network config required</text>
+    <text x="30" y="98"  font-family="Albert Sans,sans-serif" font-size="11" fill="#059669">✓ Server runs as child process</text>
+    <text x="30" y="116" font-family="Albert Sans,sans-serif" font-size="11" fill="#059669">✓ Naturally scoped to one client</text>
+    <text x="30" y="134" font-family="Albert Sans,sans-serif" font-size="11" fill="#DC2626">✗ One client only — not shareable</text>
+    <text x="30" y="152" font-family="Albert Sans,sans-serif" font-size="11" fill="#DC2626">✗ Runs locally on same machine</text>
+    <text x="164" y="178" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#0057B8">Best for: local tools, Claude Desktop</text>
+
+    <rect x="340" y="10" width="312" height="178" rx="10" fill="white" stroke="#E5E7EB" stroke-width="1.5"/>
+    <text x="496" y="36" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="13" font-weight="800" fill="#111827">HTTP / SSE transport</text>
+    <text x="496" y="54" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#6B7280">Server runs as HTTP service</text>
+    <text x="358" y="80"  font-family="Albert Sans,sans-serif" font-size="11" fill="#059669">✓ Multiple clients can connect</text>
+    <text x="358" y="98"  font-family="Albert Sans,sans-serif" font-size="11" fill="#059669">✓ Shareable across a team</text>
+    <text x="358" y="116" font-family="Albert Sans,sans-serif" font-size="11" fill="#059669">✓ Can run on a remote server</text>
+    <text x="358" y="134" font-family="Albert Sans,sans-serif" font-size="11" fill="#DC2626">✗ Requires auth for production</text>
+    <text x="358" y="152" font-family="Albert Sans,sans-serif" font-size="11" fill="#DC2626">✗ More setup than stdio</text>
+    <text x="496" y="178" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#0057B8">Best for: shared team servers, production</text>
+  </svg>
+</div>
+
+<p>This article focuses on <strong>stdio transport</strong> — it's the simplest starting point, works with Claude Desktop out of the box, and is sufficient for local-first, data-sovereign use cases. HTTP transport is covered in a later article on productionizing MCP servers.</p>
+
+<!-- STEP 1: SETUP -->
+<div class="step-header">
+  <div class="step-badge">1</div>
+  <div class="step-title">Set Up the Environment</div>
+  <div class="step-time">~5 min</div>
+</div>
+<p>Create a dedicated project folder and virtual environment:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>mkdir mcp-server && cd mcp-server
+python3 -m venv .venv
+source .venv/bin/activate   <span class="cmt"># Windows WSL2: source .venv/Scripts/activate</span>
+
+pip install "mcp[cli]"</code></pre>
+
+<p>Verify the install:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>mcp version
+<span class="cmt"># MCP version x.x.x</span></code></pre>
+
+<p>The <code>mcp[cli]</code> package installs the Python MCP SDK and the command-line tools you'll use to inspect and run your server.</p>
+
+<!-- STEP 2: FIRST SERVER -->
+<div class="step-header">
+  <div class="step-badge">2</div>
+  <div class="step-title">Your First MCP Server</div>
+  <div class="step-time">~15 min</div>
+</div>
+<p>Let's build something immediately useful: an MCP server that gives an AI agent read access to a local documents folder. This connects directly to the RAG pipeline from Article #3 — except now the agent can query documents on demand rather than through a pre-indexed vector store.</p>
+
+<div class="code-header"><span class="code-lang">python — server.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="kw">import</span> <span class="var">os</span>
+<span class="kw">import</span> <span class="var">sys</span>
+<span class="kw">from</span> <span class="var">pathlib</span> <span class="kw">import</span> <span class="cls">Path</span>
+<span class="kw">from</span> <span class="var">mcp.server.fastmcp</span> <span class="kw">import</span> <span class="cls">FastMCP</span>
+
+<span class="cmt"># ⚠ STDIO CRITICAL: never use print() — it corrupts JSON-RPC messages.</span>
+<span class="cmt"># Use print(..., file=sys.stderr) or logging for debug output.</span>
+<span class="kw">import</span> <span class="var">logging</span>
+logging.basicConfig(<span class="var">stream</span>=<span class="var">sys</span>.stderr, <span class="var">level</span>=logging.INFO)
+<span class="var">log</span> = logging.getLogger(<span class="str">"docs-server"</span>)
+
+<span class="cmt"># Initialize the server — the name appears in MCP client UIs</span>
+<span class="var">mcp</span> = <span class="cls">FastMCP</span>(<span class="str">"Local Documents"</span>)
+
+<span class="cmt"># Documents folder to expose — adjust this path to your own</span>
+DOCS_ROOT = <span class="cls">Path</span>(<span class="var">os</span>.environ.get(<span class="str">"DOCS_ROOT"</span>, <span class="str">"./documents"</span>))
+
+
+<span class="dec">@mcp.tool</span>()
+<span class="kw">def</span> <span class="fn">list_documents</span>() -> <span class="cls">list</span>[<span class="cls">str</span>]:
+    <span class="str">"""List all available documents in the local documents folder.
+    Returns a list of filenames the AI can then read."""</span>
+    <span class="kw">if not</span> DOCS_ROOT.exists():
+        <span class="kw">return</span> [<span class="str">"Documents folder not found."</span>]
+    <span class="var">files</span> = [
+        <span class="var">f</span>.name <span class="kw">for</span> <span class="var">f</span> <span class="kw">in</span> DOCS_ROOT.rglob(<span class="str">"*"</span>)
+        <span class="kw">if</span> <span class="var">f</span>.is_file() <span class="kw">and</span> <span class="var">f</span>.suffix <span class="kw">in</span> {<span class="str">".txt"</span>, <span class="str">".md"</span>, <span class="str">".pdf"</span>}
+    ]
+    <span class="kw">return</span> <span class="var">files</span> <span class="kw">if</span> <span class="var">files</span> <span class="kw">else</span> [<span class="str">"No documents found."</span>]
+
+
+<span class="dec">@mcp.tool</span>()
+<span class="kw">def</span> <span class="fn">read_document</span>(<span class="var">filename</span>: <span class="cls">str</span>) -> <span class="cls">str</span>:
+    <span class="str">"""Read the contents of a specific document by filename.
+
+    Args:
+        filename: The name of the file to read (from list_documents).
+    """</span>
+    <span class="var">path</span> = DOCS_ROOT / <span class="var">filename</span>
+
+    <span class="cmt"># Security: prevent path traversal attacks</span>
+    <span class="kw">try</span>:
+        <span class="var">path</span>.resolve().relative_to(DOCS_ROOT.resolve())
+    <span class="kw">except</span> <span class="cls">ValueError</span>:
+        <span class="kw">return</span> <span class="str">"Error: access denied — path outside documents folder."</span>
+
+    <span class="kw">if not</span> <span class="var">path</span>.exists():
+        <span class="kw">return</span> <span class="var">f</span><span class="str">"Error: file '{filename}' not found."</span>
+
+    <span class="kw">try</span>:
+        <span class="kw">return</span> <span class="var">path</span>.read_text(<span class="var">encoding</span>=<span class="str">"utf-8"</span>)
+    <span class="kw">except</span> <span class="cls">Exception</span> <span class="kw">as</span> <span class="var">e</span>:
+        <span class="kw">return</span> <span class="var">f</span><span class="str">"Error reading file: {e}"</span>
+
+
+<span class="dec">@mcp.tool</span>()
+<span class="kw">def</span> <span class="fn">search_documents</span>(<span class="var">query</span>: <span class="cls">str</span>) -> <span class="cls">str</span>:
+    <span class="str">"""Search document contents for a keyword or phrase.
+
+    Args:
+        query: The text to search for across all documents.
+    """</span>
+    <span class="var">results</span> = []
+    <span class="kw">for</span> <span class="var">path</span> <span class="kw">in</span> DOCS_ROOT.rglob(<span class="str">"*"</span>):
+        <span class="kw">if not</span> <span class="var">path</span>.is_file() <span class="kw">or</span> <span class="var">path</span>.suffix <span class="kw">not in</span> {<span class="str">".txt"</span>, <span class="str">".md"</span>}:
+            <span class="kw">continue</span>
+        <span class="kw">try</span>:
+            <span class="var">content</span> = <span class="var">path</span>.read_text(<span class="var">encoding</span>=<span class="str">"utf-8"</span>)
+            <span class="kw">if</span> <span class="var">query</span>.lower() <span class="kw">in</span> <span class="var">content</span>.lower():
+                <span class="cmt"># Return filename + snippet around the match</span>
+                <span class="var">idx</span> = <span class="var">content</span>.lower().find(<span class="var">query</span>.lower())
+                <span class="var">snippet</span> = <span class="var">content</span>[<span class="fn">max</span>(<span class="num">0</span>, <span class="var">idx</span>-<span class="num">80</span>):<span class="var">idx</span>+<span class="num">200</span>].strip()
+                <span class="var">results</span>.append(<span class="var">f</span><span class="str">"[{path.name}]\n...{snippet}..."</span>)
+        <span class="kw">except</span> <span class="cls">Exception</span>:
+            <span class="kw">pass</span>
+    <span class="kw">return</span> <span class="str">"\n\n---\n\n"</span>.join(<span class="var">results</span>) <span class="kw">if</span> <span class="var">results</span> <span class="kw">else</span> <span class="var">f</span><span class="str">"No results found for '{query}'."</span>
+
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="var">mcp</span>.run(<span class="var">transport</span>=<span class="str">"stdio"</span>)</code></pre>
+
+<div class="callout callout-danger">
+  <strong>Critical — never print() to stdout in an stdio MCP server.</strong><br>
+  The MCP protocol uses stdin/stdout for JSON-RPC communication. Any stray output to stdout — including <code>print("debug")</code> — will corrupt the protocol stream and crash the connection. Always use <code>print(..., file=sys.stderr)</code> or Python's <code>logging</code> module, which defaults to stderr.
+</div>
+
+<p>Three important things to notice in this code:</p>
+<ul>
+  <li><strong>The docstring is the tool's description</strong> — the AI model uses it to decide when and whether to call the tool. Write it clearly and specifically. Vague descriptions lead to incorrect tool selection.</li>
+  <li><strong>Type hints define the schema</strong> — FastMCP automatically generates the JSON schema for tool inputs from Python type annotations. No manual schema writing required.</li>
+  <li><strong>Path traversal check</strong> — the <code>relative_to</code> check in <code>read_document</code> prevents the AI from being manipulated into reading files outside the designated folder. Always validate user-supplied paths.</li>
+</ul>
+
+<!-- STEP 3: A PRACTICAL TOOL -->
+<div class="step-header">
+  <div class="step-badge">3</div>
+  <div class="step-title">Adding a Database Tool</div>
+  <div class="step-time">~15 min</div>
+</div>
+<p>Documents are a warm-up. Let's add something more interesting: a tool that queries a SQLite database — demonstrating how MCP handles live data, not just files.</p>
+
+<div class="code-header"><span class="code-lang">bash — install sqlite support</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="cmt"># sqlite3 is built into Python's standard library — no extra install needed</span>
+<span class="cmt"># Create a sample database to query</span>
+python3 - << <span class="str">'EOF'</span>
+<span class="kw">import</span> <span class="var">sqlite3</span>
+<span class="var">conn</span> = sqlite3.connect(<span class="str">"company.db"</span>)
+<span class="var">conn</span>.executescript(<span class="str">"""
+  CREATE TABLE IF NOT EXISTS employees (
+    id INTEGER PRIMARY KEY, name TEXT, department TEXT, salary INTEGER
+  );
+  INSERT OR IGNORE INTO employees VALUES
+    (1,'Anna Kowalski','Engineering',12000),
+    (2,'Jan Nowak','Marketing',9500),
+    (3,'Maria Wiśniewska','Engineering',13500),
+    (4,'Piotr Zając','Sales',8800);
+"""</span>)
+<span class="var">conn</span>.commit(); <span class="var">conn</span>.close(); <span class="fn">print</span>(<span class="str">"DB created"</span>)
+EOF</code></pre>
+
+<p>Add this tool to your <code>server.py</code>:</p>
+<div class="code-header"><span class="code-lang">python — add to server.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="kw">import</span> <span class="var">sqlite3</span>
+
+DB_PATH = <span class="str">"./company.db"</span>
+
+<span class="dec">@mcp.tool</span>()
+<span class="kw">def</span> <span class="fn">query_database</span>(<span class="var">sql</span>: <span class="cls">str</span>) -> <span class="cls">str</span>:
+    <span class="str">"""Run a read-only SQL query against the company database.
+    Only SELECT statements are permitted.
+
+    Args:
+        sql: A SQL SELECT statement to execute.
+    """</span>
+    <span class="cmt"># Enforce read-only: reject any write operations</span>
+    <span class="var">sql_upper</span> = <span class="var">sql</span>.strip().upper()
+    <span class="kw">if not</span> <span class="var">sql_upper</span>.startswith(<span class="str">"SELECT"</span>):
+        <span class="kw">return</span> <span class="str">"Error: only SELECT queries are permitted."</span>
+    <span class="kw">for</span> <span class="var">keyword</span> <span class="kw">in</span> [<span class="str">"DROP"</span>, <span class="str">"DELETE"</span>, <span class="str">"INSERT"</span>, <span class="str">"UPDATE"</span>, <span class="str">"ALTER"</span>]:
+        <span class="kw">if</span> <span class="var">keyword</span> <span class="kw">in</span> <span class="var">sql_upper</span>:
+            <span class="kw">return</span> <span class="var">f</span><span class="str">"Error: {keyword} not permitted in read-only mode."</span>
+
+    <span class="kw">try</span>:
+        <span class="var">conn</span> = sqlite3.connect(<span class="var">f</span><span class="str">"file:{DB_PATH}?mode=ro"</span>, <span class="var">uri</span>=<span class="kw">True</span>)
+        <span class="var">cursor</span> = <span class="var">conn</span>.execute(<span class="var">sql</span>)
+        <span class="var">cols</span> = [<span class="var">d</span>[<span class="num">0</span>] <span class="kw">for</span> <span class="var">d</span> <span class="kw">in</span> <span class="var">cursor</span>.description]
+        <span class="var">rows</span> = <span class="var">cursor</span>.fetchall()
+        <span class="var">conn</span>.close()
+        <span class="kw">if not</span> <span class="var">rows</span>: <span class="kw">return</span> <span class="str">"No results."</span>
+        <span class="cmt"># Format as simple table</span>
+        <span class="var">lines</span> = [<span class="str">" | "</span>.join(<span class="var">cols</span>)]
+        <span class="var">lines</span>.append(<span class="str">"-" * <span class="fn">len</span>(lines[0])</span>)
+        <span class="var">lines</span>.extend([<span class="str">" | "</span>.join(<span class="fn">str</span>(<span class="var">v</span>) <span class="kw">for</span> <span class="var">v</span> <span class="kw">in</span> <span class="var">row</span>) <span class="kw">for</span> <span class="var">row</span> <span class="kw">in</span> <span class="var">rows</span>])
+        <span class="kw">return</span> <span class="str">"\n"</span>.join(<span class="var">lines</span>)
+    <span class="kw">except</span> <span class="cls">Exception</span> <span class="kw">as</span> <span class="var">e</span>:
+        <span class="kw">return</span> <span class="var">f</span><span class="str">"Query error: {e}"</span></code></pre>
+
+<div class="callout callout-success">
+  <strong>Two layers of read-only enforcement:</strong> the keyword blocklist rejects obviously dangerous statements; the <code>file:...?mode=ro</code> SQLite URI opens the database in read-only mode at the OS level. Defense in depth — if the AI somehow bypasses the keyword check, the database itself refuses writes.
+</div>
+
+<!-- STEP 4: TESTING -->
+<div class="step-header">
+  <div class="step-badge">4</div>
+  <div class="step-title">Testing with MCP Inspector</div>
+  <div class="step-time">~10 min</div>
+</div>
+<p>Before wiring your server into Claude Desktop or any AI client, test it interactively with the official MCP Inspector tool. It gives you a live UI to discover and call your server's tools without any AI in the loop.</p>
+<div class="callout callout-warning"><strong>Requires Node.js.</strong> Install from <a href="https://nodejs.org" target="_blank">nodejs.org</a> if you don't have it. The inspector is run via <code>npx</code> and doesn't require a global install.</div>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="cmt"># Make sure your venv is active and you're in the project folder</span>
+npx @modelcontextprotocol/inspector uv run python server.py
+<span class="cmt"># or if you're using pip/venv instead of uv:</span>
+npx @modelcontextprotocol/inspector python server.py</code></pre>
+
+<p>This opens a browser UI at <code>http://localhost:5173</code>. From there you can:</p>
+<ul>
+  <li>See all tools, resources, and prompts your server exposes</li>
+  <li>Call any tool with custom inputs and see the raw response</li>
+  <li>Inspect the JSON-RPC messages flowing between client and server</li>
+  <li>Confirm your tool descriptions are clear and accurate</li>
+</ul>
+
+<div class="callout">
+  <strong>Test tool descriptions carefully.</strong> The AI will choose which tool to call based entirely on the docstring. If <code>list_documents</code> returns a list but the description says "returns a string", the model may misinterpret the result. Test each tool via Inspector before connecting to a real client.
+</div>
+
+<!-- STEP 5: CLAUDE DESKTOP -->
+<div class="step-header">
+  <div class="step-badge">5</div>
+  <div class="step-title">Connecting to Claude Desktop</div>
+  <div class="step-time">~5 min</div>
+</div>
+<p>Claude Desktop is the easiest way to see your MCP server in action interactively. It supports stdio MCP servers out of the box via a JSON configuration file.</p>
+<p>Find and edit the Claude Desktop config file:</p>
+<div class="code-header"><span class="code-lang">bash — config location</span></div>
+<pre><code><span class="cmt"># macOS:</span>
+~/Library/Application Support/Claude/claude_desktop_config.json
+
+<span class="cmt"># Windows:</span>
+%APPDATA%\Claude\claude_desktop_config.json</code></pre>
+
+<p>Add your server to the config. <strong>Use absolute paths</strong> — Claude Desktop won't inherit your shell's environment:</p>
+<div class="code-header"><span class="code-lang">json — claude_desktop_config.json</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"local-documents"</span>: {
+      <span class="key">"command"</span>: <span class="str">"/Users/yourname/mcp-server/.venv/bin/python"</span>,
+      <span class="key">"args"</span>: [<span class="str">"/Users/yourname/mcp-server/server.py"</span>],
+      <span class="key">"env"</span>: {
+        <span class="key">"DOCS_ROOT"</span>: <span class="str">"/Users/yourname/Documents/my-docs"</span>
+      }
+    }
+  }
+}</code></pre>
+
+<div class="callout callout-warning">
+  <strong>Absolute paths only.</strong> Both the Python interpreter path and the script path must be absolute. Using <code>python3</code> won't work — Claude Desktop doesn't inherit your PATH. Get the correct Python path with <code>which python</code> inside your activated venv.
+</div>
+
+<p>Restart Claude Desktop. You'll see a connector icon (🔌 or similar) in the input area. Click it to confirm your server's tools are available. Then ask Claude something that requires them:</p>
+<div class="code-header"><span class="code-lang">example prompts</span></div>
+<pre><code>What documents do I have available?
+Search my documents for anything related to "data retention".
+How many engineers do we have in the company database?
+What's the average salary in the Engineering department?</code></pre>
+
+<p>Claude will call the appropriate tool, show you what it's doing, and return an answer grounded in your actual local data — without sending your documents or database contents to Anthropic's servers (the tool results are processed by the model, but the raw data is returned from your local server).</p>
+
+<!-- SECURITY MODEL -->
+<h2>The Security Model — Why MCP Is Safer Than Ad-Hoc Tool Calling</h2>
+<p>Before MCP, giving an AI agent access to your systems typically meant writing glue code that directly executed whatever the model suggested — a prompt injection risk waiting to happen. MCP changes this in a few important ways:</p>
+<p><strong>Explicit capability declaration:</strong> The server declares a fixed set of tools at startup. The AI can only call what's on that list. It can't invent new tools or escalate its own permissions.</p>
+<p><strong>Structured inputs:</strong> Every tool call passes through the schema defined by your type hints. Malformed inputs are rejected before your code runs. The AI can't pass arbitrary strings to execute as shell commands unless you explicitly wrote a tool that does that.</p>
+<p><strong>Your code runs, not the AI's:</strong> The AI decides <em>to call</em> <code>query_database</code> and <em>what SQL</em> to pass. But your Python code executes the SQL — with the read-only enforcement and path validation you wrote. The AI's output is an input to your system, not an instruction your system blindly executes.</p>
+<p><strong>Audit trail by design:</strong> Every tool invocation is a discrete, logged event. You know exactly what the AI called, when, with what parameters, and what it got back. This is the foundation of AI governance in regulated environments.</p>
+
+<!-- INFOGRAPHIC: SECURITY COMPARISON -->
+<div class="infographic">
+  <div class="infographic-title">Security Model — Naive Tool Calling vs MCP</div>
+  <svg viewBox="0 0 660 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:660px;display:block;margin:0 auto">
+    <rect x="8" y="10" width="312" height="198" rx="10" fill="#FEF2F2" stroke="#FECACA" stroke-width="1.5"/>
+    <text x="164" y="36" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="13" font-weight="800" fill="#DC2626">Naive function calling</text>
+    <text x="30" y="62"  font-family="Albert Sans,sans-serif" font-size="11" fill="#991B1B">⚠ AI output executed directly</text>
+    <text x="30" y="82"  font-family="Albert Sans,sans-serif" font-size="11" fill="#991B1B">⚠ No capability boundary</text>
+    <text x="30" y="102" font-family="Albert Sans,sans-serif" font-size="11" fill="#991B1B">⚠ Prompt injection = arbitrary execution</text>
+    <text x="30" y="122" font-family="Albert Sans,sans-serif" font-size="11" fill="#991B1B">⚠ Model-specific implementation</text>
+    <text x="30" y="142" font-family="Albert Sans,sans-serif" font-size="11" fill="#991B1B">⚠ No standard audit trail</text>
+    <text x="30" y="162" font-family="Albert Sans,sans-serif" font-size="11" fill="#991B1B">⚠ New integration per model/tool pair</text>
+    <text x="30" y="182" font-family="Albert Sans,sans-serif" font-size="11" fill="#991B1B">⚠ Portable? No.</text>
+    <text x="164" y="202" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#DC2626">Every team reinvents this — badly.</text>
+
+    <rect x="340" y="10" width="312" height="198" rx="10" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="496" y="36" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="13" font-weight="800" fill="#059669">MCP</text>
+    <text x="358" y="62"  font-family="Albert Sans,sans-serif" font-size="11" fill="#065F46">✓ AI calls declared tools only</text>
+    <text x="358" y="82"  font-family="Albert Sans,sans-serif" font-size="11" fill="#065F46">✓ Server defines capability boundary</text>
+    <text x="358" y="102" font-family="Albert Sans,sans-serif" font-size="11" fill="#065F46">✓ Your validation code runs first</text>
+    <text x="358" y="122" font-family="Albert Sans,sans-serif" font-size="11" fill="#065F46">✓ Works with any MCP-compatible model</text>
+    <text x="358" y="142" font-family="Albert Sans,sans-serif" font-size="11" fill="#065F46">✓ Every call is a loggable event</text>
+    <text x="358" y="162" font-family="Albert Sans,sans-serif" font-size="11" fill="#065F46">✓ One server, many clients</text>
+    <text x="358" y="182" font-family="Albert Sans,sans-serif" font-size="11" fill="#065F46">✓ OpenAI, Google, Anthropic all support it</text>
+    <text x="496" y="202" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#059669">Write once, use everywhere.</text>
+  </svg>
+</div>
+
+<!-- DATA SOVEREIGNTY NOTE -->
+<h2>MCP and Data Sovereignty</h2>
+<p>An important clarification for regulated environments: when Claude Desktop calls your local MCP server, the tool <em>results</em> are sent back to Anthropic's Claude API as part of the conversation — that's how the model can incorporate them into its response. The raw contents of your database or files do flow through the API.</p>
+<p>If your data cannot leave your perimeter under any circumstances, the architecture changes: you need a locally-hosted AI (Ollama from Articles #1–2) as the MCP client rather than Claude Desktop. This is exactly the configuration the next section covers — connecting your MCP server to a local Ollama model via LangChain or LiteLLM, so zero data leaves your machine at any step.</p>
+
+<!-- STEP 6: LOCAL AGENT -->
+<div class="step-header">
+  <div class="step-badge">6</div>
+  <div class="step-title">Using Your MCP Server With a Local Agent</div>
+  <div class="step-time">~10 min</div>
+</div>
+<p>To keep everything fully local, connect your MCP server to Ollama via the MCP Python SDK's client interface. Install the additional dependency:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>pip install "mcp[cli]" langchain-ollama langchain-mcp-adapters</code></pre>
+
+<div class="code-header"><span class="code-lang">python — local_agent.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="kw">import</span> <span class="var">asyncio</span>
+<span class="kw">from</span> <span class="var">mcp</span> <span class="kw">import</span> <span class="cls">ClientSession</span>, <span class="cls">StdioServerParameters</span>
+<span class="kw">from</span> <span class="var">mcp.client.stdio</span> <span class="kw">import</span> <span class="var">stdio_client</span>
+<span class="kw">from</span> <span class="var">langchain_mcp_adapters.tools</span> <span class="kw">import</span> <span class="fn">load_mcp_tools</span>
+<span class="kw">from</span> <span class="var">langchain_ollama</span> <span class="kw">import</span> <span class="cls">ChatOllama</span>
+<span class="kw">from</span> <span class="var">langgraph.prebuilt</span> <span class="kw">import</span> <span class="fn">create_react_agent</span>
+
+<span class="var">server_params</span> = <span class="cls">StdioServerParameters</span>(
+    <span class="var">command</span>=<span class="str">"python"</span>,
+    <span class="var">args</span>=[<span class="str">"server.py"</span>],
+)
+
+<span class="kw">async def</span> <span class="fn">run</span>():
+    <span class="kw">async with</span> <span class="fn">stdio_client</span>(<span class="var">server_params</span>) <span class="kw">as</span> (<span class="var">read</span>, <span class="var">write</span>):
+        <span class="kw">async with</span> <span class="cls">ClientSession</span>(<span class="var">read</span>, <span class="var">write</span>) <span class="kw">as</span> <span class="var">session</span>:
+            <span class="kw">await</span> <span class="var">session</span>.initialize()
+
+            <span class="cmt"># Load MCP tools as LangChain tools</span>
+            <span class="var">tools</span> = <span class="kw">await</span> <span class="fn">load_mcp_tools</span>(<span class="var">session</span>)
+            <span class="fn">print</span>(<span class="var">f</span><span class="str">"Available tools: {[t.name for t in tools]}"</span>, <span class="var">file</span>=<span class="var">__import__</span>(<span class="str">'sys'</span>).stderr)
+
+            <span class="cmt"># Local Ollama model — zero cloud</span>
+            <span class="var">llm</span> = <span class="cls">ChatOllama</span>(<span class="var">model</span>=<span class="str">"llama3.1:8b"</span>, <span class="var">base_url</span>=<span class="str">"http://localhost:11434"</span>)
+            <span class="var">agent</span> = <span class="fn">create_react_agent</span>(<span class="var">llm</span>, <span class="var">tools</span>)
+
+            <span class="cmt"># Ask a question that requires using tools</span>
+            <span class="var">result</span> = <span class="kw">await</span> <span class="var">agent</span>.ainvoke({
+                <span class="str">"messages"</span>: [{
+                    <span class="str">"role"</span>: <span class="str">"user"</span>,
+                    <span class="str">"content"</span>: <span class="str">"How many employees are in Engineering, and what is their average salary?"</span>
+                }]
+            })
+            <span class="fn">print</span>(<span class="var">result</span>[<span class="str">"messages"</span>][-<span class="num">1</span>].content)
+
+<span class="var">asyncio</span>.run(<span class="fn">run</span>())</code></pre>
+
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>pip install langgraph
+python local_agent.py</code></pre>
+
+<p>The agent will decide to call <code>query_database</code> with an appropriate SQL query, receive the results from your local server, and synthesize a natural language answer — all without any data leaving your machine.</p>
+
+<!-- TROUBLESHOOTING -->
+<h2>Common Issues</h2>
+<div class="trouble-list">
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">Claude Desktop doesn't show the server's tools<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">Check three things: (1) Restart Claude Desktop completely after editing the config file. (2) Verify the Python path is absolute and points to the venv's Python, not system Python. (3) Check Claude Desktop logs for errors — on macOS: <code>~/Library/Logs/Claude/</code>. The most common cause is a relative path that works in your terminal but fails in Claude Desktop's environment.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">Server crashes immediately with JSON decode error<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">You have a <code>print()</code> statement writing to stdout. In stdio transport, stdout is reserved for JSON-RPC protocol messages. Any other output — including print statements, import warnings, and logging to stdout — corrupts the stream. Replace all <code>print()</code> with <code>print(..., file=sys.stderr)</code> or use <code>logging</code> which defaults to stderr.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">MCP Inspector can't connect to my server<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">Make sure your venv is activated and <code>server.py</code> runs without errors first: <code>python server.py</code> — it should hang (waiting for input), not exit. If it exits immediately, there's a startup error. Also check that Node.js and npx are installed: <code>node --version</code>.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">AI calls the wrong tool or misuses a tool<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">The AI selects tools based on docstrings. Improve your tool description — be explicit about what it does, what input format it expects, and what it returns. If two tools have overlapping descriptions, the model may pick the wrong one. Use MCP Inspector to test tool selection before connecting to an AI client.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">langchain-mcp-adapters ImportError<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">Install explicitly: <code>pip install langchain-mcp-adapters langgraph</code>. This is a separate package from the core MCP SDK and LangChain — it bridges the two. Also ensure you have LangChain core: <code>pip install langchain-core</code>.</div>
+  </div>
+</div>
+
+<!-- WHAT YOU'VE BUILT -->
+<h2>What You've Built</h2>
+<p>You now have a working MCP server that exposes local documents and a database to any MCP-compatible AI client. More importantly, you understand the architecture: the server is your security boundary, the AI can only do what you explicitly expose, and every tool call is auditable.</p>
+<p>Across four articles you've assembled the full foundation of a sovereign local AI stack: inference (Ollama), routing (LiteLLM), document retrieval (RAG + Qdrant), and live data access (MCP). Everything runs locally. Everything is under your control.</p>
+
+<div class="next-article">
+  <div>
+    <div class="next-label">Up next · Article #5</div>
+    <div class="next-title">Running Open Source Models at Scale — vLLM vs. Ollama vs. LM Studio</div>
+    <div class="next-desc">When Ollama isn't enough — performance comparison across inference engines, GPU batching, throughput optimization, and choosing the right tool for production workloads.</div>
+  </div>
+  <div class="next-arrow">→</div>
+</div>
+
+<div class="article-footer">
+  <div class="footer-series">
+    Part of the <strong>Local Sovereign AI</strong> series — 26 articles on building local AI infrastructure<br>
+    using open-source tools, from model serving to production-grade agentic workflows.
+  </div>
+  <a href="https://bitropy.io" target="_blank" class="footer-brand">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect width="18" height="18" rx="4" fill="#111827"/>
+      <circle cx="5"  cy="5"  r="1.4" fill="white" opacity="1"/>
+      <circle cx="9"  cy="5"  r="1.4" fill="white" opacity="0.7"/>
+      <circle cx="13" cy="5"  r="1.4" fill="white" opacity="0.35"/>
+      <circle cx="5"  cy="9"  r="1.4" fill="white" opacity="0.7"/>
+      <circle cx="9"  cy="9"  r="1.4" fill="white" opacity="1"/>
+      <circle cx="13" cy="9"  r="1.4" fill="white" opacity="0.5"/>
+      <circle cx="5"  cy="13" r="1.4" fill="white" opacity="0.35"/>
+      <circle cx="9"  cy="13" r="1.4" fill="white" opacity="0.5"/>
+      <circle cx="13" cy="13" r="1.4" fill="white" opacity="1"/>
+    </svg>
+    bitropy.io
+  </a>
+</div>
+
+</article>
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  const pct = (d.scrollTop / (d.scrollHeight - d.clientHeight)) * 100;
+  document.getElementById('progress-bar').style.width = Math.min(pct,100) + '%';
+});
+function copyCode(btn) {
+  const pre = btn.closest('.code-header').nextElementSibling;
+  navigator.clipboard.writeText(pre ? pre.innerText : '').then(() => {
+    btn.textContent = 'copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function toggleTrouble(el) { el.parentElement.classList.toggle('open'); }
+</script>
+</body>
+</html>
