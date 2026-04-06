@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG on Your Own Data — Without Sending Anything to the Cloud</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#0057B8;--blue-dark:#004494;--blue-light:#EBF2FC;
+  --text:#111827;--text-muted:#6B7280;--text-light:#9CA3AF;
+  --bg:#FFFFFF;--bg-soft:#F9FAFB;--bg-code:#F3F4F6;
+  --border:#E5E7EB;--border-dark:#D1D5DB;
+  --green:#059669;--green-light:#D1FAE5;
+  --amber:#D97706;--amber-light:#FFFBEB;
+  --purple:#7C3AED;--purple-light:#F5F3FF;
+  --radius:6px;--radius-lg:12px;--max-width:780px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Albert Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  line-height:1.75;font-size:17px;-webkit-font-smoothing:antialiased}
+#progress-bar{position:fixed;top:0;left:0;height:2px;background:var(--blue);
+  width:0%;z-index:1000;transition:width 0.1s linear}
+.site-header{border-bottom:1px solid var(--border);padding:0 2rem;height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;background:rgba(255,255,255,0.97);
+  backdrop-filter:blur(8px);z-index:100}
+.header-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
+.header-brand-name{font-size:14px;font-weight:700;letter-spacing:-0.3px}
+.header-series{font-size:12px;color:var(--text-muted);border-left:1px solid var(--border);
+  padding-left:12px;margin-left:4px}
+.header-right{display:flex;align-items:center;gap:16px}
+.header-tag{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--blue);background:var(--blue-light);padding:3px 8px;border-radius:4px}
+.header-num{font-size:12px;color:var(--text-muted);font-weight:500}
+.page-wrapper{display:flex;flex-direction:column;align-items:center}
+.article-container{width:100%;max-width:var(--max-width);padding:0 2rem 6rem}
+.hero{padding:3.5rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:3rem}
+.hero-meta{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
+.hero-series-badge{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue)}
+.hero-sep{color:var(--border-dark)}
+.hero-num{font-size:12px;color:var(--text-muted);font-weight:500}
+h1{font-size:clamp(2rem,5vw,2.6rem);font-weight:800;line-height:1.15;
+  letter-spacing:-0.03em;margin-bottom:1rem}
+.hero-subtitle{font-size:18px;color:var(--text-muted);font-style:italic;
+  line-height:1.6;max-width:620px;margin-bottom:1.75rem}
+.hero-stats{display:flex;gap:1.5rem;flex-wrap:wrap}
+.hero-stat{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted)}
+.hero-stat svg{color:var(--blue);flex-shrink:0}
+.time-callout{background:var(--blue-light);border:1px solid #C7DCFA;
+  border-radius:var(--radius-lg);padding:1rem 1.25rem;margin:2rem 0;
+  display:flex;align-items:flex-start;gap:12px}
+.time-callout-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.time-callout-text{font-size:14px;color:#1E40AF;line-height:1.6}
+.time-callout-text strong{font-weight:700}
+.time-steps{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.time-step{background:white;border:1px solid #BFDBFE;border-radius:4px;
+  padding:3px 10px;font-size:13px;font-weight:600;color:#1D4ED8;white-space:nowrap}
+.time-arrow{color:#93C5FD}
+h2{font-size:1.55rem;font-weight:800;letter-spacing:-0.025em;margin:3rem 0 1rem;
+  line-height:1.25;padding-top:0.5rem;border-top:2px solid var(--border)}
+h3{font-size:1.1rem;font-weight:700;margin:1.75rem 0 0.5rem}
+p{margin-bottom:1.25rem} p:last-child{margin-bottom:0}
+strong{font-weight:700} em{font-style:italic;color:var(--text-muted)}
+a{color:var(--blue);text-decoration:underline;text-underline-offset:3px}
+a:hover{color:var(--blue-dark)}
+ul,ol{padding-left:1.5rem;margin-bottom:1.25rem}
+li{margin-bottom:0.4rem;line-height:1.65}
+.callout{border-left:3px solid var(--blue);background:var(--blue-light);
+  border-radius:0 var(--radius) var(--radius) 0;padding:0.85rem 1.1rem;
+  margin:1.5rem 0;font-size:14.5px;color:#1E3A6E;line-height:1.6}
+.callout strong{color:#1E3A6E}
+.callout code{background:rgba(255,255,255,0.6);border-color:#BFDBFE}
+.callout-warning{border-left-color:var(--amber);background:var(--amber-light);color:#78350F}
+.callout-warning strong{color:#78350F}
+.callout-success{border-left-color:var(--green);background:var(--green-light);color:#064E3B}
+.callout-success strong{color:#064E3B}
+pre{background:#1E1E2E;border-radius:var(--radius-lg);padding:1.25rem 1.5rem;
+  overflow-x:auto;margin:1.25rem 0}
+pre code{font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.65;
+  color:#CDD6F4;background:none;padding:0;border:none;border-radius:0}
+code{font-family:'JetBrains Mono',monospace;font-size:0.85em;background:var(--bg-code);
+  color:#1F2937;padding:2px 6px;border-radius:4px;border:1px solid var(--border)}
+.code-header{display:flex;justify-content:space-between;align-items:center;
+  background:#181825;border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  padding:0.5rem 1rem;margin-top:1.25rem}
+.code-header+pre{border-radius:0 0 var(--radius-lg) var(--radius-lg);margin-top:0}
+.code-lang{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+  color:#6C7086;font-family:'JetBrains Mono',monospace}
+.copy-btn{font-size:11px;color:#6C7086;background:transparent;border:1px solid #313244;
+  border-radius:4px;padding:2px 8px;cursor:pointer;font-family:'Albert Sans',sans-serif;
+  font-weight:500;transition:all 0.15s}
+.copy-btn:hover{color:#CDD6F4;border-color:#45475A}
+.copy-btn.copied{color:#A6E3A1;border-color:#A6E3A1}
+.kw{color:#CBA6F7}.str{color:#A6E3A1}.cmt{color:#6C7086;font-style:italic}
+.fn{color:#89B4FA}.num{color:#FAB387}.var{color:#CDD6F4}.cls{color:#F9E2AF}
+.key{color:#89DCEB}.dec{color:#F38BA8}
+.step-header{display:flex;align-items:center;gap:14px;margin:3rem 0 1rem;
+  padding-top:0.5rem;border-top:2px solid var(--border)}
+.step-badge{width:34px;height:34px;border-radius:50%;background:var(--blue);
+  color:white;font-size:14px;font-weight:800;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0}
+.step-title{font-size:1.45rem;font-weight:800;letter-spacing:-0.025em}
+.step-time{font-size:12px;font-weight:500;color:var(--text-light);
+  margin-left:auto;white-space:nowrap}
+.infographic{background:var(--bg-soft);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:1.75rem;margin:2rem 0}
+.infographic-title{font-size:11px;font-weight:700;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--text-muted);margin-bottom:1.25rem;
+  text-align:center}
+.trouble-list{display:flex;flex-direction:column;gap:10px;margin:1.5rem 0}
+.trouble-item{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.trouble-q{padding:0.85rem 1.1rem;font-size:14px;font-weight:700;color:var(--text);
+  background:var(--bg-soft);cursor:pointer;display:flex;justify-content:space-between;
+  align-items:center;gap:10px;user-select:none}
+.trouble-q:hover{background:var(--bg-code)}
+.trouble-chevron{color:var(--text-muted);transition:transform 0.2s;font-size:12px}
+.trouble-item.open .trouble-chevron{transform:rotate(180deg)}
+.trouble-a{display:none;padding:0.85rem 1.1rem;font-size:14px;color:var(--text-muted);
+  line-height:1.65;border-top:1px solid var(--border)}
+.trouble-item.open .trouble-a{display:block}
+.next-article{background:var(--bg-soft);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:1.5rem 1.75rem;margin:3rem 0 1rem;
+  display:flex;align-items:center;gap:1.25rem}
+.next-label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--text-muted);margin-bottom:5px}
+.next-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.next-desc{font-size:13px;color:var(--text-muted);line-height:1.5}
+.next-arrow{flex-shrink:0;width:36px;height:36px;background:var(--blue);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:white;
+  font-size:16px;margin-left:auto}
+.article-footer{border-top:1px solid var(--border);padding:2rem 0 0;margin-top:1rem;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.footer-series{font-size:13px;color:var(--text-muted);line-height:1.6}
+.footer-brand{display:flex;align-items:center;gap:7px;font-size:12px;
+  color:var(--text-light);text-decoration:none}
+.footer-brand:hover{color:var(--text-muted)}
+@media(max-width:640px){
+  .site-header .header-series{display:none}
+  .next-article{flex-direction:column;align-items:flex-start}
+  .next-arrow{display:none}
+  .article-footer{flex-direction:column;gap:.75rem}
+}
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+
+<header class="site-header">
+  <div class="header-brand">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <rect width="26" height="26" rx="5" fill="#111827"/>
+      <circle cx="7"  cy="7"  r="2" fill="white" opacity="1"/>
+      <circle cx="13" cy="7"  r="2" fill="white" opacity="0.8"/>
+      <circle cx="19" cy="7"  r="2" fill="white" opacity="0.4"/>
+      <circle cx="7"  cy="13" r="2" fill="white" opacity="0.8"/>
+      <circle cx="13" cy="13" r="2" fill="white" opacity="1"/>
+      <circle cx="19" cy="13" r="2" fill="white" opacity="0.6"/>
+      <circle cx="7"  cy="19" r="2" fill="white" opacity="0.4"/>
+      <circle cx="13" cy="19" r="2" fill="white" opacity="0.6"/>
+      <circle cx="19" cy="19" r="2" fill="white" opacity="1"/>
+    </svg>
+    <span class="header-brand-name">bitropy.</span>
+    <span class="header-series">Local AI Series</span>
+  </div>
+  <div class="header-right">
+    <span class="header-tag">Open Source</span>
+    <span class="header-num">Article 3 of 26</span>
+  </div>
+</header>
+
+<div class="page-wrapper">
+<article class="article-container">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-meta">
+    <span class="hero-series-badge">Local Sovereign AI</span>
+    <span class="hero-sep">·</span>
+    <span class="hero-num">Article #3</span>
+  </div>
+  <h1>RAG on Your Own Data —<br>Without Sending Anything to the Cloud</h1>
+  <p class="hero-subtitle">You have a local LLM. You have a gateway. Now the model knows nothing about your data. RAG is how you fix that — and the entire pipeline runs locally.</p>
+  <div class="hero-stats">
+    <span class="hero-stat">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      ~60 min total
+    </span>
+    <span class="hero-stat">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      Intermediate
+    </span>
+    <span class="hero-stat">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Requires Articles #1 and #2
+    </span>
+  </div>
+</div>
+
+<div class="time-callout">
+  <span class="time-callout-icon">⏱</span>
+  <div class="time-callout-text">
+    <strong>Time breakdown</strong>
+    <div class="time-steps">
+      <span class="time-step">Install + Qdrant ~10 min</span>
+      <span class="time-arrow">→</span>
+      <span class="time-step">Index documents ~15 min</span>
+      <span class="time-arrow">→</span>
+      <span class="time-step">Query pipeline ~15 min</span>
+      <span class="time-arrow">→</span>
+      <span class="time-step">Chat interface ~20 min</span>
+    </div>
+    Ollama (Article #1) and a working venv from Article #2 required before you start.
+  </div>
+</div>
+
+<!-- SECTION: PROBLEM -->
+<h2>The Problem With Local Knowledge</h2>
+<p>Language models only know what was in their training data, and that data has a cutoff date. Ask a local Llama model about your Q3 internal risk report, your customer contracts, or your company's knowledge base — and it will either hallucinate something plausible-sounding or honestly tell you it doesn't know.</p>
+<p>The naive solution is to paste the document into the prompt. This works until the document is longer than the context window, or until you have ten documents, or a hundred, or a SharePoint full of thousands of PDFs. Stuffing entire document collections into every prompt is expensive in tokens, slow to process, and often worse than a targeted retrieval approach — because the model struggles to focus when given too much irrelevant context.</p>
+<p><strong>RAG</strong> — Retrieval Augmented Generation — solves this properly. Instead of sending all your documents to the model, you first retrieve only the relevant passages for a given query, then send just those passages as context. The model answers based on the retrieved content rather than its training data alone. It's the difference between asking someone to memorize your entire library versus giving them a good search engine.</p>
+<p>The key insight: a <strong>vector database</strong> and an <strong>embedding model</strong> — the two components that make RAG work — can both run entirely locally. Neither requires a cloud API.</p>
+
+<!-- INFOGRAPHIC 1: How RAG works -->
+<div class="infographic">
+  <div class="infographic-title">How RAG Works — Two Distinct Phases</div>
+  <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:0 auto">
+    <defs>
+      <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#9CA3AF"/></marker>
+      <marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0057B8"/></marker>
+      <marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#059669"/></marker>
+    </defs>
+    <!-- Phase 1 header -->
+    <rect x="10" y="10" width="320" height="24" rx="6" fill="#EBF2FC"/>
+    <text x="170" y="26" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#0057B8">PHASE 1 — INDEXING (run once)</text>
+    <!-- Phase 1 steps -->
+    <rect x="10"  y="44" width="68" height="44" rx="7" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+    <text x="44" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#111827">Documents</text>
+    <text x="44" y="79"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">PDF/TXT/DOCX</text>
+    <line x1="78" y1="66" x2="100" y2="66" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+    <rect x="102" y="44" width="68" height="44" rx="7" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+    <text x="136" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#111827">Chunking</text>
+    <text x="136" y="79"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">~1000 chars</text>
+    <line x1="170" y1="66" x2="192" y2="66" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+    <rect x="194" y="44" width="68" height="44" rx="7" fill="#EBF2FC" stroke="#0057B8" stroke-width="1.5"/>
+    <text x="228" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#0057B8">Embed</text>
+    <text x="228" y="79"  text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#1E40AF">nomic-embed</text>
+    <line x1="262" y1="66" x2="284" y2="66" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+    <rect x="286" y="44" width="42" height="44" rx="7" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+    <text x="307" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#7C3AED">Store</text>
+    <text x="307" y="79"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6D28D9">Qdrant</text>
+    <!-- Phase 1 label -->
+    <text x="170" y="108" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#6B7280">Each chunk becomes a vector — a semantic fingerprint stored in Qdrant.</text>
+
+    <!-- Phase 2 header -->
+    <rect x="370" y="10" width="320" height="24" rx="6" fill="#D1FAE5"/>
+    <text x="530" y="26" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#059669">PHASE 2 — RETRIEVAL (every query)</text>
+    <!-- Phase 2 steps -->
+    <rect x="370" y="44" width="62" height="44" rx="7" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+    <text x="401" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#111827">Question</text>
+    <text x="401" y="79"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">user input</text>
+    <line x1="432" y1="66" x2="448" y2="66" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
+    <rect x="450" y="44" width="62" height="44" rx="7" fill="#EBF2FC" stroke="#0057B8" stroke-width="1.5"/>
+    <text x="481" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#0057B8">Embed</text>
+    <text x="481" y="79"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#1E40AF">same model</text>
+    <line x1="512" y1="66" x2="528" y2="66" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
+    <rect x="530" y="44" width="62" height="44" rx="7" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+    <text x="561" y="63"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#7C3AED">Search</text>
+    <text x="561" y="79"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6D28D9">top-K chunks</text>
+    <line x1="592" y1="66" x2="608" y2="66" stroke="#059669" stroke-width="1.5" marker-end="url(#ag)"/>
+    <rect x="610" y="44" width="76" height="44" rx="7" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="648" y="60"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#065F46">LLM</text>
+    <text x="648" y="75"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#059669">answer</text>
+    <!-- Phase 2 label -->
+    <text x="530" y="108" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#6B7280">Semantically similar chunks retrieved — even without exact keyword match.</text>
+
+    <!-- divider -->
+    <line x1="350" y1="10" x2="350" y2="120" stroke="#E5E7EB" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+    <!-- Key insight box -->
+    <rect x="10" y="130" width="680" height="120" rx="10" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+    <text x="350" y="152" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="12" font-weight="700" fill="#111827">Why vector search finds semantically related content</text>
+    <!-- Example -->
+    <rect x="30"  y="165" width="180" height="36" rx="6" fill="#FEF3C7" stroke="#FDE68A" stroke-width="1"/>
+    <text x="120" y="181" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#92400E">Query: "vacation policy"</text>
+    <text x="120" y="195" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#B45309">→ vector [0.21, -0.87, ...]</text>
+    <line x1="210" y1="183" x2="250" y2="183" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+    <rect x="252" y="160" width="196" height="46" rx="6" fill="#EBF2FC" stroke="#BFDBFE" stroke-width="1"/>
+    <text x="350" y="178" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#1D4ED8">Cosine similarity search</text>
+    <text x="350" y="194" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#3B82F6">finds vectors mathematically close</text>
+    <line x1="448" y1="183" x2="488" y2="183" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#a1)"/>
+    <rect x="490" y="165" width="200" height="36" rx="6" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1"/>
+    <text x="590" y="181" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#065F46">Finds: "annual leave entitlements"</text>
+    <text x="590" y="195" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#059669">→ vector [0.19, -0.91, ...]</text>
+    <text x="350" y="238" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" fill="#6B7280">Different words, same semantic space — no keyword overlap required.</text>
+  </svg>
+</div>
+
+<!-- SECTION: STACK -->
+<h2>The Stack We're Building</h2>
+<p>Everything in this stack is open-source and runs locally. Nothing touches a cloud API unless you explicitly configure it to.</p>
+<ul>
+  <li><strong>Document loading:</strong> LangChain document loaders — handles PDF, DOCX, TXT, Markdown, and more</li>
+  <li><strong>Embedding model:</strong> <code>nomic-embed-text</code> via Ollama — a strong open-source embedding model that runs locally</li>
+  <li><strong>Vector database:</strong> Qdrant — fast, open-source, runs as a Docker container or in-memory</li>
+  <li><strong>Text splitting:</strong> <code>langchain-text-splitters</code> — splits documents into indexed chunks</li>
+  <li><strong>LLM:</strong> Your local Ollama model, optionally routed via LiteLLM from Article #2</li>
+  <li><strong>Orchestration:</strong> LangChain — glue between all of these components</li>
+</ul>
+
+<!-- INFOGRAPHIC 2: Local data flow -->
+<div class="infographic">
+  <div class="infographic-title">Complete Local Data Flow — Nothing Leaves Your Machine</div>
+  <svg viewBox="0 0 700 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:0 auto">
+    <defs>
+      <marker id="af" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6B7280"/></marker>
+    </defs>
+    <rect x="5" y="5" width="690" height="120" rx="10" fill="#F9FAFB" stroke="#E5E7EB" stroke-width="1"/>
+    <text x="350" y="22" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#6B7280" letter-spacing="1">YOUR MACHINE — PERIMETER BOUNDARY</text>
+
+    <rect x="20"  y="35" width="88" height="40" rx="7" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+    <text x="64" y="53"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#111827">Your Docs</text>
+    <text x="64" y="68"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#6B7280">~/documents/</text>
+
+    <line x1="108" y1="55" x2="128" y2="55" stroke="#6B7280" stroke-width="1.5" marker-end="url(#af)"/>
+
+    <rect x="130" y="35" width="88" height="40" rx="7" fill="#EBF2FC" stroke="#0057B8" stroke-width="1.5"/>
+    <text x="174" y="53"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#0057B8">Embed</text>
+    <text x="174" y="68"  text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#1E40AF">nomic·ollama</text>
+
+    <line x1="218" y1="55" x2="238" y2="55" stroke="#6B7280" stroke-width="1.5" marker-end="url(#af)"/>
+
+    <rect x="240" y="35" width="88" height="40" rx="7" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+    <text x="284" y="53"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#7C3AED">Qdrant</text>
+    <text x="284" y="68"  text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6D28D9">:6333 local</text>
+
+    <line x1="328" y1="55" x2="348" y2="55" stroke="#6B7280" stroke-width="1.5" marker-end="url(#af)"/>
+
+    <rect x="350" y="35" width="88" height="40" rx="7" fill="#EBF2FC" stroke="#0057B8" stroke-width="1.5"/>
+    <text x="394" y="53"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#0057B8">Retrieve</text>
+    <text x="394" y="68"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#1E40AF">top-K chunks</text>
+
+    <line x1="438" y1="55" x2="458" y2="55" stroke="#6B7280" stroke-width="1.5" marker-end="url(#af)"/>
+
+    <rect x="460" y="35" width="88" height="40" rx="7" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="504" y="53"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#065F46">LLM</text>
+    <text x="504" y="68"  text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#059669">ollama·:11434</text>
+
+    <line x1="548" y1="55" x2="568" y2="55" stroke="#6B7280" stroke-width="1.5" marker-end="url(#af)"/>
+
+    <rect x="570" y="35" width="110" height="40" rx="7" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+    <text x="625" y="53"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="700" fill="#111827">Answer</text>
+    <text x="625" y="68"  text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="10" fill="#059669">✓ fully local</text>
+
+    <text x="350" y="107" text-anchor="middle" font-family="Albert Sans,sans-serif" font-size="11" font-weight="600" fill="#059669">Zero external API calls in this pipeline. Every step runs on your hardware.</text>
+  </svg>
+</div>
+
+<!-- STEP 1: INSTALL -->
+<div class="step-header">
+  <div class="step-badge">1</div>
+  <div class="step-title">Set Up the Environment</div>
+  <div class="step-time">~10 min</div>
+</div>
+<p>Create a dedicated virtual environment for this project — keeping its dependencies isolated:</p>
+<div class="code-header"><span class="code-lang">bash — create venv</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="cmt"># Create project folder and virtual environment</span>
+mkdir rag-local && cd rag-local
+python3 -m venv .venv
+
+<span class="cmt"># Activate — macOS / Linux:</span>
+source .venv/bin/activate
+<span class="cmt"># Windows (WSL2): source .venv/Scripts/activate</span></code></pre>
+
+<p>Install dependencies. Note that LangChain's Qdrant integration is now a separate package — <code>langchain-qdrant</code>:</p>
+<div class="code-header"><span class="code-lang">bash — install packages</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>pip install langchain langchain-community langchain-ollama
+pip install langchain-qdrant          <span class="cmt"># Qdrant integration (separate package since v0.1.2)</span>
+pip install langchain-text-splitters  <span class="cmt"># Text splitting (separate package)</span>
+pip install qdrant-client
+pip install pypdf                     <span class="cmt"># PDF support</span>
+pip install python-docx               <span class="cmt"># Word document support</span></code></pre>
+
+<div class="callout callout-warning"><strong>Important:</strong> <code>langchain-qdrant</code> is a required separate install. The old <code>langchain_community.vectorstores.Qdrant</code> class was deprecated in v0.1.2 and scheduled for removal. Use <code>QdrantVectorStore</code> from <code>langchain_qdrant</code> instead — that's what all code in this article uses.</div>
+
+<p>Pull the embedding model via Ollama:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>ollama pull nomic-embed-text</code></pre>
+
+<p><code>nomic-embed-text</code> is a 137M parameter model purpose-built for text embeddings. It's fast, produces 768-dimensional vectors, and performs well on document retrieval. At ~270MB it's trivial compared to your LLM.</p>
+
+<p>Verify it works:</p>
+<div class="code-header"><span class="code-lang">bash — verify embedding endpoint</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>curl http://localhost:11434/api/embeddings \
+  -d <span class="str">'{"model": "nomic-embed-text", "prompt": "What is data sovereignty?"}'</span></code></pre>
+<p>You'll get back a JSON object with a list of 768 floating-point numbers — the semantic fingerprint of that phrase.</p>
+
+<!-- STEP 2: QDRANT -->
+<div class="step-header">
+  <div class="step-badge">2</div>
+  <div class="step-title">Start Qdrant</div>
+  <div class="step-time">~5 min</div>
+</div>
+<p>Qdrant is the vector database that stores and searches your document embeddings. Run it via Docker with persistent storage:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>docker run -d \
+  --name qdrant \
+  -p 6333:6333 \
+  -v $(pwd)/qdrant_storage:/qdrant/storage \
+  qdrant/qdrant</code></pre>
+
+<div class="callout callout-warning"><strong>The <code>-v</code> flag is critical.</strong> Without volume mounting, your entire indexed collection disappears when the container restarts. Always mount a local directory for persistent storage.</div>
+
+<p>Verify it's running:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>curl http://localhost:6333/healthz
+<span class="cmt"># {"title":"qdrant - vector search engine","version":"..."}</span></code></pre>
+
+<p>Qdrant includes a built-in web UI at <code>http://localhost:6333/dashboard</code> — useful for inspecting your collections and running test searches visually.</p>
+
+<p>For quick prototyping without Docker, Qdrant supports in-memory mode:</p>
+<div class="code-header"><span class="code-lang">python — in-memory (prototype only)</span></div>
+<pre><code><span class="kw">from</span> <span class="var">qdrant_client</span> <span class="kw">import</span> <span class="cls">QdrantClient</span>
+<span class="var">client</span> = <span class="cls">QdrantClient</span>(<span class="str">":memory:"</span>)   <span class="cmt"># No Docker needed — data lost on restart</span></code></pre>
+
+<!-- STEP 3: INDEX -->
+<div class="step-header">
+  <div class="step-badge">3</div>
+  <div class="step-title">Index Your Documents</div>
+  <div class="step-time">~15 min</div>
+</div>
+<p>This script reads documents from a folder, splits them into chunks, generates embeddings locally, and stores everything in Qdrant:</p>
+<div class="code-header"><span class="code-lang">python — index_documents.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="cmt"># index_documents.py</span>
+<span class="kw">import</span> <span class="var">os</span>
+<span class="kw">from</span> <span class="var">pathlib</span> <span class="kw">import</span> <span class="cls">Path</span>
+<span class="kw">from</span> <span class="var">langchain_community.document_loaders</span> <span class="kw">import</span> <span class="cls">PyPDFLoader</span>, <span class="cls">TextLoader</span>, <span class="cls">Docx2txtLoader</span>
+<span class="kw">from</span> <span class="var">langchain_text_splitters</span> <span class="kw">import</span> <span class="cls">RecursiveCharacterTextSplitter</span>
+<span class="kw">from</span> <span class="var">langchain_ollama</span> <span class="kw">import</span> <span class="cls">OllamaEmbeddings</span>
+<span class="kw">from</span> <span class="var">langchain_qdrant</span> <span class="kw">import</span> <span class="cls">QdrantVectorStore</span>
+
+<span class="cmt"># Configuration</span>
+DOCS_FOLDER = <span class="str">"./documents"</span>
+QDRANT_URL = <span class="str">"http://localhost:6333"</span>
+COLLECTION_NAME = <span class="str">"my_knowledge_base"</span>
+EMBEDDING_MODEL = <span class="str">"nomic-embed-text"</span>
+CHUNK_SIZE = <span class="num">1000</span>
+CHUNK_OVERLAP = <span class="num">200</span>
+
+
+<span class="kw">def</span> <span class="fn">load_documents</span>(<span class="var">folder</span>: <span class="cls">str</span>):
+    <span class="str">"""Load all supported documents from a folder."""</span>
+    <span class="var">documents</span> = []
+    <span class="kw">for</span> <span class="var">filepath</span> <span class="kw">in</span> <span class="cls">Path</span>(<span class="var">folder</span>).rglob(<span class="str">"*"</span>):
+        <span class="kw">if</span> <span class="var">filepath</span>.suffix.lower() == <span class="str">".pdf"</span>:
+            <span class="var">loader</span> = <span class="cls">PyPDFLoader</span>(<span class="fn">str</span>(<span class="var">filepath</span>))
+        <span class="kw">elif</span> <span class="var">filepath</span>.suffix.lower() <span class="kw">in</span> [<span class="str">".txt"</span>, <span class="str">".md"</span>]:
+            <span class="var">loader</span> = <span class="cls">TextLoader</span>(<span class="fn">str</span>(<span class="var">filepath</span>), <span class="var">encoding</span>=<span class="str">"utf-8"</span>)
+        <span class="kw">elif</span> <span class="var">filepath</span>.suffix.lower() <span class="kw">in</span> [<span class="str">".docx"</span>, <span class="str">".doc"</span>]:
+            <span class="var">loader</span> = <span class="cls">Docx2txtLoader</span>(<span class="fn">str</span>(<span class="var">filepath</span>))
+        <span class="kw">else</span>:
+            <span class="kw">continue</span>
+        <span class="kw">try</span>:
+            <span class="var">docs</span> = <span class="var">loader</span>.load()
+            <span class="kw">for</span> <span class="var">doc</span> <span class="kw">in</span> <span class="var">docs</span>:
+                <span class="var">doc</span>.metadata[<span class="str">"source_file"</span>] = <span class="var">filepath</span>.name
+            <span class="var">documents</span>.extend(<span class="var">docs</span>)
+            <span class="fn">print</span>(<span class="var">f</span><span class="str">"  Loaded: {filepath.name} ({len(docs)} sections)"</span>)
+        <span class="kw">except</span> <span class="cls">Exception</span> <span class="kw">as</span> <span class="var">e</span>:
+            <span class="fn">print</span>(<span class="var">f</span><span class="str">"  Failed: {filepath.name}: {e}"</span>)
+    <span class="kw">return</span> <span class="var">documents</span>
+
+
+<span class="kw">def</span> <span class="fn">index_documents</span>():
+    <span class="fn">print</span>(<span class="str">"Loading documents..."</span>)
+    <span class="var">documents</span> = <span class="fn">load_documents</span>(DOCS_FOLDER)
+
+    <span class="fn">print</span>(<span class="str">"\nSplitting into chunks..."</span>)
+    <span class="var">splitter</span> = <span class="cls">RecursiveCharacterTextSplitter</span>(
+        <span class="var">chunk_size</span>=CHUNK_SIZE,
+        <span class="var">chunk_overlap</span>=CHUNK_OVERLAP,
+        <span class="var">separators</span>=[<span class="str">"\n\n"</span>, <span class="str">"\n"</span>, <span class="str">". "</span>, <span class="str">" "</span>, <span class="str">""</span>]
+    )
+    <span class="var">chunks</span> = <span class="var">splitter</span>.split_documents(<span class="var">documents</span>)
+    <span class="fn">print</span>(<span class="var">f</span><span class="str">"Created {len(chunks)} chunks"</span>)
+
+    <span class="fn">print</span>(<span class="str">"\nGenerating embeddings and indexing into Qdrant..."</span>)
+    <span class="var">embeddings</span> = <span class="cls">OllamaEmbeddings</span>(
+        <span class="var">model</span>=EMBEDDING_MODEL,
+        <span class="var">base_url</span>=<span class="str">"http://localhost:11434"</span>
+    )
+
+    <span class="cls">QdrantVectorStore</span>.from_documents(
+        <span class="var">documents</span>=<span class="var">chunks</span>,
+        <span class="var">embedding</span>=<span class="var">embeddings</span>,
+        <span class="var">url</span>=QDRANT_URL,
+        <span class="var">collection_name</span>=COLLECTION_NAME,
+    )
+    <span class="fn">print</span>(<span class="var">f</span><span class="str">"\nDone. {len(chunks)} chunks indexed into '{COLLECTION_NAME}'"</span>)
+
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="var">os</span>.makedirs(DOCS_FOLDER, <span class="var">exist_ok</span>=<span class="kw">True</span>)
+    <span class="kw">if not</span> <span class="fn">any</span>(<span class="cls">Path</span>(DOCS_FOLDER).iterdir()):
+        <span class="fn">print</span>(<span class="var">f</span><span class="str">"Put your documents in '{DOCS_FOLDER}' and run again."</span>)
+    <span class="kw">else</span>:
+        <span class="fn">index_documents</span>()</code></pre>
+
+<div class="callout"><strong>Word documents note:</strong> <code>Docx2txtLoader</code> is used here instead of <code>UnstructuredWordDocumentLoader</code>. The latter requires the heavy <code>unstructured</code> package with many system dependencies. <code>Docx2txtLoader</code> needs only <code>pip install python-docx docx2txt</code> and works reliably.</div>
+
+<p>Create the documents folder, add your files, and run:</p>
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>mkdir documents
+<span class="cmt"># copy your PDFs, TXT, DOCX files into ./documents/</span>
+python index_documents.py</code></pre>
+
+<p>Chunking parameters explained:</p>
+<ul>
+  <li><strong><code>chunk_size=1000</code></strong> — approximately 1000 characters per chunk. Smaller chunks (500) give more precise retrieval but less context per result. Larger chunks (2000) provide more context but reduce precision. 1000 is a good starting point.</li>
+  <li><strong><code>chunk_overlap=200</code></strong> — adjacent chunks share 200 characters. Prevents information loss when a sentence spans two chunk boundaries.</li>
+  <li><strong><code>RecursiveCharacterTextSplitter</code></strong> — tries to split at paragraph boundaries first, then newlines, then sentences. Preserves the natural structure of your documents better than naive character-count splitting.</li>
+</ul>
+
+<!-- STEP 4: QUERY -->
+<div class="step-header">
+  <div class="step-badge">4</div>
+  <div class="step-title">Build the RAG Query Pipeline</div>
+  <div class="step-time">~15 min</div>
+</div>
+<p>This script connects to your indexed Qdrant collection, retrieves relevant chunks for a query, and sends them to your local LLM for synthesis. Note the corrected import paths — all from <code>langchain_core</code>, not the old <code>langchain.schema</code>:</p>
+<div class="code-header"><span class="code-lang">python — query.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="cmt"># query.py</span>
+<span class="kw">from</span> <span class="var">langchain_ollama</span> <span class="kw">import</span> <span class="cls">OllamaEmbeddings</span>, <span class="cls">ChatOllama</span>
+<span class="kw">from</span> <span class="var">langchain_qdrant</span> <span class="kw">import</span> <span class="cls">QdrantVectorStore</span>
+<span class="kw">from</span> <span class="var">langchain_core.prompts</span> <span class="kw">import</span> <span class="cls">ChatPromptTemplate</span>       <span class="cmt"># ← langchain_core, not langchain</span>
+<span class="kw">from</span> <span class="var">langchain_core.runnables</span> <span class="kw">import</span> <span class="cls">RunnablePassthrough</span>    <span class="cmt"># ← langchain_core, not langchain.schema</span>
+<span class="kw">from</span> <span class="var">langchain_core.output_parsers</span> <span class="kw">import</span> <span class="cls">StrOutputParser</span>   <span class="cmt"># ← langchain_core, not langchain.schema</span>
+<span class="kw">from</span> <span class="var">qdrant_client</span> <span class="kw">import</span> <span class="cls">QdrantClient</span>
+
+QDRANT_URL = <span class="str">"http://localhost:6333"</span>
+COLLECTION_NAME = <span class="str">"my_knowledge_base"</span>
+EMBEDDING_MODEL = <span class="str">"nomic-embed-text"</span>
+LLM_MODEL = <span class="str">"llama3.1:8b"</span>
+TOP_K = <span class="num">4</span>
+
+
+<span class="kw">def</span> <span class="fn">build_rag_chain</span>():
+    <span class="var">embeddings</span> = <span class="cls">OllamaEmbeddings</span>(
+        <span class="var">model</span>=EMBEDDING_MODEL,
+        <span class="var">base_url</span>=<span class="str">"http://localhost:11434"</span>
+    )
+    <span class="var">qdrant_client</span> = <span class="cls">QdrantClient</span>(<span class="var">url</span>=QDRANT_URL)
+    <span class="var">vectorstore</span> = <span class="cls">QdrantVectorStore</span>(
+        <span class="var">client</span>=<span class="var">qdrant_client</span>,
+        <span class="var">collection_name</span>=COLLECTION_NAME,
+        <span class="var">embedding</span>=<span class="var">embeddings</span>
+    )
+    <span class="var">retriever</span> = <span class="var">vectorstore</span>.as_retriever(
+        <span class="var">search_type</span>=<span class="str">"similarity"</span>,
+        <span class="var">search_kwargs</span>={<span class="str">"k"</span>: TOP_K}
+    )
+    <span class="var">llm</span> = <span class="cls">ChatOllama</span>(
+        <span class="var">model</span>=LLM_MODEL,
+        <span class="var">base_url</span>=<span class="str">"http://localhost:11434"</span>,
+        <span class="var">temperature</span>=<span class="num">0.1</span>
+    )
+    <span class="var">prompt</span> = <span class="cls">ChatPromptTemplate</span>.from_template(<span class="str">"""
+You are a helpful assistant that answers questions based strictly on the provided context.
+If the answer is not in the context, say "I don't have enough information in the provided
+documents to answer this." Do not make up information.
+
+Context:
+{context}
+
+Question: {question}
+
+Answer:"""</span>)
+
+    <span class="kw">def</span> <span class="fn">format_docs</span>(<span class="var">docs</span>):
+        <span class="var">formatted</span> = []
+        <span class="kw">for</span> <span class="var">doc</span> <span class="kw">in</span> <span class="var">docs</span>:
+            <span class="var">src</span> = <span class="var">doc</span>.metadata.get(<span class="str">"source_file"</span>, <span class="str">"unknown"</span>)
+            <span class="var">formatted</span>.append(<span class="var">f</span><span class="str">"[Source: {src}]\n{doc.page_content}"</span>)
+        <span class="kw">return</span> <span class="str">"\n\n---\n\n"</span>.join(<span class="var">formatted</span>)
+
+    <span class="var">rag_chain</span> = (
+        {<span class="str">"context"</span>: <span class="var">retriever</span> | <span class="fn">format_docs</span>, <span class="str">"question"</span>: <span class="cls">RunnablePassthrough</span>()}
+        | <span class="var">prompt</span>
+        | <span class="var">llm</span>
+        | <span class="cls">StrOutputParser</span>()
+    )
+    <span class="kw">return</span> <span class="var">rag_chain</span>, <span class="var">retriever</span>
+
+
+<span class="kw">def</span> <span class="fn">ask</span>(<span class="var">question</span>: <span class="cls">str</span>, <span class="var">rag_chain</span>, <span class="var">retriever</span>):
+    <span class="fn">print</span>(<span class="var">f</span><span class="str">"\nQuestion: {question}"</span>)
+    <span class="var">retrieved_docs</span> = <span class="var">retriever</span>.invoke(<span class="var">question</span>)
+    <span class="kw">for</span> <span class="var">i</span>, <span class="var">doc</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="var">retrieved_docs</span>, <span class="num">1</span>):
+        <span class="var">src</span> = <span class="var">doc</span>.metadata.get(<span class="str">"source_file"</span>, <span class="str">"unknown"</span>)
+        <span class="fn">print</span>(<span class="var">f</span><span class="str">"  [{i}] {src}: {doc.page_content[:80].replace(chr(10),' ')}..."</span>)
+    <span class="var">answer</span> = <span class="var">rag_chain</span>.invoke(<span class="var">question</span>)
+    <span class="fn">print</span>(<span class="var">f</span><span class="str">"\nAnswer: {answer}"</span>)
+    <span class="kw">return</span> <span class="var">answer</span>
+
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="var">rag_chain</span>, <span class="var">retriever</span> = <span class="fn">build_rag_chain</span>()
+    <span class="var">questions</span> = [
+        <span class="str">"What are the main data retention policies described in the documents?"</span>,
+        <span class="str">"Who is responsible for security incident reporting?"</span>,
+        <span class="str">"What are the consequences of non-compliance?"</span>,
+    ]
+    <span class="kw">for</span> <span class="var">q</span> <span class="kw">in</span> <span class="var">questions</span>:
+        <span class="fn">ask</span>(<span class="var">q</span>, <span class="var">rag_chain</span>, <span class="var">retriever</span>)
+        <span class="fn">print</span>(<span class="str">"\n" + "="*60</span>)</code></pre>
+
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>python query.py</code></pre>
+
+<div class="callout callout-success"><strong>Why the system prompt matters:</strong> The instruction "answer only based on the provided context" is what prevents hallucination. Test explicitly by asking about something not in your documents — the model should say it doesn't know, not invent an answer.</div>
+
+<!-- STEP 5: CHAT -->
+<div class="step-header">
+  <div class="step-badge">5</div>
+  <div class="step-title">Interactive Chat Interface</div>
+  <div class="step-time">~10 min</div>
+</div>
+<p>For interactive use, a simple command-line loop with a <code>sources</code> command — which is deliberately included for compliance and debugging:</p>
+<div class="code-header"><span class="code-lang">python — chat.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="cmt"># chat.py</span>
+<span class="kw">from</span> <span class="var">langchain_core.messages</span> <span class="kw">import</span> <span class="cls">HumanMessage</span>, <span class="cls">AIMessage</span>
+<span class="kw">from</span> <span class="var">query</span> <span class="kw">import</span> <span class="fn">build_rag_chain</span>
+
+<span class="kw">def</span> <span class="fn">chat_with_documents</span>():
+    <span class="var">rag_chain</span>, <span class="var">retriever</span> = <span class="fn">build_rag_chain</span>()
+    <span class="var">history</span> = []
+    <span class="var">last_docs</span> = []
+
+    <span class="fn">print</span>(<span class="str">"RAG Chat — ask questions about your documents."</span>)
+    <span class="fn">print</span>(<span class="str">"Type 'quit' to exit, 'sources' to show last retrieved documents.\n"</span>)
+
+    <span class="kw">while</span> <span class="kw">True</span>:
+        <span class="var">question</span> = <span class="fn">input</span>(<span class="str">"You: "</span>).strip()
+        <span class="kw">if</span> <span class="var">question</span>.lower() == <span class="str">"quit"</span>: <span class="kw">break</span>
+        <span class="kw">if</span> <span class="var">question</span>.lower() == <span class="str">"sources"</span>:
+            <span class="kw">if</span> <span class="var">last_docs</span>:
+                <span class="kw">for</span> <span class="var">doc</span> <span class="kw">in</span> <span class="var">last_docs</span>:
+                    <span class="fn">print</span>(<span class="var">f</span><span class="str">"  - {doc.metadata.get('source_file', 'unknown')}"</span>)
+                    <span class="fn">print</span>(<span class="var">f</span><span class="str">"    {doc.page_content[:150]}..."</span>)
+            <span class="kw">continue</span>
+        <span class="kw">if not</span> <span class="var">question</span>: <span class="kw">continue</span>
+
+        <span class="var">last_docs</span> = <span class="var">retriever</span>.invoke(<span class="var">question</span>)
+        <span class="var">answer</span> = <span class="var">rag_chain</span>.invoke(<span class="var">question</span>)
+        <span class="fn">print</span>(<span class="var">f</span><span class="str">"\nAssistant: {answer}\n"</span>)
+        <span class="var">history</span>.extend([<span class="cls">HumanMessage</span>(<span class="var">content</span>=<span class="var">question</span>), <span class="cls">AIMessage</span>(<span class="var">content</span>=<span class="var">answer</span>)])
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="fn">chat_with_documents</span>()</code></pre>
+
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>python chat.py
+
+<span class="cmt"># You: What does the contract say about liability?</span>
+<span class="cmt"># Assistant: Based on the contract documents, liability is limited to...</span>
+<span class="cmt"># You: sources</span>
+<span class="cmt">#   - contract_v3.pdf</span>
+<span class="cmt">#     ...section 8.2 regarding limitation of liability...</span></code></pre>
+
+<!-- STEP 6: INCREMENTAL INDEXING -->
+<div class="step-header">
+  <div class="step-badge">6</div>
+  <div class="step-title">Adding New Documents Without Rebuilding</div>
+  <div class="step-time">~5 min</div>
+</div>
+<p>You don't need to re-index everything when you add new documents. Create a separate script that adds to the existing Qdrant collection:</p>
+<div class="code-header"><span class="code-lang">python — add_documents.py</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code><span class="cmt"># add_documents.py</span>
+<span class="kw">import</span> <span class="var">sys</span>
+<span class="kw">from</span> <span class="var">pathlib</span> <span class="kw">import</span> <span class="cls">Path</span>
+<span class="kw">from</span> <span class="var">langchain_community.document_loaders</span> <span class="kw">import</span> <span class="cls">PyPDFLoader</span>, <span class="cls">TextLoader</span>
+<span class="kw">from</span> <span class="var">langchain_text_splitters</span> <span class="kw">import</span> <span class="cls">RecursiveCharacterTextSplitter</span>
+<span class="kw">from</span> <span class="var">langchain_ollama</span> <span class="kw">import</span> <span class="cls">OllamaEmbeddings</span>
+<span class="kw">from</span> <span class="var">langchain_qdrant</span> <span class="kw">import</span> <span class="cls">QdrantVectorStore</span>
+<span class="kw">from</span> <span class="var">qdrant_client</span> <span class="kw">import</span> <span class="cls">QdrantClient</span>
+<span class="kw">from</span> <span class="var">index_documents</span> <span class="kw">import</span> EMBEDDING_MODEL, QDRANT_URL, COLLECTION_NAME, CHUNK_SIZE, CHUNK_OVERLAP
+
+<span class="kw">def</span> <span class="fn">add_document</span>(<span class="var">filepath</span>: <span class="cls">str</span>):
+    <span class="var">path</span> = <span class="cls">Path</span>(<span class="var">filepath</span>)
+    <span class="var">loader</span> = <span class="cls">PyPDFLoader</span>(<span class="var">filepath</span>) <span class="kw">if</span> <span class="var">path</span>.suffix.lower() == <span class="str">".pdf"</span> <span class="kw">else</span> <span class="cls">TextLoader</span>(<span class="var">filepath</span>, <span class="var">encoding</span>=<span class="str">"utf-8"</span>)
+    <span class="var">documents</span> = <span class="var">loader</span>.load()
+    <span class="kw">for</span> <span class="var">doc</span> <span class="kw">in</span> <span class="var">documents</span>: <span class="var">doc</span>.metadata[<span class="str">"source_file"</span>] = <span class="var">path</span>.name
+
+    <span class="var">chunks</span> = <span class="cls">RecursiveCharacterTextSplitter</span>(
+        <span class="var">chunk_size</span>=CHUNK_SIZE, <span class="var">chunk_overlap</span>=CHUNK_OVERLAP
+    ).split_documents(<span class="var">documents</span>)
+
+    <span class="var">embeddings</span> = <span class="cls">OllamaEmbeddings</span>(<span class="var">model</span>=EMBEDDING_MODEL, <span class="var">base_url</span>=<span class="str">"http://localhost:11434"</span>)
+    <span class="var">client</span> = <span class="cls">QdrantClient</span>(<span class="var">url</span>=QDRANT_URL)
+
+    <span class="cmt"># add_documents on an existing QdrantVectorStore instance — no recreate</span>
+    <span class="var">vectorstore</span> = <span class="cls">QdrantVectorStore</span>(<span class="var">client</span>=<span class="var">client</span>, <span class="var">collection_name</span>=COLLECTION_NAME, <span class="var">embedding</span>=<span class="var">embeddings</span>)
+    <span class="var">vectorstore</span>.add_documents(<span class="var">chunks</span>)
+    <span class="fn">print</span>(<span class="var">f</span><span class="str">"Added {len(chunks)} chunks from {path.name}"</span>)
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="kw">if</span> <span class="fn">len</span>(<span class="var">sys</span>.argv) < <span class="num">2</span>:
+        <span class="fn">print</span>(<span class="str">"Usage: python add_documents.py path/to/document.pdf"</span>)
+    <span class="kw">else</span>: <span class="fn">add_document</span>(<span class="var">sys</span>.argv[<span class="num">1</span>])</code></pre>
+
+<div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>python add_documents.py new_policy_document.pdf
+<span class="cmt"># Added 47 chunks from new_policy_document.pdf</span></code></pre>
+<p>The new document is immediately searchable. No downtime, no full reindex.</p>
+
+<!-- PRACTICAL CONSIDERATIONS -->
+<h2>Practical Considerations</h2>
+<p><strong>Chunk size tuning</strong> is the single biggest lever for RAG quality. Smaller chunks (500) give more precise retrieval but may lack context. Larger chunks (2000) provide more context per result but reduce precision. Start at 1000 and experiment.</p>
+<p><strong>TOP_K</strong> (retrieved chunks per query) affects quality and prompt length. More chunks = more context but more tokens and more noise. Start with 4, experiment with 3–6.</p>
+<p><strong>Embedding model consistency is mandatory.</strong> The model used during indexing and during query must be identical. If you switch embedding models, you must re-index your entire collection — vectors from different models are not comparable.</p>
+<p><strong>The system prompt</strong> instruction to "answer only based on the provided context" is what prevents the model from mixing retrieved content with training data in ways that produce confident-sounding hallucinations.</p>
+
+<!-- DOCKER COMPOSE -->
+<h2>Complete Docker Compose Setup</h2>
+<p>Combining all three articles, here's a <code>docker-compose.yaml</code> that runs the full stack as a persistent local service. Two files required in the same folder, as in Article #2:</p>
+<div class="code-header"><span class="code-lang">yaml — docker-compose.yaml</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>services:
+  ollama:
+    image: ollama/ollama
+    volumes:
+      - ollama_models:/root/.ollama
+    ports:
+      - <span class="str">"11434:11434"</span>
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    ports:
+      - <span class="str">"6333:6333"</span>
+    restart: unless-stopped
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    ports:
+      - <span class="str">"4000:4000"</span>
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-not_set}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-not_set}
+    command: [<span class="str">"--config"</span>, <span class="str">"/app/config.yaml"</span>, <span class="str">"--port"</span>, <span class="str">"4000"</span>]
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_models:
+  qdrant_storage:</code></pre>
+
+<div class="code-header"><span class="code-lang">bash — start the full stack</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+<pre><code>docker compose up -d
+
+<span class="cmt"># Pull models once</span>
+docker compose exec ollama ollama pull llama3.1:8b
+docker compose exec ollama ollama pull nomic-embed-text</code></pre>
+
+<!-- WHAT YOU'VE BUILT -->
+<h2>What You've Built</h2>
+<p>Across three articles you've assembled a complete local AI data stack:</p>
+<ul>
+  <li>A local LLM serving inference via Ollama (article #1)</li>
+  <li>An LLM gateway with routing, cost tracking, and access control via LiteLLM (article #2)</li>
+  <li>A document retrieval layer that makes your own data queryable without sending it anywhere (this article)</li>
+</ul>
+<p>Every component — embedding, vector search, language model inference — runs locally. The data flow is end-to-end private and verifiable, not just a policy claim.</p>
+
+<!-- TROUBLESHOOTING -->
+<h2>Common Issues</h2>
+<div class="trouble-list">
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">ImportError: cannot import name 'Qdrant' from 'langchain_community.vectorstores'<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">The old <code>Qdrant</code> class was deprecated and removed. Install the correct package: <code>pip install langchain-qdrant</code>. Then use <code>from langchain_qdrant import QdrantVectorStore</code> — that's what all code in this article uses.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">ImportError: cannot import name 'RunnablePassthrough' from 'langchain.schema.runnable'<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">Import paths moved to <code>langchain_core</code>. Use: <code>from langchain_core.runnables import RunnablePassthrough</code>, <code>from langchain_core.output_parsers import StrOutputParser</code>, <code>from langchain_core.prompts import ChatPromptTemplate</code>.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">Qdrant connection refused on port 6333<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">The Qdrant container isn't running. Run <code>docker ps</code> to check. If it's missing, restart with <code>docker run -d --name qdrant -p 6333:6333 -v $(pwd)/qdrant_storage:/qdrant/storage qdrant/qdrant</code>. If it stopped unexpectedly: <code>docker start qdrant</code>.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">Collection not found — but I indexed documents earlier<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">You ran Qdrant without the <code>-v</code> volume flag. Without persistent storage, the entire collection disappears when the container restarts. Re-run the indexing script and always use the volume mount.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">Embedding is very slow (minutes per document)<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">Embedding runs on your local hardware. On CPU, expect 50–200 chunks per minute. For large document collections, let it run overnight. On Apple Silicon or with an NVIDIA GPU, Ollama will use the accelerator automatically and embedding will be significantly faster.</div>
+  </div>
+  <div class="trouble-item">
+    <div class="trouble-q" onclick="toggleTrouble(this)">RAG answers are hallucinated or irrelevant<span class="trouble-chevron">▼</span></div>
+    <div class="trouble-a">Two separate problems: (1) <strong>Hallucination</strong> — ensure the system prompt says "answer only based on the provided context." (2) <strong>Irrelevant chunks retrieved</strong> — experiment with smaller chunk sizes (500–800) and verify that embeddings are from the same model used during indexing.</div>
+  </div>
+</div>
+
+<!-- NEXT -->
+<div class="next-article">
+  <div>
+    <div class="next-label">Up next · Article #4</div>
+    <div class="next-title">MCP Protocol Explained — How AI Agents Securely Access Your Data</div>
+    <div class="next-desc">RAG works for static documents. For live data — your databases, APIs, and internal tools — you need MCP. We build an MCP server that gives your local AI agent secure, controlled access to real data sources.</div>
+  </div>
+  <div class="next-arrow">→</div>
+</div>
+
+<!-- FOOTER -->
+<div class="article-footer">
+  <div class="footer-series">
+    Part of the <strong>Local Sovereign AI</strong> series — 26 articles on building local AI infrastructure<br>
+    using open-source tools, from model serving to production-grade agentic workflows.
+  </div>
+  <a href="https://bitropy.io" target="_blank" class="footer-brand">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect width="18" height="18" rx="4" fill="#111827"/>
+      <circle cx="5"  cy="5"  r="1.4" fill="white" opacity="1"/>
+      <circle cx="9"  cy="5"  r="1.4" fill="white" opacity="0.7"/>
+      <circle cx="13" cy="5"  r="1.4" fill="white" opacity="0.35"/>
+      <circle cx="5"  cy="9"  r="1.4" fill="white" opacity="0.7"/>
+      <circle cx="9"  cy="9"  r="1.4" fill="white" opacity="1"/>
+      <circle cx="13" cy="9"  r="1.4" fill="white" opacity="0.5"/>
+      <circle cx="5"  cy="13" r="1.4" fill="white" opacity="0.35"/>
+      <circle cx="9"  cy="13" r="1.4" fill="white" opacity="0.5"/>
+      <circle cx="13" cy="13" r="1.4" fill="white" opacity="1"/>
+    </svg>
+    bitropy.io
+  </a>
+</div>
+
+</article>
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  const pct = (d.scrollTop / (d.scrollHeight - d.clientHeight)) * 100;
+  document.getElementById('progress-bar').style.width = Math.min(pct,100) + '%';
+});
+function copyCode(btn) {
+  const pre = btn.closest('.code-header').nextElementSibling;
+  navigator.clipboard.writeText(pre ? pre.innerText : '').then(() => {
+    btn.textContent = 'copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function toggleTrouble(el) { el.parentElement.classList.toggle('open'); }
+</script>
+</body>
+</html>
