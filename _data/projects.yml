@@ -38,3 +38,9 @@
 - title: "Pyramid builder"
   url: /projects/pyramid-builder.html
   description: "Pyramid builder."
+
+- title: "Cones builder"
+  url: /projects/cone_generator.html
+  description: "Cone generator."
+
+

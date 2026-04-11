@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bent Cone Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;600;700&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --panel: #111118;
+    --panel-border: #1e1e2a;
+    --accent: #f97316;
+    --accent-hover: #fb923c;
+    --accent-glow: rgba(249,115,22,0.2);
+    --text: #e2e2ea;
+    --text-dim: #6b6b80;
+    --text-label: #9090a8;
+    --slider-track: #1e1e2e;
+    --btn2: #3b82f6;
+    --btn2-hover: #60a5fa;
+    --btn2-glow: rgba(59,130,246,0.2);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .controls {
+    width: 340px;
+    min-width: 340px;
+    height: 100vh;
+    background: var(--panel);
+    border-right: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .controls-header {
+    padding: 18px 24px 12px;
+    border-bottom: 1px solid var(--panel-border);
+    flex-shrink: 0;
+  }
+  .controls-header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+  .controls-header p { font-size: 11px; color: var(--text-dim); font-weight: 300; margin-top: 2px; }
+
+  .controls-body {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--panel-border) transparent;
+  }
+
+  .param-section {
+    padding: 14px 24px 6px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .param-section h3 {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--text-dim); margin-bottom: 12px;
+  }
+  .param-row { margin-bottom: 14px; }
+  .param-label-row {
+    display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px;
+  }
+  .param-label { font-size: 13px; color: var(--text-label); }
+  .param-value {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    font-weight: 500; color: var(--accent); min-width: 48px; text-align: right;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 4px;
+    border-radius: 2px; background: var(--slider-track); outline: none; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--bg);
+    box-shadow: 0 0 8px var(--accent-glow); cursor: pointer; transition: transform 0.15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%; background: var(--accent);
+    border: 2px solid var(--bg); box-shadow: 0 0 8px var(--accent-glow); cursor: pointer;
+  }
+
+  /* Sticky footer */
+  .controls-footer {
+    flex-shrink: 0;
+    padding: 14px 24px 16px;
+    border-top: 1px solid var(--panel-border);
+    background: var(--panel);
+  }
+
+  .btn-row { display: flex; gap: 8px; }
+
+  .btn-download {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    flex: 1; padding: 14px 12px;
+    border: none; border-radius: 10px;
+    font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s ease; letter-spacing: 0.01em;
+  }
+  .btn-download svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .btn-single {
+    background: var(--accent); color: #000;
+  }
+  .btn-single:hover {
+    background: var(--accent-hover); transform: translateY(-1px);
+    box-shadow: 0 6px 20px var(--accent-glow);
+  }
+
+  .btn-grid {
+    background: var(--btn2); color: #fff;
+  }
+  .btn-grid:hover {
+    background: var(--btn2-hover); transform: translateY(-1px);
+    box-shadow: 0 6px 20px var(--btn2-glow);
+  }
+
+  .btn-download:active { transform: translateY(0); }
+
+  .stats {
+    margin-top: 10px; font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--text-dim); line-height: 1.7; text-align: center;
+  }
+  .stats span { color: var(--text-label); }
+
+  .viewport { flex: 1; position: relative; background: var(--bg); }
+  #canvas3d { width: 100%; height: 100%; display: block; }
+  .viewport-hint {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; color: var(--text-dim); pointer-events: none; opacity: 0.5;
+  }
+
+  @media (max-width: 768px) {
+    body { flex-direction: column; }
+    .controls { width: 100%; min-width: unset; height: auto; max-height: 55vh; border-right: none; border-bottom: 1px solid var(--panel-border); }
+    .viewport { height: 45vh; }
+    .btn-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <div class="controls-header">
+    <h1>Bent Cone Generator</h1>
+    <p>Octagonal cone with wind lean — for 3D printing</p>
+  </div>
+
+  <div class="controls-body">
+    <div class="param-section">
+      <h3>Base</h3>
+      <div class="param-row">
+        <div class="param-label-row">
+          <span class="param-label">Base Radius</span>
+          <span class="param-value" id="val-baseRadius">15 mm</span>
+        </div>
+        <input type="range" id="baseRadius" min="5" max="40" step="0.5" value="15">
+      </div>
+      <div class="param-row">
+        <div class="param-label-row">
+          <span class="param-label">Base Height</span>
+          <span class="param-value" id="val-baseHeight">5 mm</span>
+        </div>
+        <input type="range" id="baseHeight" min="2" max="15" step="0.5" value="5">
+      </div>
+    </div>
+
+    <div class="param-section">
+      <h3>Cone Shape</h3>
+      <div class="param-row">
+        <div class="param-label-row">
+          <span class="param-label">Cone Height</span>
+          <span class="param-value" id="val-coneHeight">100 mm</span>
+        </div>
+        <input type="range" id="coneHeight" min="30" max="200" step="1" value="100">
+      </div>
+      <div class="param-row">
+        <div class="param-label-row">
+          <span class="param-label">Tip Radius</span>
+          <span class="param-value" id="val-tipRadius">1 mm</span>
+        </div>
+        <input type="range" id="tipRadius" min="0" max="8" step="0.5" value="1">
+      </div>
+      <div class="param-row">
+        <div class="param-label-row">
+          <span class="param-label">Sides</span>
+          <span class="param-value" id="val-sides">8</span>
+        </div>
+        <input type="range" id="sides" min="3" max="24" step="1" value="8">
+      </div>
+    </div>
+
+    <div class="param-section">
+      <h3>Wind Lean</h3>
+      <div class="param-row">
+        <div class="param-label-row">
+          <span class="param-label">Lean Offset</span>
+          <span class="param-value" id="val-leanOffset">40 mm</span>
+        </div>
+        <input type="range" id="leanOffset" min="0" max="100" step="1" value="40">
+      </div>
+      <div class="param-row">
+        <div class="param-label-row">
+          <span class="param-label">Lean Power</span>
+          <span class="param-value" id="val-leanPower">2.2</span>
+        </div>
+        <input type="range" id="leanPower" min="1" max="5" step="0.1" value="2.2">
+      </div>
+      <div class="param-row">
+        <div class="param-label-row">
+          <span class="param-label">Lean Direction</span>
+          <span class="param-value" id="val-leanDir">0°</span>
+        </div>
+        <input type="range" id="leanDir" min="0" max="360" step="5" value="0">
+      </div>
+    </div>
+
+    <div class="param-section">
+      <h3>Grid Layout (preview)</h3>
+      <div class="param-row">
+        <div class="param-label-row">
+          <span class="param-label">Rows</span>
+          <span class="param-value" id="val-rows">1</span>
+        </div>
+        <input type="range" id="rows" min="1" max="12" step="1" value="1">
+      </div>
+      <div class="param-row">
+        <div class="param-label-row">
+          <span class="param-label">Columns</span>
+          <span class="param-value" id="val-cols">1</span>
+        </div>
+        <input type="range" id="cols" min="1" max="12" step="1" value="1">
+      </div>
+      <div class="param-row">
+        <div class="param-label-row">
+          <span class="param-label">Spacing</span>
+          <span class="param-value" id="val-spacing">35 mm</span>
+        </div>
+        <input type="range" id="spacing" min="10" max="80" step="1" value="35">
+      </div>
+    </div>
+  </div>
+
+  <div class="controls-footer">
+    <div class="btn-row">
+      <button class="btn-download btn-single" id="downloadSingle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Single STL
+      </button>
+      <button class="btn-download btn-grid" id="downloadGrid">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        <span class="btn-label">Grid STL</span>
+      </button>
+    </div>
+    <div class="stats" id="stats">
+      <span>Cone:</span> — · <span>Grid:</span> —
+    </div>
+  </div>
+</div>
+
+<div class="viewport">
+  <canvas id="canvas3d"></canvas>
+  <div class="viewport-hint">drag to orbit · scroll to zoom</div>
+</div>
+
+<script>
+// ── THREE.JS ──
+const canvas = document.getElementById('canvas3d');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0a0a0f);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 5000);
+
+let isDragging = false, prevMouse = {x:0,y:0};
+let orbitTheta = -0.6, orbitPhi = 0.65, orbitDist = 300;
+let orbitTarget = new THREE.Vector3(0, 40, 0);
+
+function updateCamera() {
+  const cp = Math.cos(orbitPhi), sp = Math.sin(orbitPhi);
+  const ct = Math.cos(orbitTheta), st = Math.sin(orbitTheta);
+  camera.position.set(
+    orbitTarget.x + orbitDist * cp * st,
+    orbitTarget.y + orbitDist * sp,
+    orbitTarget.z + orbitDist * cp * ct
+  );
+  camera.lookAt(orbitTarget);
+}
+
+canvas.addEventListener('pointerdown', e => { isDragging = true; prevMouse = {x:e.clientX,y:e.clientY}; });
+window.addEventListener('pointerup', () => isDragging = false);
+canvas.addEventListener('pointermove', e => {
+  if (!isDragging) return;
+  orbitTheta -= (e.clientX - prevMouse.x) * 0.005;
+  orbitPhi = Math.max(0.05, Math.min(1.52, orbitPhi + (e.clientY - prevMouse.y) * 0.005));
+  prevMouse = {x:e.clientX,y:e.clientY};
+  updateCamera();
+});
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  orbitDist = Math.max(30, Math.min(2000, orbitDist + e.deltaY * 0.4));
+  updateCamera();
+}, {passive:false});
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+dl.position.set(80, 150, 100); scene.add(dl);
+const fl2 = new THREE.DirectionalLight(0x88aaff, 0.25);
+fl2.position.set(-50, 40, -80);
+scene.add(fl2);
+
+scene.add(new THREE.GridHelper(600, 40, 0x1a1a2e, 0x141420));
+
+// ── GEOMETRY ──
+// Cone is built with Y as UP (Three.js convention)
+// Base sits on Y=0 plane, cone grows upward along +Y
+// Lean is applied in XZ plane
+
+let coneMeshes = [];
+
+function getParams() {
+  return {
+    baseRadius: +document.getElementById('baseRadius').value,
+    baseHeight: +document.getElementById('baseHeight').value,
+    coneHeight: +document.getElementById('coneHeight').value,
+    tipRadius:  +document.getElementById('tipRadius').value,
+    sides:      +document.getElementById('sides').value,
+    leanOffset: +document.getElementById('leanOffset').value,
+    leanPower:  +document.getElementById('leanPower').value,
+    leanDir:    +document.getElementById('leanDir').value * Math.PI / 180,
+    rows:       +document.getElementById('rows').value,
+    cols:       +document.getElementById('cols').value,
+    spacing:    +document.getElementById('spacing').value,
+  };
+}
+
+/**
+ * Generate cone geometry with Y as up-axis.
+ * Base octagon at Y=0, tip at Y = baseHeight + coneHeight.
+ * Lean offsets in X,Z plane.
+ */
+function generateConeGeometry(p) {
+  const nSeg = 60, n = p.sides;
+  const verts = [], idx = [];
+
+  // Generate a polygon ring at height y, centered at (cx, cz)
+  function ring(radius, cx, cz, y) {
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const a = 2 * Math.PI * i / n;
+      // X,Z is the horizontal plane, Y is up
+      out.push(
+        radius * Math.cos(a) + cx,  // X
+        y,                            // Y (up)
+        radius * Math.sin(a) + cz   // Z
+      );
+    }
+    return out;
+  }
+
+  const rings = [];
+
+  // Straight base section (Y = 0 to baseHeight), no lean, full radius
+  const nB = Math.max(2, Math.floor(nSeg * p.baseHeight / p.coneHeight));
+  for (let i = 0; i <= nB; i++) {
+    const y = p.baseHeight * i / nB;
+    rings.push(ring(p.baseRadius, 0, 0, y));
+  }
+
+  // Tapered cone section with progressive lean
+  const cosD = Math.cos(p.leanDir), sinD = Math.sin(p.leanDir);
+  for (let i = 1; i <= nSeg; i++) {
+    const t = i / nSeg;
+    const y = p.baseHeight + t * p.coneHeight;
+    const r = p.baseRadius * (1 - t) + p.tipRadius * t;
+    const lean = p.leanOffset * Math.pow(t, p.leanPower);
+    // Lean direction maps to X,Z
+    const lx = lean * cosD;
+    const lz = lean * sinD;
+    rings.push(ring(r, lx, lz, y));
+  }
+
+  // Pack into flat vertex array
+  for (const rng of rings) {
+    for (let i = 0; i < rng.length; i += 3) {
+      verts.push(rng[i], rng[i+1], rng[i+2]);
+    }
+  }
+
+  // Side faces
+  const nR = rings.length;
+  for (let ri = 0; ri < nR - 1; ri++) {
+    for (let j = 0; j < n; j++) {
+      const jn = (j+1) % n;
+      const a = ri*n+j, b = ri*n+jn, c = (ri+1)*n+jn, d = (ri+1)*n+j;
+      idx.push(a, b, c, a, c, d);
+    }
+  }
+
+  // Bottom cap at Y=0 (normal pointing DOWN = -Y)
+  const bcIdx = verts.length / 3;
+  verts.push(0, 0, 0); // center of base
+  for (let j = 0; j < n; j++) {
+    const jn = (j+1) % n;
+    idx.push(bcIdx, jn, j); // winding for downward normal
+  }
+
+  // Top cap
+  const ts = (nR - 1) * n;
+  let tx = 0, ty = 0, tz = 0;
+  for (let j = 0; j < n; j++) {
+    const k = ts + j;
+    tx += verts[k*3]; ty += verts[k*3+1]; tz += verts[k*3+2];
+  }
+  const tcIdx = verts.length / 3;
+  verts.push(tx/n, ty/n, tz/n);
+  for (let j = 0; j < n; j++) {
+    idx.push(tcIdx, ts+j, ts+(j+1)%n);
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  return { geo, triCount: idx.length / 3 };
+}
+
+function rebuildScene() {
+  for (const m of coneMeshes) { scene.remove(m); m.geometry.dispose(); m.material.dispose(); }
+  coneMeshes = [];
+
+  const p = getParams();
+  const { geo, triCount } = generateConeGeometry(p);
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: 0xf97316, metalness: 0.05, roughness: 0.4, clearcoat: 0.3, side: THREE.DoubleSide,
+  });
+
+  // Grid: rows along Z, columns along X
+  const rOff = (p.rows - 1) * p.spacing;
+  const cOff = (p.cols - 1) * p.spacing;
+
+  for (let r = 0; r < p.rows; r++) {
+    for (let c = 0; c < p.cols; c++) {
+      const mesh = new THREE.Mesh(geo.clone(), mat.clone());
+      mesh.position.x = c * p.spacing - cOff / 2;
+      mesh.position.z = r * p.spacing - rOff / 2;
+      mesh.position.y = 0; // base on ground
+      scene.add(mesh);
+      coneMeshes.push(mesh);
+    }
+  }
+
+  // Stats
+  geo.computeBoundingBox();
+  const bb = geo.boundingBox;
+  const sx = (bb.max.x - bb.min.x).toFixed(1);
+  const sy = (bb.max.y - bb.min.y).toFixed(1);
+  const sz = (bb.max.z - bb.min.z).toFixed(1);
+  const total = p.rows * p.cols;
+
+  document.getElementById('stats').innerHTML =
+    `<span>Cone:</span> ${sx}×${sz}×${sy} mm (w×d×h) · ` +
+    `<span>Grid:</span> ${p.rows}×${p.cols}=${total} · ` +
+    `<span>Tri:</span> ${(triCount * total).toLocaleString()}`;
+
+  // Update grid button label
+  document.getElementById('downloadGrid').querySelector('.btn-label').textContent =
+    total > 1 ? `Grid ${p.rows}×${p.cols} STL` : 'Grid STL';
+
+  // Camera
+  orbitTarget.set(0, (p.baseHeight + p.coneHeight) / 3, 0);
+  const span = Math.max(p.rows, p.cols) * p.spacing;
+  if (total > 1) orbitDist = Math.max(200, span * 1.5 + p.coneHeight);
+  updateCamera();
+}
+
+// ── STL EXPORT ──
+function buildSTLBinary(vertArrays) {
+  // vertArrays: array of { positions: Float32Array, indices: Uint32Array/Array }
+  // Each set of indices references its own positions.
+  // We merge them all into one STL.
+
+  let totalTri = 0;
+  for (const va of vertArrays) totalTri += va.indices.length / 3;
+
+  const buf = new ArrayBuffer(80 + 4 + totalTri * 50);
+  const dv = new DataView(buf);
+
+  const hdr = "Bent Octagonal Cone - Generator";
+  for (let i = 0; i < 80; i++) dv.setUint8(i, i < hdr.length ? hdr.charCodeAt(i) : 0);
+  dv.setUint32(80, totalTri, true);
+
+  let off = 84;
+
+  for (const va of vertArrays) {
+    const pos = va.positions;
+    const ix = va.indices;
+    const ox = va.offsetX || 0;
+    const oz = va.offsetZ || 0;
+    const nTri = ix.length / 3;
+
+    for (let t = 0; t < nTri; t++) {
+      const i0 = ix[t*3], i1 = ix[t*3+1], i2 = ix[t*3+2];
+
+      // For STL: X,Z are horizontal, Y is up
+      // We write as: STL X = three X, STL Y = three Z, STL Z = three Y
+      // So the slicer sees Z as up
+      const ax = pos[i0*3] + ox, ay = pos[i0*3+1], az = pos[i0*3+2] + oz;
+      const bx = pos[i1*3] + ox, by = pos[i1*3+1], bz = pos[i1*3+2] + oz;
+      const cx = pos[i2*3] + ox, cy = pos[i2*3+1], cz = pos[i2*3+2] + oz;
+
+      // Remap: STL (x, y, z) = Three.js (x, z, y) so Z is up in slicer
+      const sax = ax, say = az, saz = ay;
+      const sbx = bx, sby = bz, sbz = by;
+      const scx = cx, scy = cz, scz = cy;
+
+      // Normal
+      const e1x = sbx-sax, e1y = sby-say, e1z = sbz-saz;
+      const e2x = scx-sax, e2y = scy-say, e2z = scz-saz;
+      let nx = e1y*e2z - e1z*e2y;
+      let ny = e1z*e2x - e1x*e2z;
+      let nz = e1x*e2y - e1y*e2x;
+      const len = Math.sqrt(nx*nx+ny*ny+nz*nz) || 1;
+      nx /= len; ny /= len; nz /= len;
+
+      dv.setFloat32(off, nx, true); off += 4;
+      dv.setFloat32(off, ny, true); off += 4;
+      dv.setFloat32(off, nz, true); off += 4;
+
+      dv.setFloat32(off, sax, true); off += 4;
+      dv.setFloat32(off, say, true); off += 4;
+      dv.setFloat32(off, saz, true); off += 4;
+
+      dv.setFloat32(off, sbx, true); off += 4;
+      dv.setFloat32(off, sby, true); off += 4;
+      dv.setFloat32(off, sbz, true); off += 4;
+
+      dv.setFloat32(off, scx, true); off += 4;
+      dv.setFloat32(off, scy, true); off += 4;
+      dv.setFloat32(off, scz, true); off += 4;
+
+      dv.setUint16(off, 0, true); off += 2;
+    }
+  }
+  return buf;
+}
+
+function exportSingle() {
+  const p = getParams();
+  const { geo } = generateConeGeometry(p);
+  const pos = geo.getAttribute('position').array;
+  const indices = Array.from(geo.getIndex().array);
+  return buildSTLBinary([{ positions: pos, indices, offsetX: 0, offsetZ: 0 }]);
+}
+
+function exportGrid() {
+  const p = getParams();
+  const { geo } = generateConeGeometry(p);
+  const pos = geo.getAttribute('position').array;
+  const indices = Array.from(geo.getIndex().array);
+
+  const vertArrays = [];
+  const rOff = (p.rows - 1) * p.spacing;
+  const cOff = (p.cols - 1) * p.spacing;
+
+  for (let r = 0; r < p.rows; r++) {
+    for (let c = 0; c < p.cols; c++) {
+      vertArrays.push({
+        positions: pos,
+        indices,
+        offsetX: c * p.spacing - cOff / 2,
+        offsetZ: r * p.spacing - rOff / 2,
+      });
+    }
+  }
+  return buildSTLBinary(vertArrays);
+}
+
+function downloadBlob(data, filename) {
+  const blob = new Blob([data], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('downloadSingle').addEventListener('click', () => {
+  const p = getParams();
+  downloadBlob(exportSingle(), `cone_r${p.baseRadius}_h${p.coneHeight}_lean${p.leanOffset}.stl`);
+});
+
+document.getElementById('downloadGrid').addEventListener('click', () => {
+  const p = getParams();
+  downloadBlob(exportGrid(), `cone_grid_${p.rows}x${p.cols}_r${p.baseRadius}_h${p.coneHeight}.stl`);
+});
+
+// ── UI ──
+const sliders = ['baseRadius','baseHeight','coneHeight','tipRadius','sides',
+                 'leanOffset','leanPower','leanDir','rows','cols','spacing'];
+const units = {baseRadius:' mm',baseHeight:' mm',coneHeight:' mm',tipRadius:' mm',
+  sides:'',leanOffset:' mm',leanPower:'',leanDir:'°',rows:'',cols:'',spacing:' mm'};
+
+sliders.forEach(id => {
+  document.getElementById(id).addEventListener('input', function() {
+    document.getElementById('val-'+id).textContent = this.value + (units[id]||'');
+    rebuildScene();
+  });
+});
+
+function resize() {
+  const r = canvas.parentElement.getBoundingClientRect();
+  renderer.setSize(r.width, r.height);
+  camera.aspect = r.width / r.height;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+(function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); })();
+
+resize(); updateCamera(); rebuildScene();
+</script>
+</body>
+</html>
