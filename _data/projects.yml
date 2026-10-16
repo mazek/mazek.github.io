@@ -44,3 +44,6 @@
   description: "Cone generator."
 
 
+- title: "Heksy generator"
+  url: /projects/heksy-generator.html
+  description: "Paper hex relief generator."
