@@ -455,60 +455,52 @@ footer a:hover { text-decoration: underline; }
         <text class="lbl" x="590" y="44">+9V</text>
         <line class="wire" x1="100" y1="380" x2="580" y2="380" opacity="0.5"/>
         <text class="lbl" x="590" y="384">GND</text>
-        <!-- R1 -->
+        <!-- R1: collector resistor Q1 -->
         <line class="wire" x1="160" y1="40" x2="160" y2="62"/>
         <rect x="148" y="62" width="24" height="50" rx="4" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
-        <text class="lbl" x="124" y="90" text-anchor="end">R1 1k</text>
-        <line class="wire" x1="160" y1="112" x2="160" y2="150"/>
-        <!-- R2 -->
+        <text class="lbl" x="136" y="90" text-anchor="end">R1 1k</text>
+        <line class="wire" x1="160" y1="112" x2="160" y2="252"/>
+        <!-- R3: base resistor Q1 (to +9V) -->
+        <line class="wire" x1="260" y1="40" x2="260" y2="62"/>
+        <rect x="248" y="62" width="24" height="50" rx="4" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+        <text class="lbl-val" x="280" y="90">R3 100k</text>
+        <line class="wire" x1="260" y1="112" x2="260" y2="280"/>
+        <!-- R4: base resistor Q2 (to +9V) -->
+        <line class="wire" x1="420" y1="40" x2="420" y2="62"/>
+        <rect x="408" y="62" width="24" height="50" rx="4" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+        <text class="lbl-val" x="400" y="90" text-anchor="end">R4 100k</text>
+        <line class="wire" x1="420" y1="112" x2="420" y2="280"/>
+        <!-- R2: collector resistor Q2 -->
         <line class="wire" x1="480" y1="40" x2="480" y2="62"/>
         <rect x="468" y="62" width="24" height="50" rx="4" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
-        <text class="lbl" x="516" y="90">R2 1k</text>
-        <line class="wire" x1="480" y1="112" x2="480" y2="150"/>
-        <!-- Collector dots -->
-        <circle cx="160" cy="150" r="3" class="comp-fill"/>
-        <circle cx="480" cy="150" r="3" class="comp-fill"/>
+        <text class="lbl" x="504" y="90">R2 1k</text>
+        <line class="wire" x1="480" y1="112" x2="480" y2="252"/>
         <!-- Q1 -->
-        <circle id="sv-q1" cx="160" cy="220" r="28" class="comp"/>
-        <text class="lbl" x="160" y="224" text-anchor="middle" font-weight="500">Q1</text>
-        <line class="wire" x1="160" y1="150" x2="160" y2="192"/>
-        <line class="wire" x1="160" y1="248" x2="160" y2="300"/>
-        <line class="wire" x1="132" y1="220" x2="100" y2="220"/>
+        <circle id="sv-q1" cx="160" cy="280" r="28" class="comp"/>
+        <text class="lbl" x="160" y="284" text-anchor="middle" font-weight="500">Q1</text>
+        <line class="wire" x1="188" y1="280" x2="260" y2="280"/>
+        <line class="wire" x1="160" y1="308" x2="160" y2="380"/>
         <!-- Q2 -->
-        <circle id="sv-q2" cx="480" cy="220" r="28" class="comp"/>
-        <text class="lbl" x="480" y="224" text-anchor="middle" font-weight="500">Q2</text>
-        <line class="wire" x1="480" y1="150" x2="480" y2="192"/>
-        <line class="wire" x1="480" y1="248" x2="480" y2="300"/>
-        <line class="wire" x1="508" y1="220" x2="540" y2="220"/>
-        <!-- R3 -->
-        <line class="wire" x1="100" y1="220" x2="100" y2="310"/>
-        <rect x="88" y="310" width="24" height="40" rx="4" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
-        <text class="lbl-val" x="74" y="334" text-anchor="end">R3 100k</text>
-        <line class="wire" x1="100" y1="350" x2="100" y2="380"/>
-        <!-- R4 -->
-        <line class="wire" x1="540" y1="220" x2="540" y2="310"/>
-        <rect x="528" y="310" width="24" height="40" rx="4" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
-        <text class="lbl-val" x="566" y="334">R4 100k</text>
-        <line class="wire" x1="540" y1="350" x2="540" y2="380"/>
-        <!-- GND connections -->
-        <line class="wire" x1="160" y1="300" x2="160" y2="380"/>
-        <line class="wire" x1="480" y1="300" x2="480" y2="380"/>
-        <!-- C1 -->
-        <line class="wire" x1="160" y1="150" x2="260" y2="150"/>
-        <line x1="260" y1="136" x2="260" y2="164" stroke="var(--accent)" stroke-width="2.5"/>
-        <line x1="270" y1="136" x2="270" y2="164" stroke="var(--accent)" stroke-width="2.5"/>
-        <text class="lbl" x="265" y="128" text-anchor="middle">C1 47uF</text>
-        <line class="wire" x1="270" y1="150" x2="340" y2="150"/>
-        <!-- C2 -->
-        <line class="wire" x1="480" y1="150" x2="380" y2="150"/>
-        <line x1="380" y1="136" x2="380" y2="164" stroke="var(--accent)" stroke-width="2.5"/>
-        <line x1="370" y1="136" x2="370" y2="164" stroke="var(--accent)" stroke-width="2.5"/>
-        <text class="lbl" x="375" y="180" text-anchor="middle">C2 47uF</text>
-        <!-- Cross-coupling -->
-        <line class="wire" x1="340" y1="150" x2="340" y2="190"/>
-        <circle cx="340" cy="150" r="3" class="comp-fill"/>
-        <line class="wire" x1="340" y1="190" x2="100" y2="220" stroke-dasharray="4 3" opacity="0.5"/>
-        <line class="wire" x1="340" y1="190" x2="540" y2="220" stroke-dasharray="4 3" opacity="0.5"/>
+        <circle id="sv-q2" cx="480" cy="280" r="28" class="comp"/>
+        <text class="lbl" x="480" y="284" text-anchor="middle" font-weight="500">Q2</text>
+        <line class="wire" x1="452" y1="280" x2="420" y2="280"/>
+        <line class="wire" x1="480" y1="308" x2="480" y2="380"/>
+        <!-- C1: collector Q1 → base Q2 (crosses R3 wire, no junction) -->
+        <line class="wire" x1="160" y1="150" x2="290" y2="150"/>
+        <line x1="290" y1="136" x2="290" y2="164" stroke="var(--accent)" stroke-width="2.5"/>
+        <line x1="300" y1="136" x2="300" y2="164" stroke="var(--accent)" stroke-width="2.5"/>
+        <text class="lbl" x="295" y="128" text-anchor="middle">C1 2.2uF</text>
+        <line class="wire" x1="300" y1="150" x2="420" y2="150"/>
+        <circle cx="160" cy="150" r="3" class="comp-fill"/>
+        <circle cx="420" cy="150" r="3" class="comp-fill"/>
+        <!-- C2: collector Q2 → base Q1 (crosses R4 wire, no junction) -->
+        <line class="wire" x1="480" y1="200" x2="370" y2="200"/>
+        <line x1="370" y1="186" x2="370" y2="214" stroke="var(--accent)" stroke-width="2.5"/>
+        <line x1="360" y1="186" x2="360" y2="214" stroke="var(--accent)" stroke-width="2.5"/>
+        <text class="lbl" x="365" y="232" text-anchor="middle">C2 2.2uF</text>
+        <line class="wire" x1="360" y1="200" x2="260" y2="200"/>
+        <circle cx="480" cy="200" r="3" class="comp-fill"/>
+        <circle cx="260" cy="200" r="3" class="comp-fill"/>
         <!-- Flow arrows (animated) -->
         <path id="sv-f1" d="" fill="none" stroke="var(--coral)" stroke-width="2" opacity="0"/>
         <path id="sv-f2" d="" fill="none" stroke="var(--teal)" stroke-width="2" opacity="0"/>
@@ -518,7 +510,8 @@ footer a:hover { text-decoration: underline; }
         <rect id="sv-q2s-bg" x="430" y="390" width="100" height="22" rx="4" fill="var(--bg2)" stroke="var(--border)" stroke-width="0.5"/>
         <text id="sv-q2s" class="lbl" x="480" y="405" text-anchor="middle">Q2: idle</text>
         <!-- Output -->
-        <line class="wire" x1="486" y1="150" x2="600" y2="150" stroke-dasharray="6 3" opacity="0.5"/>
+        <circle cx="480" cy="150" r="3" class="comp-fill"/>
+        <line class="wire" x1="480" y1="150" x2="600" y2="150" stroke-dasharray="6 3" opacity="0.5"/>
         <text class="note" x="604" y="154">Output</text>
       </svg>
     </div>
@@ -534,185 +527,203 @@ footer a:hover { text-decoration: underline; }
 <div class="wrap">
   <h2 data-l="en">Full schematic</h2>
   <h2 data-l="pl">Pełny schemat</h2>
-  <p data-l="en">Four functional blocks: a clock oscillator (~2–8 Hz), a tone oscillator (~200–2000 Hz, set by the LDR), a gate that combines the two signals, and an LED driver. Everything runs on 9V.</p>
-  <p data-l="pl">Cztery bloki funkcjonalne: oscylator zegara (~2–8 Hz), oscylator tonu (~200–2000 Hz z LDR), bramka łącząca oba sygnały, driver LEDów. Wszystko na 9V.</p>
+  <p data-l="en">Four functional blocks: a clock oscillator (~2–8 Hz), a tone oscillator (~200–2000 Hz, set by the LDR), a beat switch (Q6) that turns the tone oscillator and the LEDs on and off in rhythm, and an output stage (Q5) that drives the speaker. Everything runs on 9V.</p>
+  <p data-l="pl">Cztery bloki funkcjonalne: oscylator zegara (~2–8 Hz), oscylator tonu (~200–2000 Hz z LDR), klucz rytmu (Q6), który w takt włącza oscylator tonu i LEDy, oraz stopień wyjściowy (Q5) sterujący głośnikiem. Wszystko na 9V.</p>
 
   <div class="schematic-wrap">
-    <svg viewBox="0 0 680 580">
+    <svg viewBox="0 0 680 600">
       <defs><marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
       <!-- Clock oscillator zone -->
       <rect class="zone" x="20" y="20" width="300" height="230" rx="10"/>
       <text class="section-lbl" x="34" y="42" data-l="en">Clock oscillator ~2-8 Hz</text>
       <text class="section-lbl" x="34" y="42" data-l="pl">Oscylator zegara ~2-8 Hz</text>
-      <!-- +9V -->
-      <line class="wire" x1="80" y1="60" x2="260" y2="60"/>
-      <text class="lbl" x="268" y="64">+9V</text>
-      <!-- R1 R2 -->
-      <line class="wire" x1="110" y1="60" x2="110" y2="74"/>
-      <rect x="104" y="74" width="12" height="24" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
-      <text class="lbl-val" x="122" y="90">R1</text>
-      <line class="wire" x1="110" y1="98" x2="110" y2="120"/>
-      <line class="wire" x1="230" y1="60" x2="230" y2="74"/>
-      <rect x="224" y="74" width="12" height="24" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
-      <text class="lbl-val" x="240" y="90">R2</text>
-      <line class="wire" x1="230" y1="98" x2="230" y2="120"/>
-      <!-- Q1 Q2 -->
-      <circle cx="110" cy="145" r="18" class="comp"/>
-      <text class="lbl" x="110" y="149" text-anchor="middle" font-weight="500">Q1</text>
-      <line class="wire" x1="110" y1="120" x2="110" y2="127"/>
-      <line class="wire" x1="110" y1="163" x2="110" y2="200"/>
-      <circle cx="230" cy="145" r="18" class="comp"/>
-      <text class="lbl" x="230" y="149" text-anchor="middle" font-weight="500">Q2</text>
-      <line class="wire" x1="230" y1="120" x2="230" y2="127"/>
-      <line class="wire" x1="230" y1="163" x2="230" y2="200"/>
-      <!-- Cross caps -->
-      <line class="wire" x1="110" y1="120" x2="140" y2="120"/>
-      <line x1="140" y1="114" x2="140" y2="126" stroke="var(--accent)" stroke-width="2"/>
-      <line x1="146" y1="114" x2="146" y2="126" stroke="var(--accent)" stroke-width="2"/>
-      <line class="wire" x1="146" y1="120" x2="170" y2="120"/>
-      <text class="lbl-val" x="143" y="110">C1</text>
-      <line class="wire" x1="230" y1="120" x2="200" y2="120"/>
-      <line x1="200" y1="114" x2="200" y2="126" stroke="var(--accent)" stroke-width="2"/>
-      <line x1="194" y1="114" x2="194" y2="126" stroke="var(--accent)" stroke-width="2"/>
-      <line class="wire" x1="194" y1="120" x2="170" y2="120"/>
-      <text class="lbl-val" x="197" y="110">C2</text>
-      <!-- Cross coupling wires -->
-      <circle cx="170" cy="120" r="2" class="comp-fill"/>
-      <line class="wire" x1="170" y1="120" x2="170" y2="145"/>
-      <line class="wire" x1="170" y1="145" x2="92" y2="145" stroke-dasharray="3 2" opacity="0.4"/>
-      <line class="wire" x1="170" y1="145" x2="248" y2="145" stroke-dasharray="3 2" opacity="0.4"/>
-      <!-- R3 R4 -->
-      <rect x="86" y="170" width="12" height="20" rx="3" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
-      <text class="lbl-val" x="78" y="183" text-anchor="end">R3</text>
-      <line class="wire" x1="92" y1="145" x2="92" y2="170"/>
-      <line class="wire" x1="92" y1="190" x2="92" y2="215"/>
-      <rect x="242" y="170" width="12" height="20" rx="3" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
-      <text class="lbl-val" x="260" y="183">R4</text>
-      <line class="wire" x1="248" y1="145" x2="248" y2="170"/>
-      <line class="wire" x1="248" y1="190" x2="248" y2="215"/>
-      <!-- GND -->
-      <line class="wire" x1="92" y1="215" x2="248" y2="215"/>
-      <line class="wire" x1="110" y1="200" x2="110" y2="215"/>
-      <line class="wire" x1="230" y1="200" x2="230" y2="215"/>
+      <text class="lbl" x="232" y="54">+9V</text>
+      <line class="wire" x1="60" y1="60" x2="280" y2="60"/>
+      <line class="wire" x1="70" y1="60" x2="70" y2="74"/>
+      <rect x="64" y="74" width="12" height="24" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
+      <text class="lbl-val" x="80" y="90">R1</text>
+      <line class="wire" x1="70" y1="98" x2="70" y2="157"/>
+      <line class="wire" x1="270" y1="60" x2="270" y2="74"/>
+      <rect x="264" y="74" width="12" height="24" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
+      <text class="lbl-val" x="280" y="90">R2</text>
+      <line class="wire" x1="270" y1="98" x2="270" y2="157"/>
+      <line class="wire" x1="130" y1="60" x2="130" y2="74"/>
+      <rect x="124" y="74" width="12" height="24" rx="3" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+      <text class="lbl-val" x="120" y="90" text-anchor="end">R3</text>
+      <line class="wire" x1="130" y1="98" x2="130" y2="175"/>
+      <line class="wire" x1="210" y1="60" x2="210" y2="74"/>
+      <rect x="204" y="74" width="12" height="24" rx="3" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+      <text class="lbl-val" x="220" y="90">R4</text>
+      <line class="wire" x1="210" y1="98" x2="210" y2="175"/>
+      <circle cx="70" cy="175" r="18" class="comp"/>
+      <text class="lbl" x="70" y="179" text-anchor="middle" font-weight="500">Q1</text>
+      <line class="wire" x1="88" y1="175" x2="130" y2="175"/>
+      <line class="wire" x1="70" y1="193" x2="70" y2="215"/>
+      <circle cx="270" cy="175" r="18" class="comp"/>
+      <text class="lbl" x="270" y="179" text-anchor="middle" font-weight="500">Q2</text>
+      <line class="wire" x1="252" y1="175" x2="210" y2="175"/>
+      <line class="wire" x1="270" y1="193" x2="270" y2="215"/>
+      <line class="wire" x1="70" y1="115" x2="167" y2="115"/>
+      <line x1="167" y1="109" x2="167" y2="121" stroke="var(--accent)" stroke-width="2"/>
+      <line x1="173" y1="109" x2="173" y2="121" stroke="var(--accent)" stroke-width="2"/>
+      <line class="wire" x1="173" y1="115" x2="210" y2="115"/>
+      <circle cx="70" cy="115" r="2" class="comp-fill"/>
+      <circle cx="210" cy="115" r="2" class="comp-fill"/>
+      <text class="lbl-val" x="170" y="106" text-anchor="middle">C1 2.2uF</text>
+      <line class="wire" x1="270" y1="140" x2="173" y2="140"/>
+      <line x1="173" y1="134" x2="173" y2="146" stroke="var(--accent)" stroke-width="2"/>
+      <line x1="167" y1="134" x2="167" y2="146" stroke="var(--accent)" stroke-width="2"/>
+      <line class="wire" x1="167" y1="140" x2="130" y2="140"/>
+      <circle cx="270" cy="140" r="2" class="comp-fill"/>
+      <circle cx="130" cy="140" r="2" class="comp-fill"/>
+      <text class="lbl-val" x="170" y="156" text-anchor="middle">C2 2.2uF</text>
+      <line class="wire" x1="70" y1="215" x2="270" y2="215"/>
       <text class="lbl-val" x="170" y="234" text-anchor="middle">GND</text>
-      <!-- Clock output -->
-      <circle cx="270" cy="120" r="3" fill="var(--coral)"/>
-      <line class="wire" x1="230" y1="120" x2="270" y2="120"/>
-
+      <line class="wire" x1="270" y1="115" x2="300" y2="115"/>
+      <circle cx="270" cy="115" r="2" class="comp-fill"/>
+      <circle cx="300" cy="115" r="3" fill="var(--coral)"/>
+      <line class="wire" x1="300" y1="115" x2="300" y2="250"/>
+      
       <!-- Tone oscillator zone -->
       <rect class="zone" x="350" y="20" width="310" height="230" rx="10"/>
       <text class="section-lbl" x="364" y="42" data-l="en">Tone oscillator ~200-2kHz</text>
       <text class="section-lbl" x="364" y="42" data-l="pl">Oscylator tonu ~200-2kHz</text>
-      <!-- Same structure, condensed -->
-      <line class="wire" x1="410" y1="60" x2="590" y2="60"/>
-      <line class="wire" x1="440" y1="60" x2="440" y2="74"/>
-      <rect x="434" y="74" width="12" height="24" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
-      <text class="lbl-val" x="452" y="90">R5</text>
-      <line class="wire" x1="440" y1="98" x2="440" y2="120"/>
-      <line class="wire" x1="560" y1="60" x2="560" y2="74"/>
-      <rect x="554" y="74" width="12" height="24" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
-      <text class="lbl-val" x="572" y="90">R6</text>
-      <line class="wire" x1="560" y1="98" x2="560" y2="120"/>
-      <circle cx="440" cy="145" r="18" class="comp"/>
-      <text class="lbl" x="440" y="149" text-anchor="middle" font-weight="500">Q3</text>
-      <line class="wire" x1="440" y1="120" x2="440" y2="127"/>
-      <line class="wire" x1="440" y1="163" x2="440" y2="200"/>
-      <circle cx="560" cy="145" r="18" class="comp"/>
-      <text class="lbl" x="560" y="149" text-anchor="middle" font-weight="500">Q4</text>
-      <line class="wire" x1="560" y1="120" x2="560" y2="127"/>
-      <line class="wire" x1="560" y1="163" x2="560" y2="200"/>
-      <!-- Caps C3 C4 -->
-      <line class="wire" x1="440" y1="120" x2="470" y2="120"/>
-      <line x1="470" y1="114" x2="470" y2="126" stroke="var(--accent)" stroke-width="2"/>
-      <line x1="476" y1="114" x2="476" y2="126" stroke="var(--accent)" stroke-width="2"/>
-      <line class="wire" x1="476" y1="120" x2="500" y2="120"/>
-      <text class="lbl-val" x="473" y="110">C3 10nF</text>
-      <line class="wire" x1="560" y1="120" x2="530" y2="120"/>
-      <line x1="530" y1="114" x2="530" y2="126" stroke="var(--accent)" stroke-width="2"/>
-      <line x1="524" y1="114" x2="524" y2="126" stroke="var(--accent)" stroke-width="2"/>
-      <line class="wire" x1="524" y1="120" x2="500" y2="120"/>
-      <text class="lbl-val" x="527" y="110">C4 10nF</text>
-      <circle cx="500" cy="120" r="2" class="comp-fill"/>
-      <line class="wire" x1="500" y1="120" x2="500" y2="145"/>
-      <line class="wire" x1="500" y1="145" x2="422" y2="145" stroke-dasharray="3 2" opacity="0.4"/>
-      <line class="wire" x1="500" y1="145" x2="578" y2="145" stroke-dasharray="3 2" opacity="0.4"/>
-      <!-- LDR instead of R7 -->
-      <circle cx="422" cy="175" r="12" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.8"/>
-      <text class="lbl-val" x="422" y="178" text-anchor="middle">LDR</text>
-      <line x1="412" y1="162" x2="416" y2="168" stroke="var(--amber)" stroke-width="0.6"/>
-      <line x1="418" y1="160" x2="422" y2="166" stroke="var(--amber)" stroke-width="0.6"/>
-      <line class="wire" x1="422" y1="145" x2="422" y2="163"/>
-      <line class="wire" x1="422" y1="187" x2="422" y2="215"/>
-      <!-- R8 -->
-      <rect x="572" y="170" width="12" height="20" rx="3" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
-      <text class="lbl-val" x="590" y="183">R8 10k</text>
-      <line class="wire" x1="578" y1="145" x2="578" y2="170"/>
-      <line class="wire" x1="578" y1="190" x2="578" y2="215"/>
-      <!-- GND -->
-      <line class="wire" x1="422" y1="215" x2="578" y2="215"/>
-      <line class="wire" x1="440" y1="200" x2="440" y2="215"/>
-      <line class="wire" x1="560" y1="200" x2="560" y2="215"/>
-      <text class="lbl-val" x="500" y="234" text-anchor="middle">GND</text>
-      <!-- Tone output -->
-      <circle cx="600" cy="120" r="3" fill="var(--teal)"/>
-      <line class="wire" x1="560" y1="120" x2="600" y2="120"/>
+      <line class="wire" x1="390" y1="60" x2="610" y2="60"/>
+      <line class="wire" x1="400" y1="60" x2="400" y2="74"/>
+      <rect x="394" y="74" width="12" height="24" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
+      <text class="lbl-val" x="410" y="90">R5</text>
+      <line class="wire" x1="400" y1="98" x2="400" y2="157"/>
+      <line class="wire" x1="600" y1="60" x2="600" y2="74"/>
+      <rect x="594" y="74" width="12" height="24" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
+      <text class="lbl-val" x="610" y="90">R6</text>
+      <line class="wire" x1="600" y1="98" x2="600" y2="157"/>
+      <line class="wire" x1="460" y1="60" x2="460" y2="74"/>
+      <circle cx="460" cy="86" r="12" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.8"/>
+      <text class="lbl-val" x="460" y="89" text-anchor="middle">LDR</text>
+      <line x1="438" y1="72" x2="445" y2="78" stroke="var(--amber)" stroke-width="0.6"/>
+      <line x1="442" y1="68" x2="449" y2="74" stroke="var(--amber)" stroke-width="0.6"/>
+      <line class="wire" x1="460" y1="98" x2="460" y2="175"/>
+      <line class="wire" x1="540" y1="60" x2="540" y2="74"/>
+      <rect x="534" y="74" width="12" height="24" rx="3" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+      <text class="lbl-val" x="550" y="90">R8 10k</text>
+      <line class="wire" x1="540" y1="98" x2="540" y2="175"/>
+      <circle cx="400" cy="175" r="18" class="comp"/>
+      <text class="lbl" x="400" y="179" text-anchor="middle" font-weight="500">Q3</text>
+      <line class="wire" x1="418" y1="175" x2="460" y2="175"/>
+      <line class="wire" x1="400" y1="193" x2="400" y2="215"/>
+      <circle cx="600" cy="175" r="18" class="comp"/>
+      <text class="lbl" x="600" y="179" text-anchor="middle" font-weight="500">Q4</text>
+      <line class="wire" x1="582" y1="175" x2="540" y2="175"/>
+      <line class="wire" x1="600" y1="193" x2="600" y2="215"/>
+      <line class="wire" x1="400" y1="115" x2="497" y2="115"/>
+      <line x1="497" y1="109" x2="497" y2="121" stroke="var(--accent)" stroke-width="2"/>
+      <line x1="503" y1="109" x2="503" y2="121" stroke="var(--accent)" stroke-width="2"/>
+      <line class="wire" x1="503" y1="115" x2="540" y2="115"/>
+      <circle cx="400" cy="115" r="2" class="comp-fill"/>
+      <circle cx="540" cy="115" r="2" class="comp-fill"/>
+      <text class="lbl-val" x="500" y="106" text-anchor="middle">C3 68nF</text>
+      <line class="wire" x1="600" y1="140" x2="503" y2="140"/>
+      <line x1="503" y1="134" x2="503" y2="146" stroke="var(--accent)" stroke-width="2"/>
+      <line x1="497" y1="134" x2="497" y2="146" stroke="var(--accent)" stroke-width="2"/>
+      <line class="wire" x1="497" y1="140" x2="460" y2="140"/>
+      <circle cx="600" cy="140" r="2" class="comp-fill"/>
+      <circle cx="460" cy="140" r="2" class="comp-fill"/>
+      <text class="lbl-val" x="500" y="156" text-anchor="middle">C4 68nF</text>
+      <line class="wire" x1="400" y1="215" x2="600" y2="215"/>
+      <text class="lbl-val" x="500" y="234" text-anchor="middle" data-l="en">sw. GND (Q6)</text>
+      <text class="lbl-val" x="500" y="234" text-anchor="middle" data-l="pl">masa kluczowana (Q6)</text>
+      <line class="wire" x1="600" y1="115" x2="630" y2="115"/>
+      <circle cx="600" cy="115" r="2" class="comp-fill"/>
+      <circle cx="630" cy="115" r="3" fill="var(--teal)"/>
+      <line class="wire" x1="630" y1="115" x2="630" y2="250"/>
 
-      <!-- Gate zone -->
-      <rect class="zone" x="20" y="270" width="300" height="150" rx="10"/>
-      <text class="section-lbl" x="34" y="292" data-l="en">Gate</text>
-      <text class="section-lbl" x="34" y="292" data-l="pl">Bramka (gate)</text>
-      <circle cx="170" cy="360" r="18" class="comp"/>
-      <text class="lbl" x="170" y="364" text-anchor="middle" font-weight="500">Q5</text>
-      <!-- Clock in -->
-      <line class="wire" x1="270" y1="120" x2="270" y2="260"/>
-      <path class="wire" d="M270 260 L270 290 L50 290 L50 360 L152 360"/>
-      <text class="lbl-val" x="54" y="354">Clock</text>
-      <!-- Tone in -->
-      <line class="wire" x1="600" y1="120" x2="600" y2="260"/>
-      <path class="wire" d="M600 260 L600 290 L290 290 L290 320 L170 320"/>
-      <line class="wire" x1="170" y1="320" x2="170" y2="342"/>
-      <text class="lbl-val" x="200" y="316">Tone</text>
-      <!-- Output -->
-      <line class="wire" x1="170" y1="378" x2="170" y2="405"/>
-      <circle cx="170" cy="405" r="3" fill="var(--coral)"/>
-      <text class="lbl-val" x="186" y="408">Gated out → speaker</text>
+      <!-- Clock gate + LED driver zone (Q6) -->
+      <rect class="zone" x="20" y="270" width="300" height="210" rx="10"/>
+      <text class="section-lbl" x="44" y="292" data-l="en">Beat switch + LEDs (Q6)</text>
+      <text class="section-lbl" x="44" y="292" data-l="pl">Klucz rytmu + LEDy (Q6)</text>
+      <!-- clock in → R9 → Q6 base -->
+      <path class="wire" d="M300 250 L300 262 L30 262 L30 425 L80 425"/>
+      <text class="lbl-val" x="306" y="260">Clock</text>
+      <rect x="80" y="419" width="26" height="12" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
+      <text class="lbl-val" x="93" y="412" text-anchor="middle">R9 4.7k</text>
+      <line class="wire" x1="106" y1="425" x2="152" y2="425"/>
+      <circle cx="170" cy="425" r="18" class="comp"/>
+      <text class="lbl" x="170" y="429" text-anchor="middle" font-weight="500">Q6</text>
+      <line class="wire" x1="170" y1="443" x2="170" y2="460"/>
+      <text class="lbl-val" x="170" y="474" text-anchor="middle">GND</text>
+      <!-- Q6 collector = switched GND for the tone oscillator and the LEDs -->
+      <line class="wire" x1="170" y1="407" x2="170" y2="395"/>
+      <line class="wire" x1="170" y1="395" x2="270" y2="395"/>
+      <circle cx="170" cy="395" r="2.5" class="comp-fill"/>
+      <circle cx="210" cy="395" r="2.5" class="comp-fill"/>
+      <text class="lbl-val" x="162" y="391" text-anchor="end" data-l="en">sw. GND → Q3,Q4</text>
+      <text class="lbl-val" x="162" y="391" text-anchor="end" data-l="pl">masa kl. → Q3,Q4</text>
+      <!-- LEDs from +9V -->
+      <line class="wire" x1="200" y1="310" x2="290" y2="310"/>
+      <text class="lbl-val" x="196" y="313" text-anchor="end">+9V</text>
+      <line class="wire" x1="210" y1="310" x2="210" y2="322"/>
+      <polygon points="204,322 216,322 210,334" class="comp"/>
+      <line class="comp" x1="204" y1="334" x2="216" y2="334"/>
+      <line class="wire" x1="210" y1="334" x2="210" y2="346"/>
+      <rect x="204" y="346" width="12" height="26" rx="3" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+      <line class="wire" x1="210" y1="372" x2="210" y2="395"/>
+      <text class="lbl-val" x="222" y="332">LED1</text>
+      <text class="lbl-val" x="222" y="363">R11</text>
+      <line class="wire" x1="270" y1="310" x2="270" y2="322"/>
+      <polygon points="264,322 276,322 270,334" class="comp"/>
+      <line class="comp" x1="264" y1="334" x2="276" y2="334"/>
+      <line class="wire" x1="270" y1="334" x2="270" y2="346"/>
+      <rect x="264" y="346" width="12" height="26" rx="3" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+      <line class="wire" x1="270" y1="372" x2="270" y2="395"/>
+      <text class="lbl-val" x="282" y="332">LED2</text>
+      <text class="lbl-val" x="282" y="363">R12</text>
 
-      <!-- LED driver zone -->
-      <rect class="zone" x="350" y="270" width="310" height="150" rx="10"/>
-      <text class="section-lbl" x="364" y="292" data-l="en">LED driver</text>
-      <text class="section-lbl" x="364" y="292" data-l="pl">Driver LEDów</text>
-      <circle cx="500" cy="360" r="18" class="comp"/>
-      <text class="lbl" x="500" y="364" text-anchor="middle" font-weight="500">Q6</text>
-      <!-- Clock in -->
-      <path class="wire" d="M270 290 L270 310 L380 310 L380 360 L482 360"/>
-      <text class="lbl-val" x="384" y="354">Clock</text>
-      <!-- LEDs -->
-      <polygon points="460,300 472,300 466,314" class="comp"/>
-      <line class="comp" x1="460" y1="314" x2="472" y2="314"/>
-      <line class="wire" x1="466" y1="288" x2="466" y2="300"/>
-      <line class="wire" x1="466" y1="314" x2="466" y2="340"/>
-      <text class="lbl-val" x="466" y="284" text-anchor="middle">LED1</text>
-      <polygon points="530,300 542,300 536,314" class="comp"/>
-      <line class="comp" x1="530" y1="314" x2="542" y2="314"/>
-      <line class="wire" x1="536" y1="288" x2="536" y2="300"/>
-      <line class="wire" x1="536" y1="314" x2="536" y2="340"/>
-      <text class="lbl-val" x="536" y="284" text-anchor="middle">LED2</text>
-      <line class="wire" x1="466" y1="340" x2="536" y2="340"/>
-      <line class="wire" x1="500" y1="340" x2="500" y2="342"/>
-      <!-- GND -->
-      <line class="wire" x1="500" y1="378" x2="500" y2="405"/>
-      <text class="lbl-val" x="516" y="402">GND</text>
+      <!-- Output zone (Q5) -->
+      <rect class="zone" x="350" y="270" width="310" height="210" rx="10"/>
+      <text class="section-lbl" x="364" y="292" data-l="en">Output (Q5)</text>
+      <text class="section-lbl" x="364" y="292" data-l="pl">Wyjście (Q5)</text>
+      <!-- tone in → C5 → VOL → R10 → Q5 base -->
+      <path class="wire" d="M630 250 L630 262 L380 262 L380 330 L398 330"/>
+      <text class="lbl-val" x="505" y="258">Tone</text>
+      <line x1="398" y1="322" x2="398" y2="338" stroke="var(--accent)" stroke-width="2"/>
+      <line x1="404" y1="322" x2="404" y2="338" stroke="var(--accent)" stroke-width="2"/>
+      <text class="lbl-val" x="410" y="318">C5 100nF</text>
+      <path class="wire" d="M404 330 L440 330 L440 400"/>
+      <rect x="434" y="400" width="12" height="40" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
+      <text class="lbl-val" x="428" y="424" text-anchor="end">VOL 10k</text>
+      <line class="wire" x1="440" y1="440" x2="440" y2="460"/>
+      <text class="lbl-val" x="440" y="474" text-anchor="middle">GND</text>
+      <line class="wire" x1="488" y1="420" x2="449" y2="420" marker-end="url(#arr2)"/>
+      <rect x="488" y="414" width="26" height="12" rx="3" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+      <text class="lbl-val" x="501" y="408" text-anchor="middle">R10 4.7k</text>
+      <line class="wire" x1="514" y1="420" x2="552" y2="420"/>
+      <circle cx="570" cy="420" r="18" class="comp"/>
+      <text class="lbl" x="570" y="424" text-anchor="middle" font-weight="500">Q5</text>
+      <line class="wire" x1="570" y1="438" x2="570" y2="460"/>
+      <text class="lbl-val" x="570" y="474" text-anchor="middle">GND</text>
+      <!-- speaker + R13 from +9V into Q5 collector -->
+      <path class="wire" d="M570 402 L570 380 L620 380"/>
+      <line class="wire" x1="605" y1="305" x2="640" y2="305"/>
+      <text class="lbl-val" x="644" y="308">+9V</text>
+      <line class="wire" x1="620" y1="305" x2="620" y2="312"/>
+      <rect x="614" y="312" width="12" height="22" rx="3" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+      <text class="lbl-val" x="608" y="327" text-anchor="end">R13 100</text>
+      <line class="wire" x1="620" y1="334" x2="620" y2="344"/>
+      <rect x="606" y="344" width="28" height="20" rx="3" class="comp"/>
+      <text class="lbl-val" x="620" y="358" text-anchor="middle">SPK</text>
+      <text class="lbl-val" x="600" y="358" text-anchor="end">8Ω</text>
+      <line class="wire" x1="620" y1="364" x2="620" y2="380"/>
 
-      <!-- Output stage label -->
-      <text class="note" x="20" y="440" data-l="en">Audio out: 100nF coupling capacitor → 10k volume pot → 8Ω speaker</text>
-      <text class="note" x="20" y="440" data-l="pl">Wyjście audio: kondensator sprzęgający 100nF → potencjometr głośności 10k → głośnik 8Ω</text>
+      <!-- Notes -->
+      <text class="note" x="20" y="502" data-l="en">On each beat Q6 switches on the tone oscillator and the LEDs. VOL, speaker and battery are off-board.</text>
+      <text class="note" x="20" y="502" data-l="pl">Na każdy takt Q6 włącza oscylator tonu i LEDy. VOL, głośnik i bateria są poza płytką.</text>
 
       <!-- Formula -->
-      <rect x="20" y="460" width="640" height="60" rx="8" fill="var(--bg2)" stroke="var(--border)" stroke-width="0.5"/>
-      <text class="section-lbl" x="34" y="482" data-l="en">Oscillator frequency</text>
-      <text class="section-lbl" x="34" y="482" data-l="pl">Częstotliwość oscylatora</text>
-      <text class="lbl" x="34" y="502">f = 1 / (1.4 × R × C)</text>
-      <text class="lbl-val" x="34" y="514">Clock: R=100k, C=47uF → ~0.15 Hz     Tone: R=LDR(1k–100k), C=10nF → 700–70000 Hz</text>
+      <rect x="20" y="520" width="640" height="60" rx="8" fill="var(--bg2)" stroke="var(--border)" stroke-width="0.5"/>
+      <text class="section-lbl" x="34" y="542" data-l="en">Oscillator frequency</text>
+      <text class="section-lbl" x="34" y="542" data-l="pl">Częstotliwość oscylatora</text>
+      <text class="lbl" x="34" y="562">f = 1 / (0.69 × C × (Ra + Rb))   ·   Ra = Rb = R → f ≈ 1 / (1.4 × R × C)</text>
+      <text class="lbl-val" x="34" y="574">Clock: R3=R4=100k, C=2.2uF → ~3.3 Hz     Tone: LDR(1k–100k) + R8 10k, C=68nF → ~190–1900 Hz</text>
     </svg>
   </div>
 </div>
@@ -732,22 +743,21 @@ footer a:hover { text-decoration: underline; }
     <tbody>
       <tr><td>Q1–Q6</td><td>BC547</td><td>6</td><td><span data-l="en">NPN; substitutes: 2N2222, 2N3904</span><span data-l="pl">NPN, zamienniki: 2N2222, 2N3904</span></td></tr>
       <tr><td>R1,R2,R5,R6</td><td>1k</td><td>4</td><td>1/4W</td></tr>
-      <tr><td>R3,R4</td><td>100k</td><td>2</td><td><span data-l="en">or a 220k pot (tempo)</span><span data-l="pl">lub potencjometr 220k (tempo)</span></td></tr>
-      <tr><td>R8</td><td>10k</td><td>1</td><td>1/4W</td></tr>
-      <tr><td>R9</td><td>4.7k</td><td>1</td><td>1/4W</td></tr>
-      <tr><td>R10</td><td>470Ω</td><td>1</td><td>1/4W</td></tr>
+      <tr><td>R3,R4</td><td>100k</td><td>2</td><td><span data-l="en">to +9V; tempo control: see Modifications</span><span data-l="pl">do +9V; regulacja tempa: patrz Modyfikacje</span></td></tr>
+      <tr><td>R8</td><td>10k</td><td>1</td><td><span data-l="en">1/4W, to +9V</span><span data-l="pl">1/4W, do +9V</span></td></tr>
+      <tr><td>R9,R10</td><td>4.7k</td><td>2</td><td><span data-l="en">base resistors of Q6, Q5</span><span data-l="pl">rezystory bazowe Q6, Q5</span></td></tr>
       <tr><td>R11,R12</td><td>330Ω</td><td>2</td><td><span data-l="en">LED current limiting</span><span data-l="pl">ogranicznik prądu LED</span></td></tr>
-      <tr><td>R13</td><td>100Ω</td><td>1</td><td>1/4W</td></tr>
-      <tr><td>C1,C2</td><td>47uF</td><td>2</td><td><span data-l="en">electrolytic, 16V+, mind the polarity!</span><span data-l="pl">elektrolityczne, 16V+, polaryzacja!</span></td></tr>
-      <tr><td>C3,C4</td><td>10nF</td><td>2</td><td><span data-l="en">ceramic (103)</span><span data-l="pl">ceramiczne (103)</span></td></tr>
-      <tr><td>C5</td><td>100nF</td><td>1</td><td><span data-l="en">ceramic (104), coupling</span><span data-l="pl">ceramiczny (104), sprzęgający</span></td></tr>
-      <tr><td>LDR</td><td>GL5528</td><td>1</td><td><span data-l="en">photoresistor 1k–100k</span><span data-l="pl">fotorezystor 1k–100k</span></td></tr>
+      <tr><td>R13</td><td>100Ω</td><td>1</td><td><span data-l="en">in series with the speaker</span><span data-l="pl">szeregowo z głośnikiem</span></td></tr>
+      <tr><td>C1,C2</td><td>2.2uF</td><td>2</td><td><span data-l="en">electrolytic, 16V+, mind the polarity!</span><span data-l="pl">elektrolityczne, 16V+, polaryzacja!</span></td></tr>
+      <tr><td>C3,C4</td><td>68nF</td><td>2</td><td><span data-l="en">ceramic or film (683)</span><span data-l="pl">ceramiczne lub foliowe (683)</span></td></tr>
+      <tr><td>C5</td><td>100nF</td><td>1</td><td><span data-l="en">ceramic (104), couples the tone to VOL</span><span data-l="pl">ceramiczny (104), sprzęga ton z VOL</span></td></tr>
+      <tr><td>LDR</td><td>GL5528</td><td>1</td><td><span data-l="en">photoresistor 1k–100k, to +9V</span><span data-l="pl">fotorezystor 1k–100k, do +9V</span></td></tr>
       <tr><td>LED1</td><td><span data-l="en">red 5mm</span><span data-l="pl">czerwona 5mm</span></td><td>1</td><td></td></tr>
       <tr><td>LED2</td><td><span data-l="en">green 5mm</span><span data-l="pl">zielona 5mm</span></td><td>1</td><td></td></tr>
-      <tr><td>VOL</td><td>10k pot</td><td>1</td><td><span data-l="en">linear, volume</span><span data-l="pl">liniowy, głośność</span></td></tr>
-      <tr><td>SPKR</td><td>8Ω</td><td>1</td><td><span data-l="en">small speaker or piezo</span><span data-l="pl">mały głośnik lub piezo</span></td></tr>
+      <tr><td>VOL</td><td>10k pot</td><td>1</td><td><span data-l="en">linear, volume (off-board)</span><span data-l="pl">liniowy, głośność (poza płytką)</span></td></tr>
+      <tr><td>SPK</td><td>8Ω</td><td>1</td><td><span data-l="en">small speaker (off-board)</span><span data-l="pl">mały głośnik (poza płytką)</span></td></tr>
       <tr><td>—</td><td><span data-l="en">9V battery</span><span data-l="pl">bateria 9V</span></td><td>1</td><td><span data-l="en">with snap connector</span><span data-l="pl">ze złączem</span></td></tr>
-      <tr><td>—</td><td><span data-l="en">stripboard</span><span data-l="pl">płytka stripboard</span></td><td>1</td><td><span data-l="en">at least 30×24 holes</span><span data-l="pl">min. 30×24 otwory</span></td></tr>
+      <tr><td>—</td><td><span data-l="en">stripboard</span><span data-l="pl">płytka stripboard</span></td><td>1</td><td><span data-l="en">at least 30×16 holes</span><span data-l="pl">min. 30×16 otworów</span></td></tr>
     </tbody>
   </table>
 </div>
@@ -763,8 +773,8 @@ footer a:hover { text-decoration: underline; }
 
   <h3 data-l="en">Assembly order</h3>
   <h3 data-l="pl">Kolejność montażu</h3>
-  <p data-l="en">Cut a 30×24-hole board. Make all the copper track cuts first (3mm drill bit, turned by hand). Check every cut with a multimeter. Then solder from the lowest parts up: jumpers, resistors, ceramic capacitors, transistors, electrolytics, LEDs, LDR, potentiometer, connectors.</p>
-  <p data-l="pl">Wytnij płytkę 30×24 otwory. Zrób wszystkie przecięcia ścieżek miedzianych najpierw (wiertło 3mm, ręcznie). Sprawdź każde cięcie miernikiem. Potem lutuj od najniższych elementów: zworki, rezystory, kondensatory ceramiczne, tranzystory, elektrolityczne, LEDy, LDR, potencjometr, złącza.</p>
+  <p data-l="en">Cut a 30×16-hole board. Make all 10 copper track cuts first (see the PDF; 3mm drill bit, turned by hand). Check every cut with a multimeter. Then solder from the lowest parts up: jumpers, resistors, ceramic capacitors, transistors, electrolytics, LEDs, LDR, potentiometer, connectors.</p>
+  <p data-l="pl">Wytnij płytkę 30×16 otworów. Najpierw zrób wszystkie 10 przecięć ścieżek miedzianych (patrz PDF; wiertło 3mm, ręcznie). Sprawdź każde cięcie miernikiem. Potem lutuj od najniższych elementów: zworki, rezystory, kondensatory ceramiczne, tranzystory, elektrolityczne, LEDy, LDR, potencjometr, złącza.</p>
 
   <h3 data-l="en">BC547 transistor</h3>
   <h3 data-l="pl">Tranzystor BC547</h3>
@@ -773,8 +783,8 @@ footer a:hover { text-decoration: underline; }
 
   <h3 data-l="en">Modifications</h3>
   <h3 data-l="pl">Modyfikacje</h3>
-  <p data-l="en">Tempo control: replace R3+R4 with a dual 220k potentiometer. Tone range: change C3/C4 — larger = lower, smaller = higher. More LEDs: parallel LED+resistor pairs on the collector of Q6. Tremolo effect: a third astable multivibrator (~5 Hz) feeding the volume pot.</p>
-  <p data-l="pl">Regulacja tempa: zamień R3+R4 na podwójny potencjometr 220k. Zakres tonu: zmień C3/C4 — większe = niższy, mniejsze = wyższy. Więcej LEDów: równoległe pary LED+rezystor na kolektorze Q6. Efekt tremolo: trzeci multiwibrator astabilny (~5 Hz) podłączony do potencjometru głośności.</p>
+  <p data-l="en">Tempo control: replace R3+R4 with a dual-gang 220k potentiometer, with a 22k resistor in series on each half so the base never connects straight to +9V (about 1.5–15 Hz with 2.2uF). Tone range: change C3/C4 — larger = lower, smaller = higher. More LEDs: parallel LED+resistor pairs on the collector of Q6. Tremolo effect: a third astable multivibrator (~5 Hz) feeding the volume pot.</p>
+  <p data-l="pl">Regulacja tempa: zamień R3+R4 na podwójny potencjometr 220k z rezystorem 22k szeregowo na każdej połówce, żeby baza nigdy nie była zwarta wprost do +9V (ok. 1,5–15 Hz przy 2,2uF). Zakres tonu: zmień C3/C4 — większe = niższy, mniejsze = wyższy. Więcej LEDów: równoległe pary LED+rezystor na kolektorze Q6. Efekt tremolo: trzeci multiwibrator astabilny (~5 Hz) podłączony do potencjometru głośności.</p>
 
   <button class="print-btn" onclick="window.print()"><span data-l="en">Print page</span><span data-l="pl">Drukuj stronę</span></button>
   <a class="print-btn" href="beat-machine-stripboard.pdf" download style="text-decoration:none;margin-left:8px"><span data-l="en">Download stripboard layout (PDF)</span><span data-l="pl">Pobierz layout stripboard (PDF)</span></a>
@@ -911,20 +921,20 @@ footer a:hover { text-decoration: underline; }
     {title:"Spoczynek",titleEn:"At rest",descEn:"The circuit is symmetric — two identical transistors, two identical resistors, two identical capacitors, cross-coupled. But the symmetry cannot hold. The tiniest difference between components makes one transistor turn on a fraction of a nanosecond earlier. That breaks the stalemate.",q1:"idle",q2:"idle",q1c:"",q2c:"",f1:"",f2:"",
      desc:"Układ jest symetryczny — dwa identyczne tranzystory, dwa identyczne rezystory, dwa identyczne kondensatory, sprzężone na krzyż. Ale symetria nie może się utrzymać. Najmniejsza różnica w parametrach komponentów powoduje, że jeden tranzystor włącza się ułamek nanosekundy wcześniej. To łamie pat."},
     {title:"Q1 włącza się",titleEn:"Q1 turns on",descEn:"Q1 wins the race and turns on. Current flows from +9V through R1 and Q1 to ground. The voltage at the collector of Q1 drops to almost 0V. That sudden drop passes through capacitor C1 to the base of Q2, pulling it down. Q2 is forced off.",q1:"ON",q2:"OFF",q1c:"var(--teal-l)",q2c:"",
-     f1:"M160 40 L160 220 L160 380",f2:"",
+     f1:"M160 40 L160 380",f2:"",
      desc:"Q1 wygrywa wyścig i włącza się. Prąd płynie z +9V przez R1, przez Q1 do masy. Napięcie na kolektorze Q1 spada do prawie 0V. Ten nagły spadek przechodzi przez kondensator C1 do bazy Q2, ciągnąc ją w dół. Q2 jest zmuszony do wyłączenia."},
     {title:"C1 przenosi spadek",titleEn:"C1 carries the drop",descEn:"Capacitor C1 sits between the collector of Q1 and the base of Q2. When the collector of Q1 falls to 0V, C1 passes that voltage change straight to the base of Q2 — pulling it negative. A transistor with a negative base is firmly off. This is cross-coupling — the heart of the oscillator.",q1:"ON",q2:"OFF",q1c:"var(--teal-l)",q2c:"var(--coral-l)",
-     f1:"M160 150 L260 150",f2:"",
+     f1:"M160 150 L420 150 L420 280",f2:"",
      desc:"Kondensator C1 siedzi między kolektorem Q1 a bazą Q2. Gdy kolektor Q1 spada do 0V, C1 przekazuje tę zmianę napięcia bezpośrednio na bazę Q2 — ciągnąc ją w ujemne. Tranzystor z ujemną bazą jest twardo wyłączony. To jest sprzężenie krzyżowe — serce oscylatora."},
-    {title:"C1 ładuje się przez R4",titleEn:"C1 charges through R4",descEn:"Now C1 starts charging through R4 (100k). This is the timing element — the RC time constant. The voltage at the base of Q2 slowly rises from negative towards positive. R4 is large (100k) and C1 is large (47uF), so it takes a while: t ≈ 0.7 × R × C = 0.7 × 100k × 47uF ≈ 3.3 seconds. That is your beat interval.",q1:"ON",q2:"OFF",q1c:"var(--teal-l)",q2c:"var(--coral-l)",
-     f1:"M540 380 L540 310",f2:"",
-     desc:"Teraz C1 zaczyna się ładować przez R4 (100k). To jest element czasowy — stała czasowa RC. Napięcie na bazie Q2 powoli rośnie od ujemnego w stronę dodatniego. R4 jest duży (100k) i C1 jest duży (47uF), więc to trwa: t ≈ 0.7 × R × C = 0.7 × 100k × 47uF ≈ 3.3 sekundy. To jest twój interwał beatu."},
+    {title:"C1 ładuje się przez R4",titleEn:"C1 charges through R4",descEn:"Now C1 starts charging from +9V through R4 (100k). This is the timing element — the RC time constant. The voltage at the base of Q2 slowly rises from negative towards positive. R4 (100k) and C1 (2.2uF) set how long it takes: t ≈ 0.7 × R × C = 0.7 × 100k × 2.2uF ≈ 0.15 seconds. That is half of your beat interval.",q1:"ON",q2:"OFF",q1c:"var(--teal-l)",q2c:"var(--coral-l)",
+     f1:"M420 40 L420 150",f2:"",
+     desc:"Teraz C1 zaczyna się ładować przez R4 (100k) z +9V. To jest element czasowy — stała czasowa RC. Napięcie na bazie Q2 powoli rośnie od ujemnego w stronę dodatniego. R4 (100k) i C1 (2.2uF) wyznaczają, ile to trwa: t ≈ 0.7 × R × C = 0.7 × 100k × 2.2uF ≈ 0.15 sekundy. To połowa interwału beatu."},
     {title:"Q2 się włącza — flip!",titleEn:"Q2 turns on — flip!",descEn:"Once C1 has charged enough, the base of Q2 reaches ~0.6V and Q2 snaps on. Its collector drops to 0V. Now C2 carries that drop to the base of Q1 — forcing Q1 off. The whole situation reverses. C2 starts charging through R3 and the cycle repeats in the other direction.",q1:"OFF",q2:"ON",q1c:"var(--coral-l)",q2c:"var(--teal-l)",
-     f1:"",f2:"M480 40 L480 220 L480 380",
+     f1:"",f2:"M480 40 L480 380",
      desc:"Gdy C1 naładuje się wystarczająco, baza Q2 osiąga ~0.6V i Q2 przeskakuje na ON. Jego kolektor spada do 0V. Teraz C2 przenosi ten spadek na bazę Q1 — zmuszając Q1 do wyłączenia. Cała sytuacja się odwraca. C2 zaczyna się ładować przez R3 i cykl powtórzy się w odwrotnym kierunku."},
-    {title:"Ciągła oscylacja",titleEn:"Continuous oscillation",descEn:"The circuit flips back and forth forever. Each half lasts ~0.7 × R × C seconds. With 100k and 47uF that is ~3.3s per half, so a full cycle every ~6.6s — a slow ~0.15 Hz beat. Drop C to 10nF (as in the tone oscillator) and you get thousands of cycles per second — an audible tone.",q1:"ON / OFF",q2:"OFF / ON",q1c:"var(--amber-l)",q2c:"var(--amber-l)",
-     f1:"M160 150 L260 150",f2:"M480 150 L380 150",
-     desc:"Układ przerzuca się w kółko, w nieskończoność. Każda połówka trwa ~0.7 × R × C sekund. Przy 100k i 47uF to ~3.3s na połówkę, czyli pełny cykl co ~6.6s — wolny beat ~0.15 Hz. Zmniejsz C do 10nF (jak w oscylatorze tonu) i dostaniesz tysiące cykli na sekundę — słyszalny dźwięk."}
+    {title:"Ciągła oscylacja",titleEn:"Continuous oscillation",descEn:"The circuit flips back and forth forever. Each half lasts ~0.7 × R × C seconds. With 100k and 2.2uF that is ~0.15s per half, so a full cycle every ~0.3s — about 3.3 beats per second. Drop C to 68nF and R to 11k–110k (as in the tone oscillator) and you get hundreds to thousands of cycles per second — an audible tone.",q1:"ON / OFF",q2:"OFF / ON",q1c:"var(--amber-l)",q2c:"var(--amber-l)",
+     f1:"M160 150 L420 150",f2:"M480 200 L260 200",
+     desc:"Układ przerzuca się w kółko, w nieskończoność. Każda połówka trwa ~0.7 × R × C sekund. Przy 100k i 2.2uF to ~0.15s na połówkę, czyli pełny cykl co ~0.3s — ok. 3.3 uderzenia na sekundę. Zmniejsz C do 68nF i R do 11k–110k (jak w oscylatorze tonu) i dostaniesz setki do tysięcy cykli na sekundę — słyszalny dźwięk."}
   ];
   let cur=0;
   const pills=document.getElementById('osc-pills');
