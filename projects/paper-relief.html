@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paper relief — simulator and cutting templates</title>
+<meta name="description" content="Design a folded paper relief in the browser: preview it in 3D, then download printable cutting templates, a 1:1 backing board and assembly instructions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E4E6ED;--panel:#F5F6F9;--ink:#191C31;--muted:#585D7C;--line:#CBCFDC;
+  --accent:#952C73;--accent-ink:#FFFFFF;--stage:#D3D6E1;--warn:#9E3523;--sheet:#FFFFFF;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#111327;--panel:#181B34;--ink:#E7E6F2;--muted:#9C9FBC;--line:#2B2F52;
+    --accent:#E27EC2;--accent-ink:#1B0E19;--stage:#0B0D1E;--warn:#F2917A;--sheet:#F3F3F6;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111327;--panel:#181B34;--ink:#E7E6F2;--muted:#9C9FBC;--line:#2B2F52;
+  --accent:#E27EC2;--accent-ink:#1B0E19;--stage:#0B0D1E;--warn:#F2917A;--sheet:#F3F3F6;
+  color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'Archivo',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:15px;line-height:1.45;font-variation-settings:"wdth" 100}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:minmax(0,1fr) 390px;height:100%}
+.stagewrap{display:flex;flex-direction:column;min-height:0;height:100%}
+.bar{display:flex;align-items:baseline;gap:24px;flex-wrap:wrap;padding:18px 24px 12px}
+h1{margin:0;font-size:30px;line-height:1;font-weight:760;font-stretch:72%;font-variation-settings:"wdth" 72;letter-spacing:-0.01em}
+h1 .sub{font-weight:400;color:var(--muted)}
+.lang{border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 12px;cursor:pointer;font-size:14px;color:var(--muted)}
+.lang:hover{border-color:var(--ink);color:var(--ink)}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tabs button{border:0;background:none;padding:6px 12px;border-radius:999px;cursor:pointer;color:var(--muted);font-weight:560}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.view{flex:1;min-height:0;display:flex;flex-direction:column;padding:0 24px 20px}
+.view[hidden]{display:none}
+#stage{flex:1;min-height:260px;position:relative;background:var(--stage);border-radius:6px;overflow:hidden;touch-action:none}
+#stage canvas{display:block;width:100%;height:100%;cursor:grab}
+#stage canvas:active{cursor:grabbing}
+.hint{margin:8px 2px 0;color:var(--muted);font-size:13px}
+.empty{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted)}
+.pager{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.pager span{font-variant-numeric:tabular-nums;min-width:120px;text-align:center}
+.paperbox{flex:1;min-height:0;overflow:auto;background:var(--stage);border-radius:6px;padding:16px;display:flex;justify-content:center;align-items:flex-start}
+.paperbox svg{width:100%;max-width:760px;height:auto;background:var(--sheet);box-shadow:0 1px 2px rgba(10,12,30,.25),0 8px 24px rgba(10,12,30,.12)}
+.paperbox svg{flex:none}
+@media (min-width:881px){.paperbox svg{height:100%;width:auto;max-width:100%}}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:28px;height:0;border-top:1.5px solid var(--ink);vertical-align:middle;margin-right:6px}
+.legend i.dash{border-top-style:dashed}
+.legend b{display:inline-block;width:14px;height:10px;background:#E3E3E6;border:1px solid var(--muted);vertical-align:middle;margin-right:6px}
+
+.panel{background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;padding:20px 20px 40px}
+.summary{font-size:14px;line-height:1.5;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.summary p{margin:0 0 6px}
+.summary .big{font-size:22px;font-weight:700;font-stretch:80%;font-variation-settings:"wdth" 80;line-height:1.15;margin-bottom:8px}
+.warn{color:var(--warn)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;padding:14px 0}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 12px;cursor:pointer;font-size:14px}
+.chip:hover{border-color:var(--ink)}
+.chip.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+details{border-top:1px solid var(--line)}
+summary{list-style:none;cursor:pointer;padding:12px 0;font-weight:680;font-size:16px;display:flex;justify-content:space-between}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--muted);font-weight:400}
+details[open] summary::after{content:"−"}
+.ctl{margin:0 0 14px}
+.ctl .row{display:flex;justify-content:space-between;gap:12px;font-size:14px;margin-bottom:4px}
+.ctl output{font-variant-numeric:tabular-nums;color:var(--muted);font-stretch:85%;font-variation-settings:"wdth" 85;white-space:nowrap}
+.ctl input[type=range]{width:100%;accent-color:var(--accent);margin:0}
+.ctl select{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.ctl.color .row{align-items:center;margin:0}
+.ctl input[type=color]{width:44px;height:30px;border:1px solid var(--line);border-radius:6px;padding:2px;background:var(--panel);cursor:pointer}
+.ctl.check label{display:flex;gap:10px;align-items:center;font-size:14px;cursor:pointer}
+.ctl.check input{accent-color:var(--accent);width:18px;height:18px}
+.note{font-size:13px;color:var(--muted);margin:-4px 0 14px}
+.actions{border-top:1px solid var(--line);padding-top:16px;display:grid;gap:8px}
+.btn{border:1px solid var(--line);background:transparent;border-radius:6px;padding:9px 12px;cursor:pointer;text-align:left;font-weight:560}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:680;padding:12px 14px}
+.btn[disabled]{opacity:.55;cursor:progress}
+.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.foot{font-size:13px;color:var(--muted);margin:14px 0 0}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:8px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;z-index:10}
+#toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+
+@media (max-width:880px){
+  .app{display:block;height:auto}
+  .stagewrap{height:auto}
+  .bar{padding:14px 16px 10px;gap:10px}
+  h1{font-size:26px}
+  .tabs{margin-left:0;width:100%}
+  .view{padding:0 16px 12px}
+  #stage{height:clamp(300px,82vw,60vh);flex:none}
+  .paperbox{max-height:70vh;padding:10px}
+  .panel{border-left:0;border-top:1px solid var(--line);padding:16px 16px 40px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="stagewrap">
+    <header class="bar">
+      <a class="home-link" href="/" style="font-size:13px;color:inherit;opacity:.65;text-decoration:none;white-space:nowrap">← marcinmazurek.com</a>
+      <h1><span data-t="h1a">Paper relief</span> <span class="sub" data-t="h1b">simulator and templates</span></h1>
+      <nav class="tabs" role="tablist" aria-label="View" data-ta="view">
+        <button role="tab" data-view="3d" aria-selected="true" data-t="tab3d">3D preview</button>
+        <button role="tab" data-view="sheets" aria-selected="false" data-t="tabSheets">Templates</button>
+        <button role="tab" data-view="board" aria-selected="false" data-t="tabBoard">Backing board</button>
+      </nav>
+      <button class="lang" id="langBtn" type="button" lang="pl">Polski</button>
+    </header>
+    <div id="v3d" class="view">
+      <div id="stage"></div>
+      <p class="hint" data-t="hint3d">Drag to rotate. Scroll or pinch to zoom. Double-click to reset the front view.</p>
+    </div>
+    <div id="vsheets" class="view" hidden>
+      <div class="pager">
+        <button class="btn" id="prevSheet" data-t="prev">Previous</button>
+        <span id="sheetInfo"></span>
+        <button class="btn" id="nextSheet" data-t="next">Next</button>
+      </div>
+      <div id="sheetBox" class="paperbox"></div>
+      <div class="legend">
+        <span><i></i><span data-t="lgCut">cut</span></span>
+        <span><i class="dash"></i><span data-t="lgFold">fold, print side out</span></span>
+        <span><b></b><span data-t="lgTab">glue tab</span></span>
+        <span data-t="lgSides">B T L R: bottom, top, left, right edge on the backing board</span>
+      </div>
+    </div>
+    <div id="vboard" class="view" hidden>
+      <p class="hint" id="boardInfo" style="margin:0 0 10px"></p>
+      <div id="boardBox" class="paperbox"></div>
+    </div>
+  </section>
+
+  <aside class="panel" aria-label="Settings" data-ta="settings">
+    <div class="summary" id="stats" aria-live="polite"></div>
+    <div class="presets" id="presets"></div>
+    <div id="controls"></div>
+    <div class="actions">
+      <button class="btn primary" id="dlZip" data-t="dlZip">Download project (ZIP)</button>
+      <div class="btnrow">
+        <button class="btn" id="dlPdf" data-t="dlPdf">Templates PDF</button>
+        <button class="btn" id="dlBoard" data-t="dlBoard">Backing board PDF</button>
+      </div>
+      <div class="btnrow">
+        <button class="btn" id="saveJson" data-t="save">Save settings</button>
+        <button class="btn" id="loadJson" data-t="load">Load settings</button>
+      </div>
+      <button class="btn" id="dlHtml" data-t="html">Download this page (HTML)</button>
+      <input type="file" id="fileJson" accept=".json,application/json" hidden>
+    </div>
+    <p class="foot" data-t="foot">Print at 100% scale (no fit to page) and check the 50 mm ruler in the sheet header. The ZIP contains PDF templates, SVG files for cutting plotters, a 1:1 backing board, a parts list, instructions and your settings.</p>
+  </aside>
+</div>
+<div id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const PAGE_SOURCE='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+
+/*CORE-START*/
+const TAU=Math.PI*2;
+var LANG='en';
+const tr=(pl,en)=>LANG==='pl'?pl:en;
+const SIDE=c=>LANG==='pl'?c:({D:'B',G:'T',L:'L',P:'R'}[c]||c);
+function plw(n,a,b,c){const m10=n%10,m100=n%100;if(n===1)return a;if(m10>=2&&m10<=4&&(m100<12||m100>14))return b;return c}
+const nw=(n,p1,p2,p5,e1,eN)=>LANG==='pl'?plw(n,p1,p2,p5):(n===1?e1:eN);
+const loc=()=>LANG==='pl'?'pl-PL':'en-US';
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1]],sub=(a,b)=>[a[0]-b[0],a[1]-b[1]],mul=(a,k)=>[a[0]*k,a[1]*k];
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1],len=a=>Math.hypot(a[0],a[1]),unit=a=>{const l=len(a)||1;return[a[0]/l,a[1]/l]};
+function ang(p,q,r){const a=sub(p,q),b=sub(r,q);return Math.acos(clamp(dot(a,b)/((len(a)*len(b))||1),-1,1))}
+
+const DEF={
+  shape:'pyramid',layers:2,inner:0.62,innerH:0.9,cutPos:0,openSide:'front',layerCol:'inner',
+  cols:10,rows:8,cell:40,height:30,
+  pattern:'vortex',lean:0.6,leanVar:0.45,rot:0,twist:0.5,amp:0.7,scale:2.5,cx:0.5,cy:0.5,jitter:6,seed:7,
+  hMode:'radial',hVar:0.2,qDir:0,qLev:0,
+  colFace:'#2D3478',colAccent:'#C14E9E',accent:'long',colBoard:'#1E2250',frame:true,colFrame:'#191C44',
+  lightAz:315,lightEl:38,showHits:true,
+  paper:'A4',margin:8,tab:7,baseTabs:'in',fill:'tint',labels:true
+};
+const PATTERN_KEYS=['pattern','lean','leanVar','rot','twist','amp','scale','cx','cy','jitter','hMode','hVar','qDir','qLev'];
+const PRESETS={
+  'Wir':{pattern:'vortex',twist:0.5,lean:0.6,leanVar:0.45,hMode:'radial',hVar:0.2},
+  'Przepływ':{pattern:'noise',scale:2.2,amp:0.75,lean:0.62,leanVar:0.4,hMode:'noise',hVar:0.25,jitter:3},
+  'Pola':{pattern:'patch',scale:3,amp:1,lean:0.7,leanVar:0.15,hMode:'const',hVar:0,jitter:3,qDir:8},
+  'Fala':{pattern:'wave',scale:1.4,amp:0.5,twist:0.35,lean:0.55,leanVar:0.3,hMode:'wave',hVar:0.25},
+  'Dwa wiry':{pattern:'dipole',lean:0.6,leanVar:0.6,hMode:'lean',hVar:0.25},
+  'Promienie':{pattern:'radial',twist:0.15,lean:0.5,leanVar:0.7,hMode:'edge',hVar:0.25},
+  'Skręt':{pattern:'gradient',twist:0.6,amp:0.25,lean:0.6,leanVar:0,hMode:'const',hVar:0}
+};
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hash2(i,j,seed){let h=(Math.imul(i,374761393)+Math.imul(j,668265263)+Math.imul(seed,1442695041))|0;h=Math.imul(h^(h>>>13),1274126177);h^=h>>>16;return(h>>>0)/4294967296}
+function vnoise(x,y,seed){const i=Math.floor(x),j=Math.floor(y),fx=x-i,fy=y-j,sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy);
+  const a=hash2(i,j,seed),b=hash2(i+1,j,seed),c=hash2(i,j+1,seed),d=hash2(i+1,j+1,seed);return a+(b-a)*sx+(c-a)*sy+(a-b-c+d)*sx*sy}
+function fbm(x,y,seed){let v=0,am=0.5,f=1,n=0;for(let o=0;o<3;o++){v+=am*vnoise(x*f,y*f,seed+o*101);n+=am;am*=0.5;f*=2}return v/n}
+function quant(v,n,lo,hi){if(n<2||hi-lo<1e-6)return v;const t=clamp((v-lo)/(hi-lo),0,1);return lo+Math.round(t*(n-1))/(n-1)*(hi-lo)}
+function colName(c){let s='';c++;while(c>0){const m=(c-1)%26;s=String.fromCharCode(65+m)+s;c=Math.floor((c-1)/26)}return s}
+
+function computeModules(P){
+  const s=P.cell,W=P.cols*s,H=P.rows*s,M=Math.max(W,H);
+  const rnd=mulberry32((P.seed|0)*7919+13),rot=P.rot*Math.PI/180,out=[];
+  for(let r=0;r<P.rows;r++)for(let c=0;c<P.cols;c++){
+    const x0=c*s,y0=(P.rows-1-r)*s,mx=x0+s/2,my=y0+s/2,X=mx/M,Y=my/M;
+    const rx=(mx-P.cx*W)/M,ry=(my-P.cy*H)/M,rr=Math.hypot(rx,ry),rn=clamp(rr*2.4,0,1);
+    let phi=0,m=1;
+    switch(P.pattern){
+      case 'vortex':phi=Math.atan2(ry,rx)+Math.PI/2+P.twist*rr*TAU;m=rn;break;
+      case 'radial':phi=Math.atan2(ry,rx)+P.twist*Math.PI/2;m=rn;break;
+      case 'noise':{phi=(fbm(X*P.scale+3.1,Y*P.scale+7.7,P.seed)-0.5)*2*TAU*P.amp;m=clamp((fbm(X*P.scale+51,Y*P.scale+23,P.seed+17)-0.25)/0.5,0,1);break}
+      case 'patch':{const bx=Math.floor(X*P.scale),by=Math.floor(Y*P.scale);phi=Math.round((hash2(bx,by,P.seed)*2-1)*P.amp*4)*Math.PI/4;m=0.55+0.45*hash2(bx+11,by+5,P.seed+1);break}
+      case 'wave':{const a=TAU*P.scale*X+P.twist*TAU*Y;phi=P.amp*Math.PI*Math.sin(a);m=0.35+0.65*Math.abs(Math.cos(a));break}
+      case 'dipole':{let vx=0,vy=0;for(const[k,sg]of[[-1,1],[1,-1]]){const qx=(mx-(P.cx*W+k*0.22*M))/M,qy=(my-P.cy*H)/M,q2=qx*qx+qy*qy+0.004;vx+=sg*-qy/q2;vy+=sg*qx/q2}
+        phi=Math.atan2(vy,vx)+P.twist*Math.PI/2;m=1-Math.exp(-Math.hypot(vx,vy)*0.3);break}
+      case 'gradient':phi=P.twist*TAU*X+P.amp*Math.PI*Y;m=1;break;
+    }
+    phi+=rot+(rnd()-0.5)*2*P.jitter*Math.PI/180;
+    if(P.qDir>0){const st=TAU/P.qDir;phi=Math.round(phi/st)*st}
+    let lf=1-P.leanVar+P.leanVar*m,f=0;
+    switch(P.hMode){
+      case 'radial':f=1-2*rn;break;
+      case 'edge':f=2*rn-1;break;
+      case 'noise':f=clamp((fbm(X*P.scale+40,Y*P.scale+40,P.seed+9)*2-1)*1.8,-1,1);break;
+      case 'wave':f=Math.sin(TAU*P.scale*Y);break;
+      case 'lean':f=2*m-1;break;
+    }
+    let hf=1+P.hVar*f;
+    if(P.qLev>1){lf=quant(lf,P.qLev,1-P.leanVar,1);hf=quant(hf,P.qLev,1-P.hVar,1+P.hVar)}
+    const L=P.lean*s*lf,h=Math.max(4,P.height*hf);
+    out.push({r,c,id:colName(c)+String(r+1).padStart(2,'0'),x0,y0,phi,lean:L,dx:L*Math.cos(phi),dy:L*Math.sin(phi),h});
+  }
+  return out;
+}
+
+function faceAccents(P,m){
+  const N=[[0,-1],[1,0],[0,1],[-1,0]],dx=Math.cos(m.phi),dy=Math.sin(m.phi),d=N.map(n=>n[0]*dx+n[1]*dy);
+  let lo=0,hi=0;d.forEach((v,i)=>{if(v<d[lo])lo=i;if(v>d[hi])hi=i});
+  if(P.accent==='long')return[lo];if(P.accent==='short')return[hi];if(P.accent==='top')return[2];return[];
+}
+
+function slantLengths(P,m){const s=P.cell,ax=s/2+m.dx,ay=s/2+m.dy;return[[0,0],[s,0],[s,s],[0,s]].map(p=>Math.hypot(ax-p[0],ay-p[1],m.h))}
+
+/* ---- półostrosłupy w warstwach ---- */
+function clipHalf(s,C,u,sign){
+  const sq=[[0,0],[s,0],[s,s],[0,s]],f=p=>sign*dot(sub(p,C),u),out=[];
+  for(let i=0;i<4;i++){const a=sq[i],b=sq[(i+1)%4],fa=f(a),fb=f(b);
+    if(fa<=1e-9)out.push({p:a,cut:Math.abs(fa)<=1e-9});
+    if((fa<-1e-9&&fb>1e-9)||(fa>1e-9&&fb<-1e-9)){const t=fa/(fa-fb);out.push({p:[a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])],cut:true})}}
+  const q=[];for(const v of out){const l=q[q.length-1];if(l&&len(sub(l.p,v.p))<0.01){l.cut=l.cut||v.cut;continue}q.push(v)}
+  if(q.length>1&&len(sub(q[0].p,q[q.length-1].p))<0.01){q[0].cut=q[0].cut||q[q.length-1].cut;q.pop()}
+  let k=0;for(let i=0;i<q.length;i++)if(q[i].cut&&q[(i+1)%q.length].cut){k=i;break}
+  const n=q.length,chain=[];for(let j=1;j<=n;j++)chain.push(q[(k+j)%n].p);
+  return chain;
+}
+function layerShells(P,m){
+  const s=P.cell,u=[Math.cos(m.phi),Math.sin(m.phi)],C=[s/2+u[0]*P.cutPos*s,s/2+u[1]*P.cutPos*s];
+  const chain=clipHalf(s,C,u,P.openSide==='back'?-1:1);
+  const Cc=mul(add(chain[0],chain[chain.length-1]),0.5),Pxy=[s/2+m.dx,s/2+m.dy],shells=[];
+  for(let i=0;i<P.layers;i++){const k=Math.pow(P.inner,i),kh=k*Math.pow(P.innerH,i);
+    shells.push({k,base:chain.map(v=>add(Cc,mul(sub(v,Cc),k))),apex:[...add(Cc,mul(sub(Pxy,Cc),k)),m.h*kh]})}
+  const dist=[];for(let j=0;j<chain.length-1;j++){const a=chain[j],b=chain[j+1],e=unit(sub(b,a));dist.push(Math.abs((Cc[0]-a[0])*e[1]-(Cc[1]-a[1])*e[0]))}
+  const sides=[];for(let j=0;j<chain.length-1;j++){const a=chain[j],b=chain[j+1],md=mul(add(a,b),0.5),e=1e-6*s+1e-6;
+    sides.push(Math.abs(md[1])<0.01?'D':Math.abs(md[0]-s)<0.01?'P':Math.abs(md[1]-s)<0.01?'G':'L')}
+  return{chain,Cc,shells,dist,sides};
+}
+function layerAccent(P,i){return P.layerCol==='inner'?i>0:P.layerCol==='outer'?i===0:P.layerCol==='alt'?i%2===1:false}
+function layerTab(P,lay,i,j){const D=lay.dist[j]*Math.pow(P.inner,i);return Math.min(P.tab,i<P.layers-1?0.85*(1-P.inner)*D:0.45*D)}
+function hullOf(sh,ox,oy){
+  const A=[sh.apex[0]+ox,sh.apex[1]+oy,sh.apex[2]],V=sh.base.map(v=>[v[0]+ox,v[1]+oy,0]),n=V.length,tris=[];
+  for(let j=0;j<n-1;j++)tris.push([A,V[j],V[j+1]]);tris.push([A,V[n-1],V[0]]);
+  const cen=[0,0,0];for(const v of[...V,A])for(let k=0;k<3;k++)cen[k]+=v[k]/(n+1);
+  const pl=[[0,0,-1,0]];
+  for(const[a,b,c]of tris){const u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
+    let nx=u[1]*v[2]-u[2]*v[1],ny=u[2]*v[0]-u[0]*v[2],nz=u[0]*v[1]-u[1]*v[0];const l=Math.hypot(nx,ny,nz);if(l<1e-9)continue;
+    nx/=l;ny/=l;nz/=l;let d=-(nx*a[0]+ny*a[1]+nz*a[2]);if(nx*cen[0]+ny*cen[1]+nz*cen[2]+d>0){nx=-nx;ny=-ny;nz=-nz;d=-d}pl.push([nx,ny,nz,d])}
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const v of[...V,A]){x0=Math.min(x0,v[0]);x1=Math.max(x1,v[0]);y0=Math.min(y0,v[1]);y1=Math.max(y1,v[1])}
+  return{pl,tris:tris.slice(0,n-1),bb:{x0,y0,x1,y1}};
+}
+function pierces(A,B){
+  if(A.bb.x1<B.bb.x0||B.bb.x1<A.bb.x0||A.bb.y1<B.bb.y0||B.bb.y1<A.bb.y0)return false;
+  const N=6;
+  for(const[a,b,c]of A.tris)for(let i=0;i<=N;i++)for(let j=0;j<=N-i;j++){
+    const w1=i/N,w2=j/N,w0=1-w1-w2,p=[a[0]*w0+b[0]*w1+c[0]*w2,a[1]*w0+b[1]*w1+c[1]*w2,a[2]*w0+b[2]*w1+c[2]*w2];
+    let inside=true;for(const q of B.pl)if(q[0]*p[0]+q[1]*p[1]+q[2]*p[2]+q[3]>-0.4){inside=false;break}
+    if(inside)return true}
+  return false;
+}
+function makeFanNet(P,sh,acc,tabs,sides,label){
+  const A3=sh.apex,V=sh.base,n=V.length,d3=v=>[v[0]-A3[0],v[1]-A3[1],-A3[2]],Ls=V.map(v=>{const a=d3(v);return Math.hypot(a[0],a[1],a[2])});
+  const A=[0,0],Q=[[Ls[0],0]];let th=0;
+  for(let j=0;j<n-1;j++){const a=d3(V[j]),b=d3(V[j+1]);th-=Math.acos(clamp((a[0]*b[0]+a[1]*b[1]+a[2]*b[2])/(Ls[j]*Ls[j+1]),-1,1));Q.push([Ls[j+1]*Math.cos(th),Ls[j+1]*Math.sin(th)])}
+  const net={faces:[],tabs:[],folds:[],texts:[],outline:[A,Q[0]]},Q45=Math.PI/4;
+  for(let j=0;j<n-1;j++)net.faces.push({pts:[A,Q[j],Q[j+1]],accent:acc});
+  for(let j=1;j<n-1;j++)net.folds.push([A,Q[j]]);
+  for(let j=0;j<n-1;j++){
+    const p=Q[j],q=Q[j+1];
+    if(P.baseTabs!=='in'||tabs[j]<1){net.outline.push(q);continue}
+    const outL=j===0?TAU-ang(A,p,q):TAU-ang(A,p,Q[j-1])-ang(A,p,q);
+    const outR=j===n-2?TAU-ang(A,q,p):TAU-ang(A,q,p)-ang(A,q,Q[j+2]);
+    const fL=clamp(Math.min(Q45,(j===0?outL:outL/2)-0.06),0.1,Q45),fR=clamp(Math.min(Q45,(j===n-2?outR:outR/2)-0.06),0.1,Q45);
+    let d=tabs[j],a1=d/Math.tan(fL),a2=d/Math.tan(fR);const el=len(sub(q,p));
+    if(a1+a2>0.8*el){const k=0.8*el/(a1+a2);d*=k;a1*=k;a2*=k}
+    const e=unit(sub(q,p));let nn=[e[1],-e[0]];if(dot(nn,mul(add(p,q),0.5))<0)nn=mul(nn,-1);
+    const t1=add(p,add(mul(e,a1),mul(nn,d))),t2=add(q,add(mul(e,-a2),mul(nn,d)));
+    net.tabs.push([p,t1,t2,q]);net.outline.push(t1,t2,q);net.folds.push([p,q]);
+    if(d>=1.6)net.texts.push({x:(p[0]+q[0]+t1[0]+t2[0])/4,y:(p[1]+q[1]+t1[1]+t2[1])/4,t:SIDE(sides[j]),size:clamp(d*0.5,1.2,3),ang:Math.atan2(e[1],e[0]),kind:'tab'});
+  }
+  let bi=0,ba=0;
+  net.faces.forEach((f,i)=>{const[a,b,c]=f.pts,ar=Math.abs((b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]))/2;if(ar>ba){ba=ar;bi=i}});
+  const[fa,fb,fc]=net.faces[bi].pts,per=len(sub(fa,fb))+len(sub(fb,fc))+len(sub(fc,fa)),inr=2*ba/per,ex=sub(fc,fb);
+  net.texts.push({x:(fa[0]+fb[0]+fc[0])/3,y:(fa[1]+fb[1]+fc[1])/3,t:label,size:clamp(inr*0.5,1.4,4.2),ang:Math.atan2(ex[1],ex[0]),kind:'id',face:bi});
+  return net;
+}
+
+function analyze(P,mods){
+  const s=P.cell,at=(r,c)=>mods[r*P.cols+c],edges=[];let hits=0;
+  const LAY=P.shape==='layers';
+  mods.forEach(m=>{m.hit=false;m.L=slantLengths(P,m);
+    if(LAY){m.lay=layerShells(P,m);m.tx=m.lay.shells[0].apex[0];m.ty=m.lay.shells[0].apex[1];m.hull=hullOf(m.lay.shells[0],m.x0,m.y0)}
+    else{m.lay=null;m.tx=s/2+m.dx;m.ty=s/2+m.dy}});
+  if(LAY){for(let r=0;r<P.rows;r++)for(let c=0;c<P.cols;c++){const A=at(r,c);
+    for(const[dr,dc]of[[0,1],[1,-1],[1,0],[1,1]]){const rr=r+dr,cc=c+dc;if(rr>=P.rows||cc<0||cc>=P.cols)continue;const B=at(rr,cc);
+      if(pierces(A.hull,B.hull)||pierces(B.hull,A.hull)){A.hit=B.hit=true;hits++}}}}
+  const chk=(A,B,axis)=>{
+    const e=(axis==='x'?A.x0:A.y0)+s;
+    const uA=(axis==='x'?A.x0+A.tx:A.y0+A.ty)-e,uB=(axis==='x'?B.x0+B.tx:B.y0+B.ty)-e;
+    if(!LAY&&Math.atan2(A.h,uA)<Math.atan2(B.h,uB)-0.02){A.hit=B.hit=true;hits++}
+    if(uA>0)edges.push([B,A]);if(uB<0)edges.push([A,B]);
+  };
+  for(let r=0;r<P.rows;r++)for(let c=0;c<P.cols;c++){
+    if(c+1<P.cols)chk(at(r,c),at(r,c+1),'x');
+    if(r+1<P.rows)chk(at(r+1,c),at(r,c),'y');
+  }
+  const idx=new Map(mods.map((m,i)=>[m,i])),indeg=new Array(mods.length).fill(0),adj=mods.map(()=>[]);
+  for(const[a,b]of edges){adj[idx.get(a)].push(idx.get(b));indeg[idx.get(b)]++}
+  const q=[];indeg.forEach((d,i)=>{if(!d)q.push(i)});const order=[],seen=new Array(mods.length).fill(false);
+  while(q.length){q.sort((a,b)=>a-b);const i=q.shift();if(seen[i])continue;seen[i]=true;order.push(i);for(const j of adj[i])if(--indeg[j]===0)q.push(j)}
+  mods.forEach((m,i)=>{if(!seen[i])order.push(i)});
+  order.forEach((i,k)=>mods[i].ord=k+1);
+  const keys=new Map();
+  const r5=x=>(Math.round(x*2)/2).toFixed(1);
+  mods.forEach(m=>{let best=null;
+    if(LAY){const sh=m.lay.shells[0],A=sh.apex,B=sh.base;best=B.map(v=>r5(Math.hypot(v[0]-A[0],v[1]-A[1],A[2]))).join('|')+'/'+B.slice(1).map((v,j)=>r5(len(sub(v,B[j])))).join('|')}
+    else{const v=m.L.map(r5);for(let k=0;k<4;k++){const t=v.slice(k).concat(v.slice(0,k)).join('|');if(best===null||t<best)best=t}}
+    if(!keys.has(best))keys.set(best,keys.size+1);m.shape=keys.get(best)});
+  return{hits,unique:keys.size};
+}
+
+function makeNet(P,m,accents){
+  const s=P.cell,L=m.L.slice();L.push(L[0]);
+  const A=[0,0],Q=[[L[0],0]],al=[];let th=0;
+  for(let i=0;i<4;i++){const a=Math.acos(clamp((L[i]*L[i]+L[i+1]*L[i+1]-s*s)/(2*L[i]*L[i+1]),-1,1));al.push(a);th-=a;Q.push([L[i+1]*Math.cos(th),L[i+1]*Math.sin(th)])}
+  const gap=TAU-al[0]-al[1]-al[2]-al[3],net={faces:[],tabs:[],folds:[],texts:[],outline:[A,Q[0]]};
+  const LBL=['D','P','G','L'],tab=P.tab,Q45=Math.PI/4;
+  for(let i=0;i<4;i++)net.faces.push({pts:[A,Q[i],Q[i+1]],accent:accents.includes(i)});
+  for(let i=1;i<4;i++)net.folds.push([A,Q[i]]);
+  if(P.baseTabs==='in'){
+    for(let i=0;i<4;i++){
+      const p=Q[i],q=Q[i+1];
+      const outL=i===0?TAU-ang(A,p,q):TAU-ang(A,p,Q[i-1])-ang(A,p,q);
+      const outR=i===3?TAU-ang(A,q,p)-Q45:TAU-ang(A,q,p)-ang(A,q,Q[i+2]);
+      const fL=clamp(Math.min(Q45,(i===0?outL:outL/2)-0.06),0.1,Q45),fR=clamp(Math.min(Q45,(i===3?outR:outR/2)-0.06),0.1,Q45);
+      let d=tab,a1=d/Math.tan(fL),a2=d/Math.tan(fR);const el=len(sub(q,p));
+      if(a1+a2>0.8*el){const k=0.8*el/(a1+a2);d*=k;a1*=k;a2*=k}
+      const e=unit(sub(q,p));let n=[e[1],-e[0]];if(dot(n,mul(add(p,q),0.5))<0)n=mul(n,-1);
+      const t1=add(p,add(mul(e,a1),mul(n,d))),t2=add(q,add(mul(e,-a2),mul(n,d)));
+      net.tabs.push([p,t1,t2,q]);net.outline.push(t1,t2,q);net.folds.push([p,q]);
+      net.texts.push({x:(p[0]+q[0]+t1[0]+t2[0])/4,y:(p[1]+q[1]+t1[1]+t2[1])/4,t:SIDE(LBL[i]),size:clamp(d*0.5,1.4,3),ang:Math.atan2(e[1],e[0]),kind:'tab'});
+    }
+  }else net.outline.push(Q[1],Q[2],Q[3],Q[4]);
+  const L0=L[0];
+  if(gap>0.1){
+    const sg=Math.sin(Math.min(gap,Math.PI/2));
+    let d=Math.min(0.8*tab,0.3*L0,0.9*L0*sg/(1+sg));const fA=Math.min(Q45,gap-0.06);
+    let a1=d/Math.tan(fA),a2=d;if(a1+a2>0.85*L0){const k=0.85*L0/(a1+a2);d*=k;a1*=k;a2*=k}
+    const q=Q[4],e=unit(q);let n=[e[1],-e[0]];if(dot(n,Q[3])>0)n=mul(n,-1);
+    const nq=add(q,add(mul(e,-a2),mul(n,d))),na=add(mul(e,a1),mul(n,d));
+    net.tabs.push([q,nq,na,A]);net.outline.push(nq,na);net.folds.push([A,q]);
+    net.texts.push({x:(q[0]+nq[0]+na[0])/4,y:(q[1]+nq[1]+na[1])/4,t:tr('klej','glue'),size:clamp(d*0.45,1.2,2.4),ang:Math.atan2(e[1],e[0]),kind:'tab'});
+  }
+  let bi=0,ba=0;
+  net.faces.forEach((f,i)=>{const[a,b,c]=f.pts,ar=Math.abs((b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]))/2;if(ar>ba){ba=ar;bi=i}});
+  const[fa,fb,fc]=net.faces[bi].pts,per=len(sub(fa,fb))+len(sub(fb,fc))+len(sub(fc,fa)),inr=2*ba/per;
+  const ex=sub(fc,fb);
+  net.texts.push({x:(fa[0]+fb[0]+fc[0])/3,y:(fa[1]+fb[1]+fc[1])/3,t:m.id,size:clamp(inr*0.5,1.6,4.2),ang:Math.atan2(ex[1],ex[0]),kind:'id',face:bi});
+  return net;
+}
+
+function paperSize(P){return P.paper==='A3'?[297,420]:P.paper==='Letter'?[215.9,279.4]:[210,297]}
+const HEAD=13;
+
+function bbOf(pts){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const p of pts){if(p[0]<x0)x0=p[0];if(p[0]>x1)x1=p[0];if(p[1]<y0)y0=p[1];if(p[1]>y1)y1=p[1]}return{x0,y0,x1,y1}}
+function rowSpans(pts,h,res,pad){
+  const rows=Math.ceil((h+2*pad)/res),sp=[];
+  for(let r=0;r<rows;r++){
+    const ya=r*res-pad*2,yb=(r+1)*res;let a=1e9,b=-1e9;
+    for(let k=0;k<=4;k++){const y=ya+(yb-ya)*k/4;
+      for(let i=0;i<pts.length;i++){const p=pts[i],q=pts[(i+1)%pts.length];
+        if((p[1]-y)*(q[1]-y)<=0&&p[1]!==q[1]){const x=p[0]+(y-p[1])*(q[0]-p[0])/(q[1]-p[1]);if(x<a)a=x;if(x>b)b=x}}}
+    for(const p of pts)if(p[1]>=ya&&p[1]<=yb){if(p[0]<a)a=p[0];if(p[0]>b)b=p[0]}
+    sp.push(a>b?null:[Math.max(0,Math.floor((a-pad)/res)),Math.ceil((b+pad)/res)]);
+  }
+  return sp;
+}
+function pack(P,mods,nets){
+  const[pw,ph]=paperSize(P),mg=P.margin,W=pw-2*mg,H=ph-2*mg-HEAD,res=2,pad=1.25,sheets=[];
+  const NC=Math.floor(W/res),NR=Math.floor(H/res);let cur=null,oversize=0;
+  const newSheet=()=>{const occ=[],pre=[];for(let r=0;r<NR;r++){occ.push(new Uint8Array(NC));pre.push(new Int32Array(NC+1))}cur={items:[],occ,pre};sheets.push(cur)};
+  const fits=(sh,c,ix,iy)=>{for(const r of c.ord){const s=c.sp[r];const R=iy+r-1;if(R<0)continue;if(R>=NR)return 1e9;const a=ix+s[0],b=Math.min(NC,ix+s[1]);if(sh.pre[R][b]-sh.pre[R][a]>0){let k=b-1;const o=sh.occ[R];while(k>a&&!o[k])k--;return k-s[0]+1}}return -1};
+  const find=(sh,c,limit)=>{const mx=NC-c.cw,my=NR-c.ch;for(let iy=0;iy<=my;iy++){if(iy+c.ch>=limit)return null;let ix=0;while(ix<=mx){const j=fits(sh,c,ix,iy);if(j<0)return[ix,iy];ix=Math.max(ix+1,j)}}return null};
+  const mark=(sh,c,ix,iy)=>{for(let r=0;r<c.sp.length;r++){const s=c.sp[r];if(!s)continue;const R=iy+r-1;if(R<0||R>=NR)continue;const o=sh.occ[R];for(let x=ix+s[0];x<Math.min(NC,ix+s[1]);x++)o[x]=1;const p=sh.pre[R];for(let x=0;x<NC;x++)p[x+1]=p[x]+o[x]}};
+  mods.forEach((m,i)=>{
+    const net=nets[i],cands=[];
+    for(let k=0;k<12;k++){const t=k*TAU/12,c=Math.cos(t),s=Math.sin(t);const r=net.outline.map(p=>[c*p[0]-s*p[1],s*p[0]+c*p[1]]),bb=bbOf(r),w=bb.x1-bb.x0,h=bb.y1-bb.y0;
+      if(w>W||h>H)continue;const pts=r.map(p=>[p[0]-bb.x0,p[1]-bb.y0]);const sp=rowSpans(pts,h,res,pad),ord=sp.map((v,j)=>j).filter(j=>sp[j]).sort((a,b)=>(sp[b][1]-sp[b][0])-(sp[a][1]-sp[a][0]));cands.push({t,x0:bb.x0,y0:bb.y0,w,h,cw:Math.ceil(w/res),ch:Math.ceil(h/res),sp,ord})}
+    if(!cands.length){oversize++;const c=Math.cos(0);newSheet();const bb=bbOf(net.outline);cur.items.push({mod:m,net,t:0,ox:mg-bb.x0,oy:mg+HEAD-bb.y0});m.sheet=sheets.length;cur=null;return}
+    cands.sort((a,b)=>a.w*a.h-b.w*b.h);cands.length=Math.min(cands.length,7);
+    const tryAll=sh=>{let best=null,limit=1e9;for(const c of cands){const f=find(sh,c,limit);if(f){const bot=f[1]+c.ch;if(!best||bot<limit||(bot===limit&&f[0]<best.f[0])){best={c,f};limit=bot}}}return best};
+    let b=cur?tryAll(cur):null;
+    if(!b){newSheet();b=tryAll(cur)}
+    const{c,f}=b;mark(cur,c,f[0],f[1]);
+    cur.items.push({mod:m,net,t:c.t,ox:mg+f[0]*res-c.x0,oy:mg+HEAD+f[1]*res-c.y0});m.sheet=sheets.length;
+  });
+  sheets.forEach(s=>{delete s.occ;delete s.pre});
+  return{sheets,oversize,pw,ph};
+}
+
+function mixHex(a,b,t){const A=hexRGB(a),B=hexRGB(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')}
+function hexRGB(h){h=String(h).replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return[0,2,4].map(i=>parseInt(h.slice(i,i+2),16)||0)}
+function upright(a){while(a>Math.PI/2)a-=Math.PI;while(a<=-Math.PI/2)a+=Math.PI;return a}
+
+function headerPrims(items,pw,mg,title,sub2){
+  items.push({k:'text',layer:'text',x:mg,y:mg+3,t:title,size:3.2,anchor:'start',weight:'bold',fill:'#1a1a1a'});
+  items.push({k:'text',layer:'text',x:mg,y:mg+8,t:sub2,size:2.3,anchor:'start',fill:'#444'});
+  const x1=pw-mg,x0=x1-50,yb=mg+3;
+  items.push({k:'line',layer:'mark',a:[x0,yb],b:[x1,yb],stroke:'#1a1a1a',sw:0.35});
+  for(let i=0;i<=5;i++)items.push({k:'line',layer:'mark',a:[x0+i*10,yb-(i%5?1:1.8)],b:[x0+i*10,yb],stroke:'#1a1a1a',sw:0.25});
+  items.push({k:'text',layer:'text',x:x1,y:yb+3.6,t:tr('50 mm przy druku 100%','50 mm at 100% print'),size:2.1,anchor:'end',fill:'#444'});
+}
+
+function sheetPrims(P,pk,idx){
+  const sheet=pk.sheets[idx],pw=pk.pw,ph=pk.ph,mg=P.margin,fills=[],cuts=[],folds=[],texts=[],head=[];
+  const ids=sheet.items.map(it=>it.mod.id);
+  const rng=ids[0]+(ids.length>1?tr(' do ',' to ')+ids[ids.length-1]:''),outer=P.shape==='layers'&&P.layers>1;
+  headerPrims(head,pw,mg,tr(`Papierowy relief ${P.cols}×${P.rows}, moduł ${P.cell} mm. Arkusz ${idx+1} z ${pk.sheets.length}`,`Paper relief ${P.cols}×${P.rows}, ${P.cell} mm module. Sheet ${idx+1} of ${pk.sheets.length}`),
+    tr(`Moduły ${rng}. Ciągła: tnij. Przerywana: zegnij nadrukiem na zewnątrz. D G L P: strona przy podkładzie.${outer?' -1 to warstwa zewnętrzna.':''}`,
+       `Modules ${rng}. Solid: cut. Dashed: fold, print side out. B T L R: edge on the backing board.${outer?' -1 is the outer layer.':''}`));
+  const dark=P.fill==='color',foldCol=dark?'#C9CAD9':'#5a5a5a';
+  for(const it of sheet.items){
+    const c=Math.cos(it.t),s=Math.sin(it.t),T=p=>[it.ox+c*p[0]-s*p[1],it.oy+s*p[0]+c*p[1]],n=it.net;
+    for(const f of n.faces){
+      const col=f.accent?P.colAccent:P.colFace;
+      const fill=P.fill==='color'?col:P.fill==='tint'?mixHex(col,'#ffffff',0.84):null;
+      if(fill)fills.push({k:'poly',layer:'fill',pts:f.pts.map(T),fill});
+    }
+    if(P.fill!=='lines')for(const tb of n.tabs)fills.push({k:'poly',layer:'fill',pts:tb.map(T),fill:'#E3E3E6'});
+    cuts.push({k:'poly',layer:'cut',pts:n.outline.map(T),stroke:'#111111',sw:0.25});
+    for(const[a,b]of n.folds)folds.push({k:'line',layer:'score',a:T(a),b:T(b),stroke:foldCol,sw:0.2,dash:[2.2,1.3]});
+    if(P.labels)for(const tx of n.texts){
+      const p=T([tx.x,tx.y]),onDark=tx.kind==='id'&&dark;
+      texts.push({k:'text',layer:'text',x:p[0],y:p[1],t:tx.t,size:tx.size,ang:upright(tx.ang+it.t),anchor:'middle',weight:tx.kind==='id'?'bold':'normal',fill:onDark?'#ffffff':'#333333'});
+    }
+  }
+  return{w:pw,h:ph,items:[...fills,...cuts,...folds,...head,...texts]};
+}
+
+function clipSeg(a,b,r){let t0=0,t1=1;const dx=b[0]-a[0],dy=b[1]-a[1];
+  for(const[p,q]of[[-dx,a[0]-r.x0],[dx,r.x1-a[0]],[-dy,a[1]-r.y0],[dy,r.y1-a[1]]]){
+    if(p===0){if(q<0)return null}else{const t=q/p;if(p<0){if(t>t1)return null;if(t>t0)t0=t}else{if(t<t0)return null;if(t<t1)t1=t}}}
+  return[[a[0]+t0*dx,a[1]+t0*dy],[a[0]+t1*dx,a[1]+t1*dy]]}
+
+function boardPrims(P,mods,reg,pw,ph,ox,oy,title,sub2){
+  const s=P.cell,W=P.cols*s,H=P.rows*s,items=[],lines=[],texts=[];
+  const T=p=>[ox+p[0]-reg.x0,oy+p[1]-reg.y0];
+  const seg=(a,b,st)=>{const c=clipSeg(a,b,reg);if(c)lines.push(Object.assign({k:'line',layer:'mark',a:T(c[0]),b:T(c[1])},st))};
+  for(let c=0;c<=P.cols;c++)seg([c*s,0],[c*s,H],{stroke:c===0||c===P.cols?'#111':'#777',sw:c===0||c===P.cols?0.4:0.2});
+  for(let r=0;r<=P.rows;r++)seg([0,r*s],[W,r*s],{stroke:r===0||r===P.rows?'#111':'#777',sw:r===0||r===P.rows?0.4:0.2});
+  const inside=p=>p[0]>=reg.x0&&p[0]<=reg.x1&&p[1]>=reg.y0&&p[1]<=reg.y1;
+  for(const m of mods){
+    let cx=m.x0+s/2,cy=H-(m.y0+s/2),tip=[cx+m.dx,cy-m.dy];const ts=clamp(s*0.11,1.6,3.4);
+    if(m.lay){const B=v=>[m.x0+v[0],H-(m.y0+v[1])],col=m.hit?'#C0392B':'#952C73';
+      m.lay.shells.forEach((sh,i)=>{const b=sh.base;
+        for(let j=0;j<b.length-1;j++)seg(B(b[j]),B(b[j+1]),i?{stroke:col,sw:0.25,dash:[1.2,0.9]}:{stroke:col,sw:0.3});
+        seg(B(b[b.length-1]),B(b[0]),i?{stroke:'#111',sw:0.3,dash:[1.2,0.9]}:{stroke:'#111',sw:0.55})});
+      const c0=B(m.lay.Cc);cx=c0[0];cy=c0[1];tip=B(m.lay.shells[0].apex)}
+    seg([cx,cy],tip,{stroke:m.hit?'#C0392B':'#952C73',sw:0.35});
+    if(Math.hypot(tip[0]-cx,tip[1]-cy)>1){const a=Math.atan2(tip[1]-cy,tip[0]-cx),hl=Math.min(4,Math.hypot(tip[0]-cx,tip[1]-cy)*0.35);
+      for(const da of[2.6,-2.6])seg(tip,[tip[0]+hl*Math.cos(a+da),tip[1]+hl*Math.sin(a+da)],{stroke:m.hit?'#C0392B':'#952C73',sw:0.35})}
+    const lab=[m.x0+ts*0.4+0.8,H-(m.y0+s)+ts*0.8];
+    if(inside(lab)&&P.labels){const p=T(lab);texts.push({k:'text',layer:'text',x:p[0],y:p[1],t:m.id,size:ts,anchor:'start',weight:'bold',fill:'#222'})}
+    const lo=[m.x0+s-0.8,H-m.y0-ts*0.55];
+    if(inside(lo)&&P.labels){const p=T(lo);texts.push({k:'text',layer:'text',x:p[0],y:p[1],t:'#'+m.ord+(m.hit?' !':''),size:ts*0.75,anchor:'end',fill:m.hit?'#C0392B':'#666'})}
+  }
+  const head=[];headerPrims(head,pw,P.margin,title,sub2);
+  items.push(...lines,...head,...texts);
+  return{w:pw,h:ph,items};
+}
+
+function boardPagesTiled(P,mods){
+  const[pw,ph]=paperSize(P),mg=P.margin,TW=pw-2*mg,TH=ph-2*mg-HEAD-4,W=P.cols*P.cell,H=P.rows*P.cell;
+  const nx=Math.ceil(W/TW-1e-6),ny=Math.ceil(H/TH-1e-6),pages=[];
+  for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){
+    const reg={x0:i*TW,y0:j*TH,x1:Math.min(W,(i+1)*TW),y1:Math.min(H,(j+1)*TH)};
+    const pg=boardPrims(P,mods,reg,pw,ph,mg,mg+HEAD+4,tr(`Podkład 1:1. Kafelek: rząd ${j+1}, kolumna ${i+1} (układ ${ny}×${nx})`,`Backing board 1:1. Tile: row ${j+1}, column ${i+1} (layout ${ny}×${nx})`),
+      P.shape==='layers'?tr('Przytnij do szarej ramki, sklej na styk. Gruba linia: otwarcie. Przerywana: obrys mniejszej warstwy. #n: kolejność.','Trim to the grey frame and butt-join the tiles. Thick line: opening. Dashed: smaller layer outline. #n: gluing order.')
+        :tr('Przytnij do szarej ramki i sklej kafelki na styk. Strzałka pokazuje, gdzie wypada wierzchołek. #n to kolejność klejenia.','Trim to the grey frame and butt-join the tiles. The arrow shows where the apex lands. #n is the gluing order.'));
+    pg.items.unshift({k:'poly',layer:'mark',pts:[[mg,mg+HEAD+4],[mg+reg.x1-reg.x0,mg+HEAD+4],[mg+reg.x1-reg.x0,mg+HEAD+4+reg.y1-reg.y0],[mg,mg+HEAD+4+reg.y1-reg.y0]],stroke:'#AAAAAA',sw:0.25,dash:[1,1]});
+    pages.push(pg);
+  }
+  return pages;
+}
+function boardPageFull(P,mods){
+  const W=P.cols*P.cell,H=P.rows*P.cell,mg=12,pw=W+2*mg,ph=H+2*mg+HEAD+4;
+  const Q=Object.assign({},P,{margin:mg});
+  return boardPrims(Q,mods,{x0:0,y0:0,x1:W,y1:H},pw,ph,mg,mg+HEAD+4,tr(`Podkład 1:1, ${W}×${H} mm (${P.cols}×${P.rows} modułów po ${P.cell} mm)`,`Backing board 1:1, ${W}×${H} mm (${P.cols}×${P.rows} modules of ${P.cell} mm)`),
+    P.shape==='layers'?tr('Gruba linia: otwarta strona. Przerywana: obrys mniejszej warstwy. Strzałka: wierzchołek. #n: kolejność klejenia, !: kolizja.','Thick line: open side. Dashed: smaller layer outline. Arrow: apex. #n: gluing order, !: collision.')
+      :tr('Góra kompozycji jest u góry arkusza. Strzałka pokazuje, gdzie wypada wierzchołek. #n to kolejność klejenia, ! oznacza kolizję.','The top of the composition is at the top of the sheet. The arrow shows where the apex lands. #n is the gluing order, ! marks a collision.'));
+}
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function primsToSVG(pr,mode){
+  const f=n=>Math.round(n*100)/100,L={fill:[],cut:[],score:[],mark:[],text:[]};
+  for(const p of pr.items){
+    if(mode==='plotter'&&p.layer==='fill')continue;
+    let stroke=p.stroke||'none';if(mode==='plotter'){if(p.layer==='cut')stroke='#FF0000';if(p.layer==='score')stroke='#0000FF'}
+    const dash=p.dash?` stroke-dasharray="${p.dash.join(' ')}"`:'';
+    if(p.k==='poly')L[p.layer].push(`<path d="M${p.pts.map(q=>f(q[0])+' '+f(q[1])).join(' L')} Z" fill="${p.fill||'none'}" stroke="${stroke}" stroke-width="${p.sw||0}"${dash}/>`);
+    else if(p.k==='line')L[p.layer].push(`<line x1="${f(p.a[0])}" y1="${f(p.a[1])}" x2="${f(p.b[0])}" y2="${f(p.b[1])}" stroke="${stroke}" stroke-width="${p.sw||0.2}"${dash}/>`);
+    else if(p.k==='text'){const deg=f((p.ang||0)*180/Math.PI);
+      L.text.push(`<text x="${f(p.x)}" y="${f(p.y)}" font-size="${f(p.size)}" text-anchor="${p.anchor||'middle'}" dominant-baseline="central" fill="${p.fill||'#222'}"${p.weight==='bold'?' font-weight="700"':''}${deg?` transform="rotate(${deg} ${f(p.x)} ${f(p.y)})"`:''}>${esc(p.t)}</text>`)}
+  }
+  const g=(id,name,arr,extra='')=>arr.length?`<g id="${id}" inkscape:groupmode="layer" inkscape:label="${name}"${extra}>${arr.join('')}</g>`:'';
+  return`<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${f(pr.w)}mm" height="${f(pr.h)}mm" viewBox="0 0 ${f(pr.w)} ${f(pr.h)}">`+
+    `<rect width="100%" height="100%" fill="#ffffff"/>`+g('fill',tr('Wypelnienia','Fills'),L.fill)+g('mark',tr('Znaczniki','Marks'),L.mark)+
+    g('cut',tr('Ciecie','Cut'),L.cut,' stroke-linejoin="round"')+g('score',tr('Bigowanie','Score'),L.score)+
+    g('text',tr('Opisy','Labels'),L.text,` font-family="Archivo, Helvetica, Arial, sans-serif"`)+`</svg>`;
+}
+
+const PL={'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z','×':'x','–':'-','—':'-','’':"'"};
+const ascii=s=>String(s).replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ×–—’]/g,c=>PL[c]);
+function primsToPDF(doc,pr){
+  for(const p of pr.items){
+    if(p.k==='poly'){
+      if(p.fill)doc.setFillColor(...hexRGB(p.fill));
+      if(p.stroke){doc.setDrawColor(...hexRGB(p.stroke));doc.setLineWidth(p.sw||0.2)}
+      doc.setLineDashPattern(p.dash||[],0);
+      const d=[];for(let i=1;i<p.pts.length;i++)d.push([p.pts[i][0]-p.pts[i-1][0],p.pts[i][1]-p.pts[i-1][1]]);
+      doc.lines(d,p.pts[0][0],p.pts[0][1],[1,1],p.fill&&p.stroke?'FD':p.fill?'F':'S',true);
+    }else if(p.k==='line'){
+      doc.setDrawColor(...hexRGB(p.stroke||'#000'));doc.setLineWidth(p.sw||0.2);doc.setLineDashPattern(p.dash||[],0);
+      doc.line(p.a[0],p.a[1],p.b[0],p.b[1]);
+    }else if(p.k==='text'){
+      const t=ascii(p.t);doc.setFont('helvetica',p.weight==='bold'?'bold':'normal');doc.setFontSize(p.size*2.835);doc.setTextColor(...hexRGB(p.fill||'#222'));
+      const w=doc.getTextWidth(t),a=p.ang||0,u=[Math.cos(a),Math.sin(a)],n=[-Math.sin(a),Math.cos(a)];
+      const sh=p.anchor==='end'?-w:p.anchor==='start'?0:-w/2,vy=p.size*0.36;
+      doc.text(t,p.x+u[0]*sh+n[0]*vy,p.y+u[1]*sh+n[1]*vy,{angle:-a*180/Math.PI});
+    }
+  }
+  doc.setLineDashPattern([],0);
+}
+function pagesToPDF(jsPDF,pages){
+  let doc=null;
+  for(const pg of pages){const o=pg.w>pg.h?'l':'p';if(!doc)doc=new jsPDF({unit:'mm',format:[pg.w,pg.h],orientation:o,compress:true});else doc.addPage([pg.w,pg.h],o);primsToPDF(doc,pg)}
+  return doc;
+}
+
+function buildModel(P){
+  const mods=computeModules(P),info=analyze(P,mods);
+  let nets=[],pm=[],minTab=1e9;
+  if(P.shape==='layers'){
+    for(const m of mods){const L=m.lay;L.shells.forEach((sh,i)=>{const tabs=L.dist.map((_,j)=>layerTab(P,L,i,j));tabs.forEach(t=>{if(t<minTab)minTab=t});
+      nets.push(makeFanNet(P,sh,layerAccent(P,i),tabs,L.sides,P.layers>1?m.id+'-'+(i+1):m.id));pm.push(m)})}
+  }else{nets=mods.map(m=>makeNet(P,m,faceAccents(P,m)));pm=mods}
+  let area=0;for(const n of nets){const o=n.outline;let a=0;for(let i=0;i<o.length;i++){const p=o[i],q=o[(i+1)%o.length];a+=p[0]*q[1]-q[0]*p[1]}area+=Math.abs(a)/2}
+  return{mods,nets,pm,minTab,info,area,maxH:Math.max(...mods.map(m=>m.h)),pk:null};
+}
+function buildAll(P){const G=buildModel(P);G.pk=pack(P,G.pm,G.nets);return G}
+/*CORE-END*/
+
+/* ---------------- UI ---------------- */
+const $=s=>document.querySelector(s);
+let P=Object.assign({},DEF);
+(function(){let l=null;try{l=new URLSearchParams(location.search).get('lang')}catch(e){}
+  if(l!=='pl'&&l!=='en'){try{l=localStorage.getItem('papierowy-relief-lang')}catch(e){}}
+  LANG=l==='pl'?'pl':'en'})();
+const PRESET_EN={'Wir':'Vortex','Przepływ':'Flow','Pola':'Patches','Fala':'Wave','Dwa wiry':'Twin vortex','Promienie':'Rays','Skręt':'Twist'};
+const STATIC={h1a:['Papierowy relief','Paper relief'],h1b:['symulator i wykroje','simulator and templates'],
+  tab3d:['Podgląd 3D','3D preview'],tabSheets:['Wykroje','Templates'],tabBoard:['Podkład','Backing board'],
+  hint3d:['Przeciągnij, aby obrócić. Przewiń albo zsuń palce, aby przybliżyć. Dwuklik przywraca widok z przodu.','Drag to rotate. Scroll or pinch to zoom. Double-click to reset the front view.'],
+  prev:['Poprzedni','Previous'],next:['Następny','Next'],lgCut:['tnij','cut'],lgFold:['zegnij nadrukiem na zewnątrz','fold, print side out'],lgTab:['zakładka do klejenia','glue tab'],
+  lgSides:['D G L P: dolna, górna, lewa, prawa krawędź na podkładzie','B T L R: bottom, top, left, right edge on the backing board'],
+  dlZip:['Pobierz projekt (ZIP)','Download project (ZIP)'],dlPdf:['Wykroje PDF','Templates PDF'],dlBoard:['Podkład PDF','Backing board PDF'],
+  save:['Zapisz ustawienia','Save settings'],load:['Wczytaj ustawienia','Load settings'],html:['Pobierz kod tej strony (HTML)','Download this page (HTML)'],
+  foot:['Drukuj w skali 100% (bez dopasowania do strony) i sprawdź linijkę 50 mm w nagłówku arkusza. ZIP zawiera wykroje PDF i SVG dla plotera tnącego, podkład 1:1, listę modułów, instrukcję i ustawienia.','Print at 100% scale (no fit to page) and check the 50 mm ruler in the sheet header. The ZIP contains PDF templates, SVG files for cutting plotters, a 1:1 backing board, a parts list, instructions and your settings.'],
+  view:['Widok','View'],settings:['Ustawienia','Settings']};
+function applyStatic(){const k=LANG==='pl'?0:1;document.documentElement.lang=LANG;
+  document.title=tr('Papierowy relief — symulator i wykroje','Paper relief — simulator and cutting templates');
+  document.querySelectorAll('[data-t]').forEach(el=>{const v=STATIC[el.dataset.t];if(v&&!el.disabled)el.textContent=v[k]});
+  document.querySelectorAll('[data-ta]').forEach(el=>{const v=STATIC[el.dataset.ta];if(v)el.setAttribute('aria-label',v[k])});
+  const b=document.getElementById('langBtn');b.textContent=LANG==='pl'?'English':'Polski';b.lang=LANG==='pl'?'en':'pl';
+  b.setAttribute('aria-label',LANG==='pl'?'Switch to English':'Przełącz na polski')}
+let curPreset=null;
+try{const saved=JSON.parse(localStorage.getItem('papierowy-relief')||'null');if(saved)for(const k in DEF)if(k in saved)P[k]=saved[k]}catch(e){}
+let G=null,view='3d',sheetIdx=0,timer=0;
+const pct=v=>Math.round(v*100)+'%',mm=v=>v+' mm',deg=v=>Math.round(v)+'°';
+const isP=(...a)=>()=>a.includes(P.pattern);
+const isL=()=>P.shape==='layers';
+function makeSections(){return[
+  {t:tr('Moduł','Module'),open:true,items:[
+    {k:'shape',type:'select',l:tr('Kształt modułu','Module shape'),opts:[['pyramid',tr('Ostrosłup','Pyramid')],['layers',tr('Półostrosłupy w warstwach','Layered half-pyramids')]]},
+    {type:'note',text:tr('Otwarty półostrosłup, a w nim mniejsze, podobne warstwy. Otwarcia wszystkich warstw leżą w jednej linii, więc spod zewnętrznej widać wewnętrzne.','An open half-pyramid with smaller, similar layers nested inside. All openings sit on one line, so the inner layers show from under the outer one.'),show:isL},
+    {k:'layers',type:'select',l:tr('Liczba warstw','Layers'),num:true,opts:[[1,tr('1 warstwa','1 layer')],[2,tr('2 warstwy','2 layers')],[3,tr('3 warstwy','3 layers')]],show:isL},
+    {k:'inner',l:tr('Wielkość kolejnej warstwy','Next layer size'),min:0.3,max:0.9,step:0.01,fmt:v=>pct(v)+tr(' poprzedniej',' of previous'),show:()=>isL()&&P.layers>1},
+    {k:'innerH',l:tr('Wysokość kolejnej warstwy','Next layer height'),min:0.5,max:1,step:0.01,fmt:v=>v>=0.995?tr('proporcjonalna','proportional'):pct(v)+tr(' proporcjonalnej',' of proportional'),show:()=>isL()&&P.layers>1},
+    {k:'cutPos',l:tr('Linia otwarcia','Opening line'),min:-0.35,max:0.35,step:0.01,fmt:v=>Math.abs(v)<0.005?tr('przez środek','through the center'):pct(Math.abs(v))+tr(' boku ',' of side ')+(v>0?tr('do przodu','forward'):tr('do tyłu','back')),show:isL},
+    {k:'openSide',type:'select',l:tr('Otwarta strona','Open side'),opts:[['front',tr('W stronę pochylenia','Toward the lean')],['back',tr('Przeciwnie do pochylenia','Away from the lean')]],show:isL}]},
+  {t:tr('Wymiary','Size'),open:true,items:[
+    {k:'cols',l:tr('Kolumny','Columns'),min:2,max:40,step:1},
+    {k:'rows',l:tr('Rzędy','Rows'),min:2,max:40,step:1},
+    {k:'cell',l:tr('Bok modułu','Module side'),min:15,max:100,step:1,fmt:mm},
+    {k:'height',l:tr('Wysokość wierzchołka','Apex height'),min:5,max:120,step:1,fmt:mm}]},
+  {t:tr('Wzór','Pattern'),open:true,items:[
+    {k:'pattern',type:'select',l:tr('Kierunek pochylenia','Lean direction'),opts:[['vortex',tr('Wir','Vortex')],['radial',tr('Promienie','Rays')],['noise',tr('Przepływ','Flow')],['patch',tr('Pola','Patches')],['wave',tr('Fala','Wave')],['dipole',tr('Dwa wiry','Twin vortex')],['gradient',tr('Skręt liniowy','Linear twist')]]},
+    {k:'lean',l:tr('Pochylenie wierzchołka','Apex lean'),min:0,max:1.2,step:0.01,fmt:v=>pct(v)+tr(' boku',' of side')},
+    {k:'leanVar',l:tr('Zmienność pochylenia','Lean variation'),min:0,max:1,step:0.01,fmt:pct},
+    {k:'rot',l:tr('Obrót wszystkich kierunków','Rotate all directions'),min:-180,max:180,step:1,fmt:deg},
+    {k:'twist',l:tr('Skręt','Twist'),min:-2,max:2,step:0.01,fmt:v=>v.toFixed(2),show:isP('vortex','radial','wave','gradient','dipole')},
+    {k:'amp',l:tr('Siła odchyleń','Deviation strength'),min:0,max:1,step:0.01,fmt:pct,show:isP('noise','patch','wave','gradient')},
+    {k:'scale',l:tr('Skala wzoru','Pattern scale'),min:0.5,max:8,step:0.1,fmt:v=>v.toFixed(1),show:()=>['noise','patch','wave'].includes(P.pattern)||['noise','wave'].includes(P.hMode)},
+    {k:'cx',l:tr('Środek w poziomie','Center, horizontal'),min:0,max:1,step:0.01,fmt:pct,show:isP('vortex','radial','dipole')},
+    {k:'cy',l:tr('Środek w pionie','Center, vertical'),min:0,max:1,step:0.01,fmt:pct,show:isP('vortex','radial','dipole')},
+    {k:'jitter',l:tr('Losowe drgania kierunku','Random direction jitter'),min:0,max:45,step:1,fmt:deg},
+    {k:'seed',l:tr('Ziarno losowania','Random seed'),min:1,max:999,step:1}]},
+  {t:tr('Wysokość','Height'),items:[
+    {k:'hMode',type:'select',l:tr('Rozkład wysokości','Height profile'),opts:[['const',tr('Stała','Constant')],['radial',tr('Wyżej w środku','Higher in the center')],['edge',tr('Wyżej przy brzegach','Higher at the edges')],['noise',tr('Pagórki','Hills')],['wave',tr('Fala pionowa','Vertical wave')],['lean',tr('Rośnie z pochyleniem','Grows with lean')]]},
+    {k:'hVar',l:tr('Zmienność wysokości','Height variation'),min:0,max:0.8,step:0.01,fmt:pct,show:()=>P.hMode!=='const'}]},
+  {t:tr('Mniej różnych kształtów','Fewer unique shapes'),items:[
+    {type:'note',text:tr('Zaokrąglenie kierunków i poziomów sprawia, że wiele modułów ma tę samą siatkę. Łatwiej wtedy ciąć seriami albo na ploterze.','Rounding directions and levels makes many modules share the same template, so you can cut them in batches or on a plotter.')},
+    {k:'qDir',type:'select',l:tr('Kierunki pochylenia','Lean directions'),num:true,opts:[[0,tr('Dowolne','Any')],[4,tr('4 kierunki','4 directions')],[8,tr('8 kierunków','8 directions')],[12,tr('12 kierunków','12 directions')],[16,tr('16 kierunków','16 directions')],[24,tr('24 kierunki','24 directions')]]},
+    {k:'qLev',type:'select',l:tr('Poziomy pochylenia i wysokości','Lean and height levels'),num:true,opts:[[0,tr('Płynnie','Smooth')],[2,tr('2 poziomy','2 levels')],[3,tr('3 poziomy','3 levels')],[4,tr('4 poziomy','4 levels')],[5,tr('5 poziomów','5 levels')]]}]},
+  {t:tr('Kolory i światło','Colors and light'),items:[
+    {k:'colFace',type:'color',l:tr('Kolor ścian','Face color')},
+    {k:'colAccent',type:'color',l:tr('Kolor akcentu','Accent color')},
+    {k:'accent',type:'select',l:tr('Ściana w kolorze akcentu','Accent face'),opts:[['long',tr('Długi stok, za wierzchołkiem','Long slope, behind the apex')],['short',tr('Krótki stok, pod wierzchołkiem','Short slope, under the apex')],['top',tr('Zawsze górna','Always the top one')],['none',tr('Bez akcentu','No accent')]],show:()=>!isL()},
+    {k:'layerCol',type:'select',l:tr('Warstwy w kolorze akcentu','Accent layers'),opts:[['inner',tr('Wewnętrzne','Inner')],['outer',tr('Zewnętrzna','Outer')],['alt',tr('Na przemian','Alternating')],['same',tr('Żadna','None')]],show:()=>isL()&&P.layers>1},
+    {k:'colBoard',type:'color',l:tr('Kolor podkładu','Backing color')},
+    {k:'frame',type:'check',l:tr('Pokaż ramkę','Show frame')},
+    {k:'colFrame',type:'color',l:tr('Kolor ramki','Frame color'),show:()=>P.frame},
+    {k:'lightAz',l:tr('Kierunek światła','Light direction'),min:0,max:360,step:1,fmt:v=>deg(v)+tr(' od góry',' from top')},
+    {k:'lightEl',l:tr('Wysokość światła','Light elevation'),min:5,max:85,step:1,fmt:deg},
+    {k:'showHits',type:'check',l:tr('Zaznacz kolizje na czerwono','Mark collisions in red')}]},
+  {t:tr('Druk i cięcie','Print and cut'),items:[
+    {k:'paper',type:'select',l:tr('Format papieru','Paper size'),opts:[['A4','A4'],['A3','A3'],['Letter','Letter']]},
+    {k:'margin',l:tr('Margines drukarki','Printer margin'),min:3,max:20,step:1,fmt:mm},
+    {k:'tab',l:tr('Szerokość zakładek','Tab width'),min:3,max:14,step:0.5,fmt:mm},
+    {k:'baseTabs',type:'select',l:tr('Mocowanie do podkładu','Attaching to the backing'),opts:[['in',tr('Zakładki pod spód','Tabs folded under')],['none',tr('Bez zakładek, klej na gorąco','No tabs, hot glue')]]},
+    {k:'fill',type:'select',l:tr('Nadruk na siatkach','Template print'),opts:[['tint',tr('Linie i jasny odcień ścian','Lines and a light face tint')],['color',tr('Pełne kolory ścian','Full face colors')],['lines',tr('Same linie (kolorowy karton)','Lines only (colored card)')]]},
+    {k:'labels',type:'check',l:tr('Numery modułów i oznaczenia krawędzi','Module numbers and edge labels')}]}
+]}
+const CTRL=[];
+function buildPanel(){
+  const pr=$('#presets');
+  for(const name of Object.keys(PRESETS)){const b=document.createElement('button');b.className='chip';b.dataset.key=name;b.textContent=tr(name,PRESET_EN[name]||name);b.dataset.on=curPreset===name?'1':'';b.onclick=()=>applyPreset(name);pr.appendChild(b)}
+  const rb=document.createElement('button');rb.className='chip';rb.textContent=tr('Losuj','Randomize');rb.onclick=randomize;pr.appendChild(rb);
+  const host=$('#controls');let uid=0;
+  for(const sec of makeSections()){
+    const d=document.createElement('details');if(sec.open)d.open=true;d.innerHTML=`<summary>${sec.t}</summary>`;
+    for(const it of sec.items){
+      const el=document.createElement('div'),id='c'+(uid++);
+      if(it.type==='note'){el.className='note';el.textContent=it.text;d.appendChild(el);if(it.show)CTRL.push({it,el});continue}
+      if(it.type==='select'){el.className='ctl';el.innerHTML=`<div class="row"><label for="${id}">${it.l}</label></div><select id="${id}">${it.opts.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join('')}</select>`;
+        const s=el.querySelector('select');s.onchange=()=>{P[it.k]=it.num?+s.value:s.value;sync();schedule()};el.sync=()=>{s.value=String(P[it.k])}}
+      else if(it.type==='color'){el.className='ctl color';el.innerHTML=`<div class="row"><label for="${id}">${it.l}</label><input type="color" id="${id}"></div>`;
+        const s=el.querySelector('input');s.oninput=()=>{P[it.k]=s.value;schedule()};el.sync=()=>{s.value=P[it.k]}}
+      else if(it.type==='check'){el.className='ctl check';el.innerHTML=`<label><input type="checkbox" id="${id}">${it.l}</label>`;
+        const s=el.querySelector('input');s.onchange=()=>{P[it.k]=s.checked;sync();schedule()};el.sync=()=>{s.checked=!!P[it.k]}}
+      else{el.className='ctl';el.innerHTML=`<div class="row"><label for="${id}">${it.l}</label><output for="${id}"></output></div><input type="range" id="${id}" min="${it.min}" max="${it.max}" step="${it.step}">`;
+        const s=el.querySelector('input'),o=el.querySelector('output'),fm=it.fmt||(v=>v);
+        s.oninput=()=>{P[it.k]=+s.value;o.textContent=fm(+s.value);schedule()};el.sync=()=>{s.value=P[it.k];o.textContent=fm(+P[it.k])}}
+      CTRL.push({it,el});d.appendChild(el);
+    }
+    host.appendChild(d);
+  }
+  sync();
+}
+function sync(){for(const{it,el}of CTRL){el.sync&&el.sync();el.hidden=it.show?!it.show():false}
+  document.querySelectorAll('#presets .chip').forEach(b=>b.classList.toggle('on',b.dataset.on==='1'))}
+function applyPreset(name){for(const k of PATTERN_KEYS)P[k]=DEF[k];Object.assign(P,PRESETS[name]);
+  curPreset=name;document.querySelectorAll('#presets .chip').forEach(b=>b.dataset.on=b.dataset.key===name?'1':'');sync();schedule(true)}
+function randomize(){const r=Math.random,pats=['vortex','radial','noise','patch','wave','dipole','gradient'],hm=['const','radial','edge','noise','wave','lean'];
+  Object.assign(P,{pattern:pats[Math.floor(r()*pats.length)],seed:1+Math.floor(r()*999),lean:0.35+r()*0.45,leanVar:r()*0.7,rot:Math.round(r()*360-180),twist:+(r()*1.6-0.8).toFixed(2),amp:+(0.3+r()*0.7).toFixed(2),scale:+(1+r()*3).toFixed(1),cx:+(0.3+r()*0.4).toFixed(2),cy:+(0.3+r()*0.4).toFixed(2),jitter:Math.round(r()*10),hMode:hm[Math.floor(r()*hm.length)],hVar:+(r()*0.35).toFixed(2)});
+  curPreset=null;document.querySelectorAll('#presets .chip').forEach(b=>b.dataset.on='');sync();schedule(true)}
+function schedule(now){clearTimeout(timer);timer=setTimeout(regen,now?0:50)}
+
+function plural(n,a,b,c){const m10=n%10,m100=n%100;if(n===1)return a;if(m10>=2&&m10<=4&&(m100<12||m100>14))return b;return c}
+let packT=0;
+function ensurePack(){if(!G.pk){G.pk=pack(P,G.pm,G.nets);sheetIdx=Math.min(sheetIdx,G.pk.sheets.length-1)}return G.pk}
+function regen(){
+  G=buildModel(P);
+  renderStats();rebuild3D();
+  clearTimeout(packT);
+  if(view!=='3d'){ensurePack();renderStats();if(view==='sheets')renderSheet();if(view==='board')renderBoard()}
+  else packT=setTimeout(()=>{ensurePack();renderStats()},260);
+  try{localStorage.setItem('papierowy-relief',JSON.stringify(P))}catch(e){}
+}
+function renderStats(){
+  const W=P.cols*P.cell,H=P.rows*P.cell,n=G.mods.length,tiles=boardPagesTiled(P,G.mods).length,pk=G.pk,np=G.nets.length,L=loc(),LAY=P.shape==='layers';
+  const sh=pk?pk.sheets.length:0,u=G.info.unique,depth=Math.ceil((G.maxH+15)/5)*5,top=Math.round(G.maxH);
+  let html=`<p class="big">${(W/10).toLocaleString(L)} × ${(H/10).toLocaleString(L)} cm, ${n} ${nw(n,'moduł','moduły','modułów','module','modules')}${np!==n?`, ${np} ${nw(np,'element','elementy','elementów','piece','pieces')}`:''}</p>`;
+  html+=LANG==='pl'
+    ?`<p>${u} ${plw(u,'kształt siatki','różne kształty siatek','różnych kształtów siatek')}. ${pk?`Wykroje na ${sh} ${plw(sh,'arkuszu','arkuszach','arkuszach')} ${P.paper}`:'Układam wykroje na arkuszach'}, podkład na ${tiles} ${plw(tiles,'kafelku','kafelkach','kafelkach')}. Najwyższy wierzchołek ${top} mm, więc ramka potrzebuje około ${depth} mm głębokości.</p>`
+    :`<p>${u} unique template ${u===1?'shape':'shapes'}. ${pk?`Templates fit on ${sh} ${P.paper} ${sh===1?'sheet':'sheets'}`:'Laying out templates on sheets'}, the backing board on ${tiles} ${tiles===1?'tile':'tiles'}. The tallest apex is ${top} mm, so the frame needs about ${depth} mm of depth.</p>`;
+  const area=(G.area/1e6).toLocaleString(L,{maximumFractionDigits:2}),per=LAY?3:4,hrs=Math.max(1,Math.round((LAY?np:n)*per/60));
+  html+=LANG==='pl'?`<p>Karton na moduły: około ${area} m². Składanie: mniej więcej ${hrs} h przy ${per} minutach na ${LAY?'element':'moduł'}.</p>`
+    :`<p>Card for the modules: about ${area} m². Assembly: roughly ${hrs} h at ${per} minutes per ${LAY?'piece':'module'}.</p>`;
+  const h=G.info.hits;
+  if(h)html+=`<p class="warn">${h} ${nw(h,'kolizja','kolizje','kolizji','collision','collisions')}: ${tr('sąsiednie moduły wchodzą w siebie.','neighboring modules run into each other.')} ${LAY?tr('Zmniejsz pochylenie albo przesuń linię otwarcia do tyłu.','Reduce the lean or move the opening line back.'):tr('Zmniejsz pochylenie albo zwiększ wysokość.','Reduce the lean or raise the apex height.')}</p>`;
+  if(LAY&&P.layers>1&&P.baseTabs==='in'&&G.minTab<3)html+=`<p class="warn">${tr(`Najwęższe zakładki mają ${G.minTab.toFixed(1)} mm, bo między warstwami jest mało miejsca. Zmniejsz wielkość kolejnej warstwy albo wybierz klej na gorąco.`,`The narrowest tabs are ${G.minTab.toFixed(1)} mm because there is little room between layers. Make the next layer smaller or switch to hot glue.`)}</p>`;
+  if(pk&&pk.oversize){const o=pk.oversize;html+=`<p class="warn">${tr(`${o} ${plw(o,'siatka nie mieści','siatki nie mieszczą','siatek nie mieści')} się na ${P.paper}. Wybierz większy format albo mniejszy moduł.`,`${o} ${o===1?'template does':'templates do'} not fit on ${P.paper}. Choose a larger paper size or a smaller module.`)}</p>`}
+  if(P.cell<22)html+=`<p class="warn">${tr('Moduły poniżej 22 mm są bardzo trudne do sklejenia.','Modules under 22 mm are very hard to glue together.')}</p>`;
+  $('#stats').innerHTML=html;
+}
+function renderSheet(){ensurePack();const n=G.pk.sheets.length;$('#sheetInfo').textContent=tr(`Arkusz ${sheetIdx+1} z ${n}`,`Sheet ${sheetIdx+1} of ${n}`);$('#sheetBox').innerHTML=primsToSVG(sheetPrims(P,G.pk,sheetIdx),'print')}
+function renderBoard(){const pg=boardPageFull(P,G.mods);$('#boardInfo').textContent=tr(`Podkład w skali 1:1 ma ${P.cols*P.cell}×${P.rows*P.cell} mm. W ZIP-ie jest też wersja pocięta na kafelki ${P.paper}.`,`The 1:1 backing board is ${P.cols*P.cell}×${P.rows*P.cell} mm. The ZIP also has a version split into ${P.paper} tiles.`);$('#boardBox').innerHTML=primsToSVG(pg,'print')}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  view=b.dataset.view;document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',String(x===b)));
+  $('#v3d').hidden=view!=='3d';$('#vsheets').hidden=view!=='sheets';$('#vboard').hidden=view!=='board';
+  if(view==='sheets'){renderSheet();renderStats()}if(view==='board')renderBoard();if(view==='3d')resize3D();
+});
+$('#prevSheet').onclick=()=>{ensurePack();const n=G.pk.sheets.length;sheetIdx=(sheetIdx-1+n)%n;renderSheet()};
+$('#nextSheet').onclick=()=>{ensurePack();const n=G.pk.sheets.length;sheetIdx=(sheetIdx+1)%n;renderSheet()};
+
+/* ---------------- 3D ---------------- */
+const R={},cam={az:-0.28,el:0.16,zoom:1};let raf=0;
+function lin(hex){return new THREE.Color(hex).convertSRGBToLinear()}
+function init3D(){
+  const host=$('#stage');
+  if(!window.THREE){host.innerHTML='<div class="empty">'+tr('Podgląd 3D potrzebuje biblioteki three.js, która się nie wczytała. Wykroje, podkład i eksport działają normalnie.','The 3D preview needs the three.js library, which did not load. Templates, the backing board and export still work.')+'</div>';return}
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
+  renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputEncoding=THREE.sRGBEncoding;
+  host.appendChild(renderer.domElement);
+  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(30,1,1,20000);
+  const hemi=new THREE.HemisphereLight(0xffffff,0x3c3e58,0.5),sun=new THREE.DirectionalLight(0xffffff,1.2);
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-0.0006;sun.shadow.normalBias=0.5;
+  scene.add(hemi,sun,sun.target);const group=new THREE.Group();scene.add(group);
+  Object.assign(R,{renderer,scene,camera,sun,hemi,group,host});
+  const cv=renderer.domElement,ptr=new Map();let pinch=0;
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptr.set(e.pointerId,[e.clientX,e.clientY])});
+  cv.addEventListener('pointermove',e=>{if(!ptr.has(e.pointerId))return;const p=ptr.get(e.pointerId);
+    if(ptr.size===1){cam.az=clamp(cam.az-(e.clientX-p[0])*0.006,-1.35,1.35);cam.el=clamp(cam.el+(e.clientY-p[1])*0.006,-1.2,1.3)}
+    ptr.set(e.pointerId,[e.clientX,e.clientY]);
+    if(ptr.size===2){const[a,b]=[...ptr.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pinch)cam.zoom=clamp(cam.zoom*pinch/d,0.25,3);pinch=d}
+    updateCam()});
+  const up=e=>{ptr.delete(e.pointerId);if(ptr.size<2)pinch=0};
+  cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('wheel',e=>{e.preventDefault();cam.zoom=clamp(cam.zoom*Math.exp(e.deltaY*0.0012),0.25,3);updateCam()},{passive:false});
+  cv.addEventListener('dblclick',()=>{cam.az=-0.28;cam.el=0.16;cam.zoom=1;updateCam()});
+  new ResizeObserver(resize3D).observe(host);
+}
+function frameW(){return Math.max(18,P.cell*0.45)}
+function rebuild3D(){
+  if(!R.renderer)return;
+  const g=R.group;while(g.children.length){const c=g.children.pop();c.geometry&&c.geometry.dispose();c.material&&c.material.dispose()}
+  const s=P.cell,W=P.cols*s,H=P.rows*s,pos=[],col=[];
+  const cF=lin(P.colFace),cA=lin(P.colAccent),cHit=lin('#FF3B30'),tmp=new THREE.Color();
+  for(const m of G.mods){
+    const ox=m.x0-W/2,oy=m.y0-H/2;
+    if(m.lay){m.lay.shells.forEach((sh,i)=>{const A=[ox+sh.apex[0],oy+sh.apex[1],sh.apex[2]],b=sh.base;
+      tmp.copy(layerAccent(P,i)?cA:cF);if(m.hit&&P.showHits)tmp.lerp(cHit,0.65);
+      for(let j=0;j<b.length-1;j++){pos.push(ox+b[j][0],oy+b[j][1],0,ox+b[j+1][0],oy+b[j+1][1],0,...A);for(let k=0;k<3;k++)col.push(tmp.r,tmp.g,tmp.b)}});continue}
+    const B=[[0,0],[s,0],[s,s],[0,s]],A=[ox+s/2+m.dx,oy+s/2+m.dy,m.h],acc=faceAccents(P,m);
+    for(let i=0;i<4;i++){
+      const p=B[i],q=B[(i+1)%4];pos.push(ox+p[0],oy+p[1],0,ox+q[0],oy+q[1],0,...A);
+      tmp.copy(acc.includes(i)?cA:cF);if(m.hit&&P.showHits)tmp.lerp(cHit,0.65);
+      for(let k=0;k<3;k++)col.push(tmp.r,tmp.g,tmp.b);
+    }
+  }
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));geo.computeVertexNormals();
+  const mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.9,metalness:0,side:THREE.DoubleSide}));
+  mesh.castShadow=mesh.receiveShadow=true;g.add(mesh);
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(W,H),new THREE.MeshStandardMaterial({color:lin(P.colBoard),roughness:0.95}));board.position.z=-0.05;board.receiveShadow=true;g.add(board);
+  if(P.frame){
+    const fw=frameW(),fd=G.maxH+15,fm=new THREE.MeshStandardMaterial({color:lin(P.colFrame),roughness:0.75});
+    const back=new THREE.Mesh(new THREE.BoxGeometry(W+2*fw,H+2*fw,4),fm.clone());back.position.z=-2.1;back.receiveShadow=true;g.add(back);
+    for(const[w,h,x,y]of[[W+2*fw,fw,0,H/2+fw/2],[W+2*fw,fw,0,-H/2-fw/2],[fw,H,W/2+fw/2,0],[fw,H,-W/2-fw/2,0]]){
+      const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,fd),fm.clone());b.position.set(x,y,fd/2-0.1);b.castShadow=b.receiveShadow=true;g.add(b)}
+  }
+  const M=Math.max(W,H)+2*frameW(),D=M*2,az=P.lightAz*Math.PI/180,el=P.lightEl*Math.PI/180;
+  R.sun.position.set(D*Math.sin(az)*Math.cos(el),D*Math.cos(az)*Math.cos(el),D*Math.sin(el));R.sun.target.position.set(0,0,0);
+  const sc=R.sun.shadow.camera,ext=M*0.75;sc.left=-ext;sc.right=ext;sc.top=ext;sc.bottom=-ext;sc.near=Math.max(1,D-M*1.5);sc.far=D+M*1.5;sc.updateProjectionMatrix();
+  updateCam();
+}
+function updateCam(){
+  if(!R.renderer)return;const c=R.camera,W=P.cols*P.cell+2*frameW(),H=P.rows*P.cell+2*frameW(),t=Math.tan(c.fov*Math.PI/360);
+  const d=Math.max(H/2/t,W/2/(t*c.aspect))*1.3*cam.zoom+(G?G.maxH:30);
+  c.position.set(d*Math.sin(cam.az)*Math.cos(cam.el),d*Math.sin(cam.el),d*Math.cos(cam.az)*Math.cos(cam.el));
+  c.near=Math.max(1,d*0.05);c.far=d*6;c.lookAt(0,0,(G?G.maxH:30)*0.25);c.updateProjectionMatrix();draw();
+}
+function draw(){if(!R.renderer||raf)return;raf=requestAnimationFrame(()=>{raf=0;R.renderer.render(R.scene,R.camera)})}
+function resize3D(){if(!R.renderer)return;const r=R.host.getBoundingClientRect();if(r.width<10||r.height<10)return;R.renderer.setSize(r.width,r.height,false);R.camera.aspect=r.width/r.height;updateCam()}
+
+/* ---------------- Export ---------------- */
+const dlPromise=(window.claude&&typeof window.claude.use==='function')?window.claude.use('downloads').catch(()=>null):Promise.resolve(null);
+let toastT=0;function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200)}
+async function saveFile(name,blob){
+  const dl=await dlPromise;
+  if(dl){try{await dl.save({filename:name,data:blob});toast(tr('Zapisano ','Saved ')+name)}catch(e){toast(e&&e.code==='declined'?tr('Pobieranie anulowane','Download cancelled'):tr('Nie udało się zapisać pliku. ','Could not save the file. ')+((e&&e.message)||''))}return}
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
+}
+function baseName(){return`relief-${P.cols}x${P.rows}-${P.cell}mm`}
+function needLibs(list){const miss=list.filter(n=>n==='pdf'?!window.jspdf:n==='zip'?!window.JSZip:false);if(miss.length){toast(tr('Biblioteka do eksportu się nie wczytała. Odśwież stronę.','The export library did not load. Reload the page.'));return false}return true}
+function modulesPDF(){ensurePack();return pagesToPDF(window.jspdf.jsPDF,G.pk.sheets.map((_,i)=>sheetPrims(P,G.pk,i)))}
+function boardPDF(){return pagesToPDF(window.jspdf.jsPDF,boardPagesTiled(P,G.mods))}
+function csv(){ensurePack();const rows=[LANG==='pl'?['id','rzad','kolumna','kolejnosc_klejenia','wysokosc_mm','pochylenie_mm','kierunek_deg','ksztalt','arkusz','kolizja']:['id','row','column','glue_order','height_mm','lean_mm','direction_deg','shape','sheet','collision']];
+  const ordered=[...G.mods].sort((a,b)=>a.ord-b.ord);
+  for(const m of ordered)rows.push([m.id,m.r+1,m.c+1,m.ord,m.h.toFixed(1),m.lean.toFixed(1),((m.phi*180/Math.PI%360+360)%360).toFixed(0),'K'+String(m.shape).padStart(2,'0'),m.sheet,m.hit?tr('tak','yes'):'']);
+  return rows.map(r=>r.join(';')).join('\r\n')}
+function readmePL(){ensurePack();const W=P.cols*P.cell,H=P.rows*P.cell;return`PAPIEROWY RELIEF ${P.cols}x${P.rows}, moduł ${P.cell} mm
+Wymiar kompozycji: ${W} x ${H} mm, ${G.mods.length} modułów${G.nets.length!==G.mods.length?` (${G.nets.length} elementów)`:''}, ${G.info.unique} różnych kształtów siatek.
+Najwyższy wierzchołek: ${Math.round(G.maxH)} mm. Ramka typu box frame: głębokość wnętrza co najmniej ${Math.ceil((G.maxH+15)/5)*5} mm.
+
+PLIKI
+  moduly-${P.paper}.pdf       wykroje do druku, ${G.pk.sheets.length} arkuszy
+  podklad-${P.paper}.pdf      podkład 1:1 pocięty na kafelki ${P.paper}
+  podklad-1do1.pdf / .svg     podkład w jednym kawałku (drukarnia, ploter)
+  svg/arkusz-NN.svg           wykroje dla plotera tnącego (Cricut, Silhouette, laser)
+                              warstwa "Ciecie" czerwona, "Bigowanie" niebieska
+  lista-modulow.csv           moduły w kolejności klejenia, wymiary, arkusz
+  parametry.json              ustawienia, wczytasz je z powrotem w symulatorze
+  podglad.png                 podgląd 3D
+  symulator.html              ten symulator, działa w przeglądarce
+
+MATERIAŁY
+  Karton 160-250 g/m2 na moduły. Na ciemne ściany z kolorowym akcentem: albo nadruk
+  w trybie "Pełne kolory", albo karton dwukolorowy, albo druk samych linii na kolorowym.
+  Podkład: tektura 2-3 mm albo płyta piankowa 5 mm, oklejona papierem w kolorze podkładu.
+  Nożyk z wymiennym ostrzem, metalowa linijka, mata, bigówka lub wypisany długopis,
+  klej introligatorski w pisaku albo cienka taśma dwustronna.
+
+DRUK
+  Drukuj w skali 100%, bez dopasowania do strony. Sprawdź linijkę 50 mm na górze arkusza.
+
+${P.shape==='layers'?`SKŁADANIE MODUŁU (półostrosłupy w warstwach)
+  1. Przeciągnij bigówką po wszystkich liniach przerywanych.
+  2. Wytnij po linii ciągłej.
+  3. Zegnij przerywane nadrukiem na zewnątrz. Element to otwarty półostrosłup, bez zakładki
+     zamykającej. Krótkie krawędzie od wierzchołka do podstawy zostają wolne, to otwarcie.
+  4. Zakładki D, G, L, P zagnij do środka. Litera mówi, do której krawędzi kwadratu na podkładzie
+     jest równoległa krawędź elementu (dolnej, górnej, lewej, prawej).
+${P.layers>1?`  5. Na każdym kwadracie najpierw przyklej najmniejszą warstwę (np. B03-${P.layers}) na przerywany obrys,
+     potem kolejne, a na końcu zewnętrzną B03-1 na obrys ciągły. Otwarcia wszystkich warstw mają leżeć
+     na grubej linii.
+`:''}
+MONTAŻ NA PODKŁADZIE
+  Podkład jest podzielony na kwadraty z numerami jak na modułach (kolumna litera, rząd liczba,
+  rząd 01 to góra). Gruba linia w kwadracie to otwarta strona, strzałka pokazuje wierzchołek.
+  Klej moduły w kolejności #n z podkładu (i z lista-modulow.csv).`:`SKŁADANIE MODUŁU
+  1. Przeciągnij bigówką po wszystkich liniach przerywanych.
+  2. Wytnij po linii ciągłej.
+  3. Zegnij wszystkie przerywane nadrukiem na zewnątrz (grzbiety piramidy).
+  4. Zakładkę "klej" przyklej od spodu do przeciwległej krawędzi. Powstaje skośna piramida.
+  5. Zakładki D, G, L, P zagnij do środka i nałóż na nie taśmę lub klej.
+
+MONTAŻ NA PODKŁADZIE
+  Podkład jest podzielony na kwadraty z numerami jak na modułach (kolumna litera, rząd liczba,
+  rząd 01 to góra). Krawędź D modułu kładź przy dolnej krawędzi kwadratu, G przy górnej,
+  L przy lewej, P przy prawej. Strzałka na podkładzie pokazuje, gdzie ma wypaść wierzchołek.
+  Klej w kolejności #n z podkładu (i z lista-modulow.csv): najpierw moduły, nad którymi
+  pochylają się sąsiedzi, potem te pochylone.`}
+${G.info.hits?`\nUWAGA: ${G.info.hits} kolizji między sąsiadami (oznaczone "!" na podkładzie). Te moduły będą na siebie\nnachodzić. Rozważ zmianę ustawień przed cięciem.\n`:''}
+Wygenerowano: ${new Date().toLocaleString('pl-PL')}
+`}
+const FN=k=>LANG==='pl'?{mod:'moduly',base:'podklad',full:'podklad-1do1',sheet:'arkusz',csv:'lista-modulow.csv',json:'parametry.json',png:'podglad.png',sim:'symulator.html',page:'papierowy-relief.html'}[k]
+  :{mod:'templates',base:'backing',full:'backing-1to1',sheet:'sheet',csv:'modules.csv',json:'settings.json',png:'preview.png',sim:'simulator.html',page:'paper-relief.html'}[k];
+function readme(){return LANG==='pl'?readmePL():readmeEN()}
+function readmeEN(){ensurePack();const W=P.cols*P.cell,H=P.rows*P.cell,LAY=P.shape==='layers';return`PAPER RELIEF ${P.cols}x${P.rows}, ${P.cell} mm module
+Composition: ${W} x ${H} mm, ${G.mods.length} modules${G.nets.length!==G.mods.length?` (${G.nets.length} pieces)`:''}, ${G.info.unique} unique template shapes.
+Tallest apex: ${Math.round(G.maxH)} mm. Box frame: inner depth of at least ${Math.ceil((G.maxH+15)/5)*5} mm.
+
+FILES
+  templates-${P.paper}.pdf        cutting templates to print, ${G.pk.sheets.length} sheets
+  backing-${P.paper}.pdf          1:1 backing board split into ${P.paper} tiles
+  backing-1to1.pdf / .svg     backing board in one piece (print shop, plotter)
+  svg/sheet-NN.svg            templates for cutting plotters (Cricut, Silhouette, laser)
+                              layer "Cut" is red, layer "Score" is blue
+  modules.csv                 modules in gluing order, dimensions, sheet
+  settings.json               your settings; load them back into the simulator
+  preview.png                 3D preview
+  simulator.html              this simulator, runs in the browser
+
+MATERIALS
+  160-250 gsm card for the modules. For dark faces with a colored accent, either print
+  in "Full face colors" mode, use two-tone card, or print lines only on colored card.
+  Backing: 2-3 mm board or 5 mm foam board, covered with paper in the backing color.
+  Craft knife with snap-off blades, metal ruler, cutting mat, scoring tool or an empty
+  ballpoint pen, glue pen or thin double-sided tape.
+
+PRINTING
+  Print at 100% scale with no fit to page. Check the 50 mm ruler at the top of each sheet.
+
+${LAY?`ASSEMBLING A MODULE (layered half-pyramids)
+  1. Score all dashed lines.
+  2. Cut along the solid lines.
+  3. Fold the dashed lines with the print outside. Each piece is an open half-pyramid with
+     no closing tab. The short edges from the apex down to the base stay free: that is the opening.
+  4. Fold tabs B, T, L and R inward. The letter tells you which edge of the square on the
+     backing board the piece edge runs parallel to (bottom, top, left, right).
+${P.layers>1?`  5. On each square, glue the smallest layer first (e.g. B03-${P.layers}) onto the dashed outline,
+     then the next ones, and the outer layer B03-1 last onto the solid outline. The openings of
+     all layers should sit on the thick line.
+`:''}
+MOUNTING ON THE BACKING BOARD
+  The board is divided into squares numbered like the modules (column letter, row number,
+  row 01 at the top). The thick line in a square is the open side; the arrow points to the apex.
+  Glue the modules in the #n order shown on the board (and in modules.csv).`:`ASSEMBLING A MODULE
+  1. Score all dashed lines.
+  2. Cut along the solid lines.
+  3. Fold all dashed lines with the print outside (these are the pyramid ridges).
+  4. Glue the "glue" tab under the opposite edge. This closes the slanted pyramid.
+  5. Fold tabs B, T, L and R inward and put tape or glue on them.
+
+MOUNTING ON THE BACKING BOARD
+  The board is divided into squares numbered like the modules (column letter, row number,
+  row 01 at the top). Place edge B of a module along the bottom edge of its square, T along
+  the top, L along the left and R along the right. The arrow shows where the apex should land.
+  Glue in the #n order from the board (and from modules.csv): first the modules that
+  neighbors lean over, then the ones leaning over them.`}
+${G.info.hits?`
+NOTE: ${G.info.hits} collisions between neighbors (marked "!" on the board). These modules
+will overlap. Consider changing the settings before cutting.
+`:''}
+Generated: ${new Date().toLocaleString('en-US')}
+`}
+function busy(btn,on,label){btn.disabled=on;if(on){btn.dataset.l=btn.textContent;btn.textContent=label||tr('Przygotowuję…','Preparing…')}else btn.textContent=btn.dataset.l}
+function canvasPNG(){return new Promise(res=>{if(!R.renderer)return res(null);R.renderer.render(R.scene,R.camera);R.renderer.domElement.toBlob(b=>res(b),'image/png')})}
+$('#dlZip').onclick=async e=>{
+  if(!needLibs(['pdf','zip']))return;const btn=e.currentTarget;busy(btn,true);
+  await new Promise(r=>setTimeout(r,30));
+  try{
+    const zip=new JSZip(),root=zip.folder(baseName());
+    root.file('README.txt',readme());root.file(FN('json'),JSON.stringify(P,null,2));root.file(FN('csv'),'\ufeff'+csv());
+    root.file(`${FN('mod')}-${P.paper}.pdf`,modulesPDF().output('arraybuffer'));
+    root.file(`${FN('base')}-${P.paper}.pdf`,boardPDF().output('arraybuffer'));
+    const full=boardPageFull(P,G.mods);root.file(FN('full')+'.pdf',pagesToPDF(window.jspdf.jsPDF,[full]).output('arraybuffer'));root.file(FN('full')+'.svg',primsToSVG(full,'print'));
+    const sv=root.folder('svg');G.pk.sheets.forEach((_,i)=>sv.file(`${FN('sheet')}-${String(i+1).padStart(2,'0')}.svg`,primsToSVG(sheetPrims(P,G.pk,i),'plotter')));
+    const png=await canvasPNG();if(png)root.file(FN('png'),png);
+    root.file(FN('sim'),PAGE_SOURCE);
+    const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    await saveFile(baseName()+'.zip',blob);
+  }catch(err){toast(tr('Nie udało się przygotować ZIP-a. ','Could not build the ZIP. ')+err.message)}
+  busy(btn,false);
+};
+$('#dlPdf').onclick=async e=>{if(!needLibs(['pdf']))return;const b=e.currentTarget;busy(b,true);await new Promise(r=>setTimeout(r,30));try{await saveFile(`${baseName()}-${FN('mod')}-${P.paper}.pdf`,modulesPDF().output('blob'))}catch(err){toast(err.message)}busy(b,false)};
+$('#dlBoard').onclick=async e=>{if(!needLibs(['pdf']))return;const b=e.currentTarget;busy(b,true);await new Promise(r=>setTimeout(r,30));try{await saveFile(`${baseName()}-${FN('base')}-${P.paper}.pdf`,boardPDF().output('blob'))}catch(err){toast(err.message)}busy(b,false)};
+$('#saveJson').onclick=()=>saveFile(baseName()+'.json',new Blob([JSON.stringify(P,null,2)],{type:'application/json'}));
+$('#dlHtml').onclick=()=>saveFile(FN('page'),new Blob([PAGE_SOURCE],{type:'text/html'}));
+$('#loadJson').onclick=()=>$('#fileJson').click();
+$('#fileJson').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);let n=0;for(const k in DEF)if(k in o&&typeof o[k]===typeof DEF[k]){P[k]=o[k];n++}
+  if(!n)throw new Error(tr('brak znanych pól','no known fields'));sync();schedule(true);toast(tr('Wczytano ustawienia','Settings loaded'))}catch(err){toast(tr('To nie jest plik ustawień symulatora (','This is not a settings file for this simulator (')+err.message+')')}};rd.readAsText(f);e.target.value=''};
+
+function setLang(l){LANG=l;try{localStorage.setItem('papierowy-relief-lang',l)}catch(e){}
+  applyStatic();$('#presets').innerHTML='';$('#controls').innerHTML='';CTRL.length=0;buildPanel();
+  if(!R.renderer&&$('#stage .empty'))$('#stage').innerHTML='',init3D();regen()}
+$('#langBtn').onclick=()=>setLang(LANG==='pl'?'en':'pl');
+applyStatic();buildPanel();init3D();regen();resize3D();
+</script>
+</body>
+</html>
