@@ -1,0 +1,27 @@
+# Articles shown in the "Articles" column on the homepage.
+# Fields: title, url, description (same as projects.yml).
+
+
+- title: "#1 Running Local LLMs"
+  url: /projects/article-01-local-llm.html
+  description: "How to run open-source LLMs locally with Ollama — privacy, cost, and control."
+
+- title: "#2 LiteLLM as Your Local AI Gateway"
+  url: /projects/article-02-litellm-gateway.html
+  description: "A unified gateway in front of all your models — local and cloud — with routing, cost tracking, and fallback logic."
+
+- title: "#3 RAG on Your Own Data"
+  url: /projects/article-03-rag-local.html
+  description: "Retrieval Augmented Generation running entirely locally — query your documents without sending anything to the cloud."
+
+- title: "#4 MCP Protocol Explained"
+  url: /projects/article-04-mcp-protocol.html
+  description: "The open standard that gives AI agents controlled, auditable access to live data sources — databases, APIs, file systems — without bespoke integrations."
+
+- title: "#5 Running Open Source Models at Scale"
+  url: /projects/article-05-inference-engines.html
+  description: "vLLM vs. Ollama vs. LM Studio — when Ollama isn't enough and what to reach for when you have real throughput requirements."
+
+- title: "#6 Local AI Observability"
+  url: /projects/article-06-observability.html
+  description: "Tracing, logging, and monitoring for local LLMs — because AI systems fail silently in ways traditional monitoring completely misses."

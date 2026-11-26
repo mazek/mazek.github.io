@@ -22,14 +22,28 @@ layout: default
 </section>
 {% endif %}
 
-<section class="section" id="projects">
-  <h2 class="section-heading">Projects</h2>
-  <ul class="project-list">
-    {% for project in site.data.projects %}
-    <li class="project-item">
-      <a class="project-link" href="{{ project.url }}"{% if project.external %} target="_blank" rel="noopener"{% endif %}>{{ project.title }} →</a>
-      {% if project.description %}<p class="project-desc">{{ project.description }}</p>{% endif %}
-    </li>
-    {% endfor %}
-  </ul>
-</section>
+<div class="home-grid">
+  <section class="section" id="articles">
+    <h2 class="section-heading">Articles <span class="section-sub">Local Sovereign AI series</span></h2>
+    <ul class="project-list">
+      {% for item in site.data.articles %}
+      <li class="project-item">
+        <a class="project-link" href="{{ item.url }}"{% if item.external %} target="_blank" rel="noopener"{% endif %}>{{ item.title }}</a>
+        {% if item.description %}<p class="project-desc">{{ item.description }}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="section" id="projects">
+    <h2 class="section-heading">Projects</h2>
+    <ul class="project-list">
+      {% for item in site.data.projects %}
+      <li class="project-item">
+        <a class="project-link" href="{{ item.url }}"{% if item.external %} target="_blank" rel="noopener"{% endif %}>{{ item.title }}</a>
+        {% if item.description %}<p class="project-desc">{{ item.description }}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>

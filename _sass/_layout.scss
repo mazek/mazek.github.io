@@ -3,7 +3,7 @@
  */
 .site-header {
     border-bottom: 1px solid $grey-color-light;
-    min-height: 60px;
+    min-height: 48px;
     position: relative;
     background: $background-color;
 }
@@ -11,7 +11,7 @@
 .site-title {
     font-size: 16px;
     font-weight: 600;
-    line-height: 60px;
+    line-height: 48px;
     letter-spacing: -0.3px;
     margin-bottom: 0;
     float: left;
@@ -30,7 +30,7 @@
 
 .site-nav {
     float: right;
-    line-height: 60px;
+    line-height: 48px;
 
     .menu-icon {
         display: none;
@@ -57,7 +57,7 @@
 
     @include media-query($on-palm) {
         position: absolute;
-        top: 9px;
+        top: 5px;
         right: 20px;
         background-color: $background-color;
         border: 1px solid $grey-color-light;
@@ -172,50 +172,28 @@
  * Hero section
  */
 .hero {
-    padding: 40px 0 28px;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    padding: 8px 0 14px;
     border-bottom: 1px solid $grey-color-light;
-    margin-bottom: $spacing-unit;
+    margin-bottom: 22px;
 }
 
 .hero-name {
-    font-size: 34px;
+    font-size: 22px;
     font-weight: 600;
-    letter-spacing: -1.5px;
-    line-height: 1.1;
-    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    margin-bottom: 0;
     color: $text-color;
-
-    @include media-query($on-palm) {
-        font-size: 28px;
-    }
 }
 
 .hero-tagline {
-    font-size: 16px;
+    font-size: 13px;
     color: $grey-color;
-    margin-bottom: 16px;
-    font-weight: 300;
-}
-
-.hero-links {
-    display: flex;
-    gap: 20px;
-
-    a {
-        font-size: 14px;
-        font-weight: 500;
-        color: $brand-color;
-        text-decoration: none;
-
-        &:visited {
-            color: $brand-color;
-        }
-
-        &:hover {
-            color: $brand-color-dark;
-            text-decoration: underline;
-        }
-    }
+    margin-bottom: 0;
 }
 
 
@@ -224,7 +202,7 @@
  * Sections
  */
 .section {
-    margin-bottom: $spacing-unit * 1.25;
+    margin-bottom: 28px;
 }
 
 .section-heading {
@@ -233,9 +211,36 @@
     letter-spacing: 1.5px;
     text-transform: uppercase;
     color: $grey-color;
-    margin-bottom: $spacing-unit-half;
-    padding-bottom: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
     border-bottom: 1px solid $grey-color-light;
+}
+
+.section-sub {
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    text-transform: none;
+    margin-left: 6px;
+    color: $grey-color;
+}
+
+/* Homepage: wider page, articles and projects side by side */
+.home .wrapper {
+    max-width: 960px;
+}
+
+.home .page-content {
+    padding: 20px 0;
+}
+
+.home-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 40px;
+
+    @include media-query($on-laptop) {
+        grid-template-columns: 1fr;
+    }
 }
 
 
@@ -300,15 +305,16 @@
 }
 
 .project-item {
-    margin-bottom: 18px;
+    margin-bottom: 10px;
 }
 
 .project-link {
-    font-size: 16px;
+    font-size: 14.5px;
     font-weight: 500;
+    line-height: 1.35;
     color: $text-color;
     display: block;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
 
     &:visited {
         color: $text-color;
@@ -321,9 +327,14 @@
 }
 
 .project-desc {
-    font-size: 14px;
+    font-size: 13px;
+    line-height: 1.4;
     color: $grey-color;
     margin-bottom: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 
