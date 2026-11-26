@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>try{var q=new URLSearchParams(location.search).get('lang'),l=q||localStorage.getItem('swarm-puck-lang');if(l==='pl'||l==='en')document.documentElement.lang=l}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Swarm Puck — a swarm of hockey-puck robots</title>
+<meta name="description" content="Swarm Puck: ~15 autonomous puck-shaped robots with differential drive, 360° time-of-flight sensing, escape behaviour, sound and light proximity cues, tracked by a ceiling camera. 3D-printable enclosure (OpenSCAD), ESP32 firmware, parts list.">
+<meta name="author" content="Marcin Mazurek">
+<meta property="og:title" content="Swarm Puck — a swarm of hockey-puck robots">
+<meta property="og:description" content="Parametric 3D-printed enclosure, ESP32 firmware and parts list for a swarm of puck-shaped robots.">
+<meta property="og:image" content="https://www.marcinmazurek.com/projects/swarm-puck-podglad.png">
+<meta property="og:url" content="https://www.marcinmazurek.com/projects/swarm-puck.html">
+<meta property="og:type" content="website">
+<style>
+:root{--paper:#f1f2f4;--panel:#fff;--ink:#1c1e21;--muted:#5b6068;--line:#cfd3d9;--acc:#2f7f86;--acc-ink:#fff;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#15171a;--panel:#1f2226;--ink:#e7e9eb;--muted:#9aa0a8;--line:#33373d;--acc:#4fb3bb;--acc-ink:#0b1c1e;color-scheme:dark}}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.55}
+a{color:inherit}.wrap{max-width:820px;margin:0 auto;padding:0 20px}
+header{max-width:820px;margin:0 auto;padding:28px 20px 0}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.back{font-size:15px;color:var(--muted);text-decoration:none}.back:hover{color:var(--ink);text-decoration:underline}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{font:inherit;font-size:14px;font-weight:600;background:transparent;color:var(--ink);border:0;padding:5px 13px;cursor:pointer}
+.seg button+button{border-left:1.5px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--acc);color:var(--acc-ink)}
+h1{font-weight:850;font-size:clamp(40px,8vw,76px);line-height:.95;letter-spacing:-.02em;margin:0}
+.lede{color:var(--muted);font-size:18px;margin:14px 0 0}
+.dl{display:inline-flex;align-items:center;gap:10px;margin:20px 0 6px;padding:11px 20px;border-radius:999px;background:var(--acc);color:var(--acc-ink);font-weight:700;text-decoration:none}
+.dl small{font-weight:500;opacity:.85}
+.hero-img{display:block;width:100%;height:auto;border-radius:12px;border:1px solid var(--line);margin:26px 0 0;background:var(--panel)}
+section{padding:40px 0 4px}
+h2{font-weight:800;font-size:30px;line-height:1.1;margin:0 0 14px;letter-spacing:-.01em}
+h3{font-size:19px;margin:26px 0 8px}
+p{margin:0 0 14px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:20px 0}
+.facts div{background:var(--paper);padding:12px 14px}.facts b{display:block;font-size:24px;line-height:1.1}.facts span{font-size:14px;color:var(--muted)}
+.tbl{overflow-x:auto;margin:10px 0 18px;border-top:2px solid var(--ink)}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:520px}
+th,td{text-align:left;padding:8px 10px 8px 0;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:14px;color:var(--muted)}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em;background:var(--panel);padding:1px 5px;border-radius:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:14px 0}
+.grid figure{margin:0}.grid img{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:var(--panel);display:block}
+figcaption{font-size:14px;color:var(--muted);margin-top:4px}
+.note{border-left:4px solid var(--acc);padding:4px 0 4px 14px;margin:16px 0}
+footer{padding:50px 0;color:var(--muted);font-size:14px}
+a:focus-visible,button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+html[lang="en"] [data-l="pl"],html[lang="pl"] [data-l="en"]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar"><a class="back" href="/#swarm-puck"><span data-l="en">← Home</span><span data-l="pl">← Strona główna</span></a><div class="seg" role="group" aria-label="Language / Język"><button data-lang="en" aria-pressed="true">EN</button><button data-lang="pl" aria-pressed="false">PL</button></div></div>
+  <h1>Swarm Puck</h1>
+  <p class="lede"><span data-l="en">A swarm of about fifteen autonomous robots shaped like hockey pucks. Each one drives on two wheels, watches all around with six time-of-flight sensors, and actively runs away from walls and from the other pucks — signalling how close the danger is with a rising tone and coloured lights. A ceiling camera tracks them by the ArUco marker on top. Everything is 3D-printed or built from off-the-shelf modules, without a custom PCB.</span><span data-l="pl">Rój około piętnastu autonomicznych robotów w kształcie krążków hokejowych. Każdy jedzie na dwóch kołach, patrzy dookoła sześcioma czujnikami czasu przelotu i aktywnie ucieka od ścian i innych krążków — a bliskość zagrożenia sygnalizuje rosnącym dźwiękiem i kolorowymi diodami. Kamera pod sufitem śledzi je po znaczniku ArUco na wierzchu. Wszystko z druku 3D i gotowych modułów, bez własnej płytki PCB.</span></p>
+  <a class="dl" href="swarm-puck_pakiet.zip" download><span data-l="en">Download package <small>ZIP, 0.5 MB: STL, OpenSCAD, firmware, docs</small></span><span data-l="pl">Pobierz paczkę <small>ZIP, 0,5 MB: STL, OpenSCAD, firmware, dokumentacja</small></span></a>
+  <img class="hero-img" src="swarm-puck-podglad.png" alt="Assembled Swarm Puck enclosure, 3D render" width="1200" height="857">
+</header>
+<main class="wrap">
+<div data-l="en">
+<section>
+  <h2>How it works</h2>
+  <p>Six VL53L0X sensors sit every 60° around the rim, behind windows in the wall, each reading the distance in its own sector. The firmware adds the six readings into a repulsive vector — a sensor that sees something close pushes the puck the other way, harder the closer it is — and steers the differential drive along it. Below a critical distance (7 cm) a hard override takes over and reverses at full power for a fraction of a second, whatever the proportional layer says.</p>
+  <p>Above each sensor sits a WS2812B pixel that goes from green to red with proximity, and a small I2S speaker plays a clean sine wave whose pitch and volume rise as the nearest obstacle gets closer. Sound is synthesised in its own task on the second ESP32 core, so it stays smooth even though a full sensor sweep takes tens of milliseconds.</p>
+  <div class="facts">
+    <div><b>Ø120 mm</b><span>body; Ø146 mm with the wheel skirt</span></div>
+    <div><b>6 × ToF</b><span>360°, one every 60°</span></div>
+    <div><b>2 + 1</b><span>N20 drive wheels + ball caster</span></div>
+    <div><b>ESP32</b><span>WiFi on board, no custom PCB</span></div>
+    <div><b>50 × 50 mm</b><span>ArUco marker on the lid</span></div>
+  </div>
+  <div class="grid">
+    <figure><img src="swarm-puck-komponenty.png" alt="Enclosure interior with component mock-ups" loading="lazy"><figcaption>Base with component mock-ups: motors, battery, ESP32 deck, driver, charger, amplifier, mux, sensors.</figcaption></figure>
+    <figure><img src="swarm-puck-rozlozony.png" alt="Exploded view of base and lid" loading="lazy"><figcaption>Exploded view: base + lid, screwed together with four M3 screws.</figcaption></figure>
+    <figure><img src="swarm-puck-pokrywa.png" alt="Lid from above: ArUco marker recess and speaker pocket" loading="lazy"><figcaption>Lid from above: 50 mm marker recess, speaker pocket beside it, status LED.</figcaption></figure>
+  </div>
+</section>
+<section>
+  <h2>Parts (one puck)</h2>
+  <p>Specific products from Botland; the quantities are per puck. Prices change — check on the product page.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Part</th><th>Product</th><th>Qty</th></tr></thead><tbody>
+    <tr><td>Motors</td><td><a href="https://botland.store/n20-micro-motors-mp-series-medium-power/12603-micro-motor-n20-bt41-100-1-150rpm-6v-5904422306700.html">Micro motor N20-BT41 100:1, 150 RPM, 6 V</a></td><td>2</td></tr>
+    <tr><td>Wheels</td><td><a href="https://botland.store/wheels-with-tires/12-wheels-32x7mm-black-2pcs-pololu-1087-5903351247924.html">Pololu Wheel 32×7 mm (pair)</a></td><td>1</td></tr>
+    <tr><td>Caster</td><td><a href="https://botland.store/reference-balls/30-ball-caster-38-plastic-pololu-950-5903351240765.html">Pololu Ball Caster 3/8″</a></td><td>1</td></tr>
+    <tr><td>Motor driver</td><td><a href="https://botland.store/motor-drivers-modules/32-tb6612fng-two-channel-motor-controller-135v-1a-pololu-713.html">TB6612FNG carrier, Pololu #713</a></td><td>1</td></tr>
+    <tr><td>MCU</td><td><a href="https://botland.store/esp32-wifi-and-bt-modules/8306-esp32-devkitc-32e-v4-wifi-bt-42-platform-with-the-module-esp-wroom-32e-5904422336394.html">ESP32-DevKitC-32E</a></td><td>1</td></tr>
+    <tr><td>Distance sensors</td><td><a href="https://botland.store/sensors-of-light-and-color/7176-vl53l0x-time-of-flight-distance-and-ambient-light-sensor-i2c-200cm-max-pololu-2490-5904422308513.html">VL53L0X, Pololu #2490</a></td><td>6</td></tr>
+    <tr><td>I2C multiplexer</td><td><a href="https://botland.store/multiplexers/4915-tca9548a-module-with-multiplexer-i2c-adafruit-2717-5904422354268.html">TCA9548A, Adafruit #2717</a></td><td>1</td></tr>
+    <tr><td>Proximity LEDs</td><td><a href="https://botland.store/led-diodes/2290-pixel-module-with-addressed-rgb-led-ws2812b-5904422300494.html">WS2812B pixel module</a></td><td>7</td></tr>
+    <tr><td>Audio</td><td><a href="https://botland.store/mp3-wav-ogg-midi-players/13062-max98357a-decoder-stereo-dac-i2s-sparkfun-dev-14809-5903351249676.html">MAX98357A I2S amp</a> + <a href="https://botland.store/analog-speakers/3471-speaker-yd27-05w-8ohm-27x5mm-5903351245876.html">YD27 speaker 27 mm</a></td><td>1 + 1</td></tr>
+    <tr><td>Battery + charger</td><td><a href="https://botland.store/battery-li-pol-1s-37-v/15613-akyga-li-pol-cell-1000mah-1s-37v-jst-bec-connector-socket-48x30x7mm-5904422324230.html">Akyga Li-Pol 1000 mAh</a> + <a href="https://botland.store/chargers/6944-li-ion-charger-tp4056-1s-37v-microusb-with-protection-5904422375355.html">TP4056</a></td><td>1 + 1</td></tr>
+  </tbody></table></div>
+  <div class="note"><b>Not in the list yet:</b> a 5 V step-up converter and a power switch (the ESP32 dev board’s 3.3 V regulator will not hold up on a bare LiPo). See the verification notes in the package.</div>
+</section>
+<section>
+  <h2>Printing</h2>
+  <p>PETG, because the pucks will collide. <b>Base</b> flat side down; the wheel skirt is held up by ramp-shaped ribs every 12°, so it prints without supports except locally in the wheel sectors. <b>Lid</b> upside down. Measure your modules before printing: the OpenSCAD model has the typical datasheet sizes marked <code>[ZMIERZ]</code> (“measure”), and cheap modules vary. Export STL from <code>cad/puck_enclosure.scad</code> by setting <code>MODE</code> to <code>base</code>, <code>lid</code> or <code>wheel</code>.</p>
+  <h3>Status</h3>
+  <p>Work in progress: the CAD model and obstacle-avoidance firmware (ESP32, Arduino-ESP32 2.x/3.x) are done; WiFi/MQTT, camera tracking and the visualisation are planned, not implemented. The package includes a verification report with open items to check before printing a full set.</p>
+</section>
+</div>
+
+<div data-l="pl">
+<section>
+  <h2>Jak to działa</h2>
+  <p>Sześć czujników VL53L0X siedzi co 60° na obwodzie, za oknami w ściance, i każdy mierzy odległość w swoim sektorze. Firmware sumuje sześć odczytów w wektor odpychania — czujnik, który widzi coś blisko, popycha krążek w przeciwną stronę, tym mocniej, im bliżej — i kieruje napędem różnicowym wzdłuż niego. Poniżej dystansu krytycznego (7 cm) przejmuje twardy override: pełna moc wstecz na ułamek sekundy, niezależnie od warstwy proporcjonalnej.</p>
+  <p>Nad każdym czujnikiem jest piksel WS2812B, który z bliskością przechodzi z zieleni w czerwień, a mały głośnik I2S gra czysty sinus, którego wysokość i głośność rosną, im bliżej najbliższa przeszkoda. Dźwięk jest syntezowany w osobnym zadaniu na drugim rdzeniu ESP32, więc jest płynny, choć pełny przegląd czujników trwa dziesiątki milisekund.</p>
+  <div class="facts">
+    <div><b>Ø120 mm</b><span>korpus; Ø146 mm ze spódnicą kół</span></div>
+    <div><b>6 × ToF</b><span>360°, co 60°</span></div>
+    <div><b>2 + 1</b><span>koła napędowe N20 + kółko samonastawne</span></div>
+    <div><b>ESP32</b><span>WiFi na pokładzie, bez własnej płytki PCB</span></div>
+    <div><b>50 × 50 mm</b><span>znacznik ArUco na pokrywie</span></div>
+  </div>
+</section>
+<section>
+  <h2>Części (jeden krążek)</h2>
+  <p>Konkretne produkty z Botlandu — tabela w wersji angielskiej powyżej zawiera linki (ilości na jeden krążek): 2 silniki N20-BT41, koła Pololu 32×7, kółko Pololu 950, sterownik TB6612FNG (Pololu #713), ESP32-DevKitC-32E, 6× VL53L0X, multiplekser TCA9548A, 7 pikseli WS2812B, wzmacniacz MAX98357A + głośnik YD27, akumulator 1000 mAh + ładowarka TP4056. Ceny się zmieniają — sprawdź na stronie produktu.</p>
+  <div class="note"><b>Jeszcze nie ma na liście:</b> przetwornicy step-up 5 V i wyłącznika zasilania (stabilizator 3,3 V na płytce ESP32 nie utrzyma napięcia na gołym LiPo). Szczegóły w notatkach weryfikacyjnych w paczce.</div>
+</section>
+<section>
+  <h2>Druk</h2>
+  <p>PETG, bo krążki będą się zderzać. <b>Base</b> dnem do stołu; spódnica kół jest podparta żebrami-rampami co 12°, więc drukuje się bez podpór poza sektorami kół. <b>Lid</b> do góry nogami. Przed drukiem zmierz moduły: model OpenSCAD ma typowe wymiary z kart katalogowych oznaczone <code>[ZMIERZ]</code>, a tanie moduły mają odchyłki. STL wyeksportujesz z <code>cad/puck_enclosure.scad</code>, ustawiając <code>MODE</code> na <code>base</code>, <code>lid</code> lub <code>wheel</code>.</p>
+  <h3>Status</h3>
+  <p>Praca w toku: model CAD i firmware unikania przeszkód (ESP32, Arduino-ESP32 2.x/3.x) są gotowe; WiFi/MQTT, śledzenie kamerą i wizualizacja są zaplanowane, nie zaimplementowane. W paczce jest raport weryfikacji z punktami do sprawdzenia przed drukiem całej serii.</p>
+</section>
+</div>
+<footer>© Marcin Mazurek</footer>
+</main>
+<script>
+(function(){var b=document.querySelectorAll('[data-lang]');function set(l){document.documentElement.lang=l;try{localStorage.setItem('swarm-puck-lang',l)}catch(e){}b.forEach(function(x){x.setAttribute('aria-pressed',x.dataset.lang===l?'true':'false')})}
+b.forEach(function(x){x.addEventListener('click',function(){set(x.dataset.lang)})});set(document.documentElement.lang==='pl'?'pl':'en')})();
+</script>
+</body>
+</html>
