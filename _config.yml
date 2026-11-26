@@ -13,3 +13,11 @@ excerpt_separator: <!--more-->
 
 # Build settings
 markdown: kramdown
+
+# Not published
+exclude:
+  - CLAUDE.md
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
