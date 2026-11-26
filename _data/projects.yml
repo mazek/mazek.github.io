@@ -11,6 +11,10 @@
 
 # Example — a local HTML experiment:
 
+- title: "Leaf tile generator"
+  url: /projects/leaf-generator.html
+  description: "Parametric leaf on a hexagonal or square base for a modular sculpture: live 3D preview, fit check against the base outline and STL export (EN/PL)."
+
 - title: "Ukwiał — 3D-printable kinetic sculpture"
   url: /projects/ukwial.html
   description: "13 meshing bevel gears with wide concave leaves. Interactive 3D model, STL files, wiring and assembly guide (English / Polish)."

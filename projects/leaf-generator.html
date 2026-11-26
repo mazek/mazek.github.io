@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leaf tile generator</title>
+<meta name="description" content="Parametric 3D leaf on a hexagonal or square base. Adjust the shape and download an STL for printing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E8EDE8; --ink:#14231E; --muted:#51635B; --rule:#BCC8C0;
+  --stage:#1F2D2A; --accent:#3646C8; --accent-ink:#FFFFFF; --warn:#B0262E; --ok:#1F6B45;
+  --footfill:#F4F7F3;
+  --display:"Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --ui:"Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:16px;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding:28px clamp(16px,3vw,40px) 56px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:28px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.02;letter-spacing:-.025em;margin:0 0 12px}
+.lede{max-width:56ch;margin:0;color:var(--muted);font-size:1.05rem}
+.lang{display:flex;border:1.5px solid var(--ink);border-radius:999px;padding:2px;flex:none}
+.lang button{font:600 .9rem var(--ui);border:0;background:transparent;color:var(--ink);padding:6px 14px;border-radius:999px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+main{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(320px,.7fr);gap:clamp(24px,4vw,56px);align-items:start}
+.viewer{position:sticky;top:16px}
+.stage{position:relative;background:var(--stage);border-radius:8px;height:min(66vh,640px);min-height:380px;overflow:hidden}
+.stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.stage .msg{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:24px;text-align:center;color:#C9D6CF}
+.hint{margin:8px 0 0;font-size:.85rem;color:var(--muted)}
+.readout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:24px;align-items:start;margin-top:22px;padding-top:18px;border-top:1.5px solid var(--ink)}
+.foot figure{margin:0}
+.foot canvas{width:200px;height:200px;display:block}
+.foot figcaption{font-size:.8rem;color:var(--muted);margin-top:6px;line-height:1.35}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 18px;font-size:.95rem}
+dt{color:var(--muted)}
+dd{margin:0;font-weight:500;font-variant-numeric:tabular-nums}
+dd.ok{color:var(--ok)} dd.warn{color:var(--warn)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+button.primary,button.ghost{font:600 .95rem var(--ui);border-radius:6px;padding:11px 18px;cursor:pointer;border:1.5px solid var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink)}
+button.primary:hover{background:#2B39A8;border-color:#2B39A8}
+button.ghost{background:transparent;color:var(--accent)}
+button.ghost:hover{background:rgba(54,70,200,.08)}
+.note{margin:14px 0 0;font-size:.9rem;color:var(--muted);max-width:58ch}
+.panel{min-width:0}
+.group{border-top:1.5px solid var(--ink);padding:14px 0 10px;margin-bottom:10px}
+.group:first-child{margin-top:0}
+.group h2{font:600 1.1rem var(--display);letter-spacing:-.005em;margin:0 0 12px}
+.row{margin-bottom:14px}
+.row[hidden]{display:none}
+.row .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.row label{font-weight:500;font-size:.95rem}
+.row .val{display:flex;align-items:baseline;gap:4px;color:var(--muted);font-size:.85rem}
+input[type=number]{width:5.2rem;font:500 .95rem var(--ui);text-align:right;color:var(--ink);background:transparent;border:0;border-bottom:1.5px solid var(--rule);padding:2px 2px;font-variant-numeric:tabular-nums}
+input[type=number]:disabled{color:var(--muted);border-bottom-style:dotted}
+select{width:100%;font:500 .95rem var(--ui);color:var(--ink);background:#F4F7F3;border:1.5px solid var(--rule);border-radius:6px;padding:8px 10px;margin-top:6px}
+input[type=range]{width:100%;margin:8px 0 0;accent-color:var(--accent);height:20px}
+input[type=range]:disabled{opacity:.45}
+.hintline{margin:4px 0 0;font-size:.82rem;color:var(--muted);line-height:1.35}
+.check{display:flex;gap:10px;align-items:flex-start}
+.check input{margin-top:4px;width:18px;height:18px;accent-color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:3px}
+@media (max-width:900px){
+  header{flex-direction:column-reverse;align-items:flex-start;gap:16px}
+  main{grid-template-columns:1fr}
+  .viewer{position:static}
+  .stage{height:62vh;min-height:340px}
+}
+@media (max-width:480px){ .readout{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 data-i18n="title">Leaf tile generator</h1>
+      <p class="lede" data-i18n="lede"></p>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-lang="pl" aria-pressed="false">PL</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="viewer" aria-label="3D preview">
+      <div class="stage" id="stage"><div class="msg" id="nogl" data-i18n="noWebgl"></div></div>
+      <p class="hint" data-i18n="hint"></p>
+      <div class="readout">
+        <div class="foot"><figure>
+          <canvas id="foot" role="img" aria-label="Top view"></canvas>
+          <figcaption data-i18n="footCap"></figcaption>
+        </figure></div>
+        <dl>
+          <dt data-i18n="stTris"></dt><dd id="sTris"></dd>
+          <dt data-i18n="stSize"></dt><dd id="sSize"></dd>
+          <dt data-i18n="stMesh"></dt><dd id="sMesh"></dd>
+          <dt data-i18n="stFit"></dt><dd id="sFit"></dd>
+        </dl>
+      </div>
+      <div class="actions">
+        <button type="button" class="primary" id="dl" data-i18n="dl"></button>
+        <button type="button" class="ghost" id="reset" data-i18n="reset"></button>
+      </div>
+      <p class="note" data-i18n="print"></p>
+    </section>
+
+    <form class="panel" id="panel" onsubmit="return false"></form>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ---------- Geometry core (no DOM, no three.js) ---------- */
+const DEFAULTS = {
+  base: 'hex', orient: 'pointy', edge: 30, baseH: 4, height: 100, wall: 3,
+  twist: 15, expSpan: 1.4, expFront: 1.8, expBack: 2.2,
+  autoFit: true, hs: 22.2, dfAbs: 16.5, db: 23.0,
+  slices: 80, pts: 61
+};
+
+function fitProfile(apo, wall) {
+  // Maximise cross-section area with every outer point inside the inscribed circle (r = apo)
+  const db = apo - wall;
+  const a = (-db + Math.sqrt(db * db + 8 * apo * apo)) / 4;
+  return { hs: Math.sqrt(apo * apo - a * a), dfAbs: a + wall, db: db };
+}
+
+function resolveParams(raw) {
+  const p = Object.assign({}, raw);
+  p.sides = p.base === 'hex' ? 6 : 4;
+  p.R = p.base === 'hex' ? p.edge : p.edge / Math.SQRT2;
+  p.apo = p.R * Math.cos(Math.PI / p.sides);
+  if (p.autoFit) Object.assign(p, fitProfile(p.apo, p.wall));
+  p.pts = (p.pts | 0) % 2 === 0 ? (p.pts | 0) + 1 : (p.pts | 0);   // odd => a sample sits exactly on x = 0
+  return p;
+}
+
+function polygonAngles(p) {
+  const off = p.base === 'square' ? 45 : (p.orient === 'pointy' ? 30 : 0);
+  const step = 360 / p.sides, a = [];
+  for (let k = 0; k < p.sides; k++) a.push((off + step * k) * Math.PI / 180);
+  return a;
+}
+
+function signedVolume(t) {
+  let v = 0;
+  for (let i = 0; i < t.length; i += 9) {
+    v += t[i] * (t[i+4] * t[i+8] - t[i+5] * t[i+7])
+       - t[i+1] * (t[i+3] * t[i+8] - t[i+5] * t[i+6])
+       + t[i+2] * (t[i+3] * t[i+7] - t[i+4] * t[i+6]);
+  }
+  return v / 6;
+}
+function flip(t) {
+  for (let i = 0; i < t.length; i += 9)
+    for (let k = 0; k < 3; k++) { const x = t[i+3+k]; t[i+3+k] = t[i+6+k]; t[i+6+k] = x; }
+}
+
+function openEdges(t) {
+  const d = new Map(), key = (i) => t[i].toFixed(3) + ',' + t[i+1].toFixed(3) + ',' + t[i+2].toFixed(3);
+  for (let i = 0; i < t.length; i += 9) {
+    const v = [key(i), key(i+3), key(i+6)];
+    for (let k = 0; k < 3; k++) {
+      const e = v[k] + '>' + v[(k+1)%3];
+      d.set(e, (d.get(e) || 0) + 1);
+    }
+  }
+  let bad = 0;
+  for (const [e, c] of d) {
+    const [a, b] = e.split('>');
+    if (c !== 1 || d.get(b + '>' + a) !== 1) bad++;
+  }
+  return bad;
+}
+
+function buildModel(raw) {
+  const p = resolveParams(raw);
+  const leaf = [], base = [];
+  const push = (arr, a, b, c) => arr.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]);
+  const quad = (arr, a, b, c, d) => { push(arr, a, b, c); push(arr, a, c, d); };
+
+  const tw = p.twist * Math.PI / 180, df0 = -p.dfAbs, n = p.pts;
+  const rings = [], rings2d = [];
+  for (let i = 0; i <= p.slices; i++) {
+    const t = i / p.slices;
+    const hs = p.hs * (1 - Math.pow(t, p.expSpan));
+    if (hs < 0.4) { rings.push(null); continue; }
+    const df = df0 * (1 - Math.pow(t, p.expFront));
+    const db = p.db * (1 - Math.pow(t, p.expBack));
+    const z = p.baseH + t * p.height, a = tw * t, c = Math.cos(a), s = Math.sin(a);
+    const ri = [], ro = [];
+    for (let j = 0; j < n; j++) {
+      const x = -hs + 2 * hs * j / (n - 1);
+      const y = db + (df - db) * (x / hs) * (x / hs);
+      ri.push([x * c - y * s, x * s + y * c, z]);
+      const yo = y + p.wall;
+      ro.push([x * c - yo * s, x * s + yo * c, z]);
+    }
+    rings.push([ri, ro]);
+    rings2d.push({ t, pts: ro.map(q => [q[0], q[1]]) });
+  }
+
+  let last = -1;
+  rings.forEach((r, i) => { if (r) last = i; });
+  const m = (n - 1) / 2;
+  const tip = [
+    (rings[last][0][m][0] + rings[last][1][m][0]) / 2,
+    (rings[last][0][m][1] + rings[last][1][m][1]) / 2,
+    p.baseH + p.height
+  ];
+
+  for (let i = 0; i < p.slices; i++) {
+    const r0 = rings[i], r1 = rings[i + 1];
+    if (!r0) continue;
+    const [ri0, ro0] = r0;
+    if (!r1) {
+      for (let j = 0; j < n - 1; j++) {
+        push(leaf, ri0[j+1], ri0[j], tip);
+        push(leaf, ro0[j], ro0[j+1], tip);
+      }
+      push(leaf, ri0[0], ro0[0], tip);
+      push(leaf, ro0[n-1], ri0[n-1], tip);
+    } else {
+      const [ri1, ro1] = r1;
+      for (let j = 0; j < n - 1; j++) {
+        quad(leaf, ri0[j+1], ri0[j], ri1[j], ri1[j+1]);
+        quad(leaf, ro0[j], ro0[j+1], ro1[j+1], ro1[j]);
+      }
+      quad(leaf, ri0[0], ro0[0], ro1[0], ri1[0]);
+      quad(leaf, ro0[n-1], ri0[n-1], ri1[n-1], ro1[n-1]);
+    }
+  }
+  const [rib, rob] = rings[0];
+  for (let j = 0; j < n - 1; j++) quad(leaf, rib[j], rib[j+1], rob[j+1], rob[j]);
+
+  const ang = polygonAngles(p), h = p.baseH;
+  const ct = [0, 0, h], cb = [0, 0, 0];
+  for (let k = 0; k < p.sides; k++) {
+    const A = [p.R * Math.cos(ang[k]), p.R * Math.sin(ang[k])];
+    const B = [p.R * Math.cos(ang[(k+1) % p.sides]), p.R * Math.sin(ang[(k+1) % p.sides])];
+    const a1 = [A[0], A[1], h], b1 = [B[0], B[1], h], a0 = [A[0], A[1], 0], b0 = [B[0], B[1], 0];
+    push(base, ct, a1, b1);
+    push(base, cb, b0, a0);
+    quad(base, a0, b0, b1, a1);
+  }
+
+  if (signedVolume(leaf) < 0) flip(leaf);
+  if (signedVolume(base) < 0) flip(base);
+
+  // Fit check: exact distance of every outer point to every edge of the base polygon
+  let margin = Infinity;
+  for (const r of rings2d) for (const q of r.pts)
+    for (let k = 0; k < p.sides; k++) {
+      const na = ang[k] + Math.PI / p.sides;
+      margin = Math.min(margin, p.apo - (q[0] * Math.cos(na) + q[1] * Math.sin(na)));
+    }
+
+  const pos = new Float32Array(leaf.length + base.length);
+  pos.set(leaf, 0); pos.set(base, leaf.length);
+  let mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
+  for (let i = 0; i < pos.length; i += 3) for (let k = 0; k < 3; k++) {
+    mn[k] = Math.min(mn[k], pos[i+k]); mx[k] = Math.max(mx[k], pos[i+k]);
+  }
+  return {
+    p, pos, ang, rings2d, margin, mn, mx,
+    tris: pos.length / 9,
+    checkOpen: () => openEdges(leaf) + openEdges(base),
+    volLeaf: signedVolume(leaf), volBase: signedVolume(base)
+  };
+}
+
+function toBinarySTL(pos) {
+  const n = pos.length / 9, buf = new ArrayBuffer(84 + n * 50), dv = new DataView(buf);
+  const head = 'Leaf tile generator'; for (let i = 0; i < head.length; i++) dv.setUint8(i, head.charCodeAt(i));
+  dv.setUint32(80, n, true);
+  let o = 84;
+  for (let i = 0; i < n; i++) {
+    const b = i * 9;
+    const ux = pos[b+3]-pos[b], uy = pos[b+4]-pos[b+1], uz = pos[b+5]-pos[b+2];
+    const vx = pos[b+6]-pos[b], vy = pos[b+7]-pos[b+1], vz = pos[b+8]-pos[b+2];
+    let nx = uy*vz-uz*vy, ny = uz*vx-ux*vz, nz = ux*vy-uy*vx;
+    const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+    [nx, ny, nz].forEach(v => { dv.setFloat32(o, v, true); o += 4; });
+    for (let k = 0; k < 9; k++) { dv.setFloat32(o, pos[b+k], true); o += 4; }
+    dv.setUint16(o, 0, true); o += 2;
+  }
+  return buf;
+}
+
+
+/* ---------- Translations ---------- */
+const I18N = {
+  en: {
+    docTitle:'Leaf tile generator', title:'Leaf tile generator',
+    lede:'A parametric leaf on a hexagonal or square base, designed for a modular sculpture. Shape it, check that it fits the base, and download an STL ready to print.',
+    hint:'Drag to rotate, scroll to zoom.', dl:'Download STL', reset:'Reset to defaults',
+    gBase:'Base', gLeaf:'Leaf', gTaper:'Taper toward the tip', gProfile:'Profile at the base', gMesh:'Mesh quality',
+    base:'Base shape', optHex:'Hexagon', optSquare:'Square',
+    orient:'Hexagon orientation', optPointy:'Corner at the back', optFlat:'Edge at the back',
+    edge:'Edge length', baseH:'Base thickness', height:'Leaf height', wall:'Wall thickness', twist:'Twist',
+    expSpan:'Side narrowing', expSpanHint:'Higher keeps the leaf wide for longer, then tapers sharply.',
+    expFront:'Front edge rise', expFrontHint:'How quickly the front opening closes toward the tip.',
+    expBack:'Back spine closing', expBackHint:'How quickly the back of the leaf curves in toward the tip.',
+    autoFit:'Fit the profile to the base automatically',
+    autoFitHint:'Sizes the profile to the circle inscribed in the base, so the leaf stays inside the outline at any twist.',
+    hs:'Half-width', dfAbs:'Front edge distance from axis', db:'Back spine distance from axis',
+    slices:'Vertical slices', pts:'Points per profile',
+    stTris:'Triangles', stSize:'Size, X × Y × Z', stMesh:'Mesh', stFit:'Fit',
+    meshOk:'Closed, ready to slice', meshOpen:'{n} open edges', meshChecking:'Checking…',
+    fitOk:'Leaf stays inside the base outline', fitBad:'Leaf sticks out of the base by {x} mm',
+    footCap:'Top view: base outline and the leaf outline at several heights.',
+    print:'Print upright with the tip up. A 3 mm wall works well in PLA or PETG.',
+    noWebgl:'The 3D preview needs WebGL. You can still download the STL.'
+  },
+  pl: {
+    docTitle:'Generator liścia', title:'Generator liścia',
+    lede:'Parametryczny liść na podstawie sześciokątnej lub kwadratowej, zaprojektowany do modularnej rzeźby. Dopasuj kształt, sprawdź czy mieści się w podstawie i pobierz plik STL gotowy do druku.',
+    hint:'Przeciągnij, aby obracać, przewiń, aby przybliżyć.', dl:'Pobierz STL', reset:'Przywróć domyślne',
+    gBase:'Podstawa', gLeaf:'Liść', gTaper:'Zwężanie ku czubkowi', gProfile:'Profil u podstawy', gMesh:'Jakość siatki',
+    base:'Kształt podstawy', optHex:'Sześciokąt', optSquare:'Kwadrat',
+    orient:'Orientacja sześciokąta', optPointy:'Wierzchołek z tyłu', optFlat:'Krawędź z tyłu',
+    edge:'Długość krawędzi', baseH:'Grubość podstawy', height:'Wysokość liścia', wall:'Grubość ścianki', twist:'Skręt',
+    expSpan:'Zwężanie boków', expSpanHint:'Wyższa wartość to dłużej szeroki liść, a potem ostre zwężenie.',
+    expFront:'Unoszenie przedniej krawędzi', expFrontHint:'Jak szybko przedni otwór zamyka się ku czubkowi.',
+    expBack:'Domykanie grzbietu', expBackHint:'Jak szybko tył liścia zakrzywia się ku czubkowi.',
+    autoFit:'Dopasuj profil do podstawy automatycznie',
+    autoFitHint:'Profil jest dopasowany do koła wpisanego w podstawę, więc liść mieści się w obrysie przy każdym skręcie.',
+    hs:'Połowa szerokości', dfAbs:'Odległość przedniej krawędzi od osi', db:'Odległość grzbietu od osi',
+    slices:'Przekroje w pionie', pts:'Punkty na profilu',
+    stTris:'Trójkąty', stSize:'Wymiary X × Y × Z', stMesh:'Siatka', stFit:'Dopasowanie',
+    meshOk:'Zamknięta, gotowa do slicingu', meshOpen:'Otwarte krawędzie: {n}', meshChecking:'Sprawdzanie…',
+    fitOk:'Liść mieści się w obrysie podstawy', fitBad:'Liść wystaje poza podstawę o {x} mm',
+    footCap:'Widok z góry: obrys podstawy i obrys liścia na kilku wysokościach.',
+    print:'Drukuj pionowo, czubkiem do góry. Ścianka 3 mm dobrze sprawdza się w PLA i PETG.',
+    noWebgl:'Podgląd 3D wymaga WebGL. Plik STL nadal możesz pobrać.'
+  }
+};
+
+/* ---------- Controls ---------- */
+const GROUPS = [
+  { id:'gBase', items:[
+    { k:'base', type:'select', opts:[['hex','optHex'],['square','optSquare']] },
+    { k:'orient', type:'select', opts:[['pointy','optPointy'],['flat','optFlat']], showIf:s => s.base === 'hex' },
+    { k:'edge', min:20, max:60, step:0.5, unit:'mm' },
+    { k:'baseH', min:1, max:10, step:0.5, unit:'mm' } ]},
+  { id:'gLeaf', items:[
+    { k:'height', min:40, max:160, step:1, unit:'mm' },
+    { k:'wall', min:1.2, max:6, step:0.1, unit:'mm' },
+    { k:'twist', min:0, max:30, step:0.5, unit:'°' } ]},
+  { id:'gTaper', items:[
+    { k:'expSpan', min:0.8, max:4, step:0.05, hint:'expSpanHint' },
+    { k:'expFront', min:0.8, max:4, step:0.05, hint:'expFrontHint' },
+    { k:'expBack', min:0.8, max:4, step:0.05, hint:'expBackHint' } ]},
+  { id:'gProfile', items:[
+    { k:'autoFit', type:'check', hint:'autoFitHint' },
+    { k:'hs', min:5, max:40, step:0.1, unit:'mm', manual:true },
+    { k:'dfAbs', min:5, max:40, step:0.1, unit:'mm', manual:true },
+    { k:'db', min:5, max:40, step:0.1, unit:'mm', manual:true } ]},
+  { id:'gMesh', items:[
+    { k:'slices', min:20, max:160, step:5 },
+    { k:'pts', min:21, max:121, step:2 } ]}
+];
+
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const state = Object.assign({}, DEFAULTS);
+let lang = 'en', model = null, firstBuild = true;
+try { const q = new URLSearchParams(location.search).get('lang'), saved = q || localStorage.getItem('leaf-lang'); if (saved === 'pl' || saved === 'en') lang = saved; } catch (e) {}
+const tr = k => (I18N[lang][k] !== undefined ? I18N[lang][k] : I18N.en[k]);
+
+const inputs = {};   // k -> {range, num, row}
+function buildPanel() {
+  const panel = $('panel');
+  GROUPS.forEach(g => {
+    const sec = document.createElement('section'); sec.className = 'group';
+    const h = document.createElement('h2'); h.dataset.i18n = g.id; sec.appendChild(h);
+    g.items.forEach(it => {
+      const row = document.createElement('div'); row.className = 'row';
+      const id = 'f_' + it.k;
+      if (it.type === 'select') {
+        const lab = document.createElement('label'); lab.htmlFor = id; lab.dataset.i18n = it.k;
+        const sel = document.createElement('select'); sel.id = id;
+        it.opts.forEach(([v, key]) => { const o = document.createElement('option'); o.value = v; o.dataset.i18n = key; sel.appendChild(o); });
+        sel.value = state[it.k];
+        sel.addEventListener('input', () => { state[it.k] = sel.value; schedule(); });
+        row.append(lab, sel); inputs[it.k] = { sel, row, it };
+      } else if (it.type === 'check') {
+        row.className = 'row check';
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.id = id; cb.checked = state[it.k];
+        const wrap = document.createElement('div');
+        const lab = document.createElement('label'); lab.htmlFor = id; lab.dataset.i18n = it.k;
+        wrap.appendChild(lab);
+        if (it.hint) { const p = document.createElement('p'); p.className = 'hintline'; p.dataset.i18n = it.hint; wrap.appendChild(p); }
+        cb.addEventListener('input', () => { state[it.k] = cb.checked; schedule(); });
+        row.append(cb, wrap); inputs[it.k] = { cb, row, it };
+      } else {
+        const top = document.createElement('div'); top.className = 'top';
+        const lab = document.createElement('label'); lab.htmlFor = id; lab.dataset.i18n = it.k;
+        const val = document.createElement('div'); val.className = 'val';
+        const num = document.createElement('input'); num.type = 'number'; num.id = id;
+        num.min = it.min; num.max = it.max; num.step = it.step; num.value = state[it.k];
+        val.appendChild(num); if (it.unit) { const u = document.createElement('span'); u.textContent = it.unit; val.appendChild(u); }
+        top.append(lab, val);
+        const range = document.createElement('input'); range.type = 'range';
+        range.min = it.min; range.max = it.max; range.step = it.step; range.value = state[it.k];
+        range.setAttribute('aria-label', '');
+        range.addEventListener('input', () => { state[it.k] = parseFloat(range.value); num.value = range.value; schedule(); });
+        num.addEventListener('input', () => {
+          const v = parseFloat(num.value);
+          if (isFinite(v) && v >= it.min && v <= it.max) { state[it.k] = v; range.value = v; schedule(); }
+        });
+        num.addEventListener('change', () => {
+          let v = parseFloat(num.value); if (!isFinite(v)) v = state[it.k];
+          v = Math.min(it.max, Math.max(it.min, v)); state[it.k] = v; num.value = v; range.value = v; schedule();
+        });
+        row.append(top, range);
+        if (it.hint) { const p = document.createElement('p'); p.className = 'hintline'; p.dataset.i18n = it.hint; row.appendChild(p); }
+        inputs[it.k] = { range, num, row, it };
+      }
+      sec.appendChild(row);
+    });
+    panel.appendChild(sec);
+  });
+}
+
+function syncInputs(m) {
+  GROUPS.forEach(g => g.items.forEach(it => {
+    const e = inputs[it.k];
+    if (it.showIf) e.row.hidden = !it.showIf(state);
+    if (it.manual) {
+      const v = state.autoFit ? m.p[it.k] : state[it.k];
+      const shown = Math.round(v * 10) / 10;
+      e.num.value = shown; e.range.value = shown;
+      e.num.disabled = e.range.disabled = state.autoFit;
+    }
+  }));
+  Object.keys(inputs).forEach(k => {
+    const e = inputs[k]; if (e.range || e.sel || e.cb) {
+      const it = e.it; if (it.manual) return;
+      if (e.sel) e.sel.value = state[k]; else if (e.cb) e.cb.checked = state[k];
+      else if (document.activeElement !== e.num) { e.num.value = state[k]; e.range.value = state[k]; }
+    }
+  });
+}
+
+/* ---------- Language ---------- */
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.title = tr('docTitle');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = tr(el.dataset.i18n); });
+  document.querySelectorAll('.row input[type=range]').forEach(r => {
+    const lab = r.closest('.row').querySelector('label'); if (lab) r.setAttribute('aria-label', lab.textContent);
+  });
+  document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  if (model) renderStats(model, true);
+}
+document.querySelectorAll('.lang button').forEach(b => b.addEventListener('click', () => {
+  lang = b.dataset.lang; try { localStorage.setItem('leaf-lang', lang); } catch (e) {}
+  applyLang();
+}));
+
+/* ---------- Stats and footprint ---------- */
+let openTimer = null;
+function renderStats(m, skipCheck) {
+  $('sTris').textContent = m.tris.toLocaleString(lang === 'pl' ? 'pl-PL' : 'en-US');
+  $('sSize').textContent = [0, 1, 2].map(i => (m.mx[i] - m.mn[i]).toFixed(1)).join(' × ') + ' mm';
+  const fit = $('sFit');
+  if (m.margin >= -0.01) { fit.textContent = tr('fitOk'); fit.className = 'ok'; }
+  else { fit.textContent = tr('fitBad').replace('{x}', (-m.margin).toFixed(1)); fit.className = 'warn'; }
+  const mesh = $('sMesh');
+  if (m.openCount === undefined) { mesh.textContent = tr('meshChecking'); mesh.className = ''; }
+  else if (m.openCount === 0) { mesh.textContent = tr('meshOk'); mesh.className = 'ok'; }
+  else { mesh.textContent = tr('meshOpen').replace('{n}', m.openCount); mesh.className = 'warn'; }
+  if (!skipCheck) {
+    clearTimeout(openTimer);
+    openTimer = setTimeout(() => { m.openCount = m.checkOpen(); if (m === model) renderStats(m, true); }, 300);
+  }
+}
+
+function drawFoot(m) {
+  const c = $('foot'), dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+  if (!W) return;
+  c.width = W * dpr; c.height = H * dpr;
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  const R = m.p.R, s = (Math.min(W, H) / 2 - 8) / R, cx = W / 2, cy = H / 2;
+  const X = x => cx + x * s, Y = y => cy - y * s;
+  g.beginPath();
+  m.ang.forEach((a, k) => { const x = X(R * Math.cos(a)), y = Y(R * Math.sin(a)); k ? g.lineTo(x, y) : g.moveTo(x, y); });
+  g.closePath(); g.fillStyle = css('--footfill'); g.fill(); g.strokeStyle = css('--ink'); g.lineWidth = 1.75; g.stroke();
+  g.setLineDash([3, 3]); g.beginPath(); g.arc(cx, cy, m.p.apo * s, 0, Math.PI * 2);
+  g.strokeStyle = css('--muted'); g.lineWidth = 1; g.stroke(); g.setLineDash([]);
+  const rs = m.rings2d, step = Math.max(1, Math.floor(rs.length / 8));
+  rs.forEach((r, i) => {
+    if (i % step && i !== rs.length - 1) return;
+    g.beginPath(); r.pts.forEach((q, j) => { j ? g.lineTo(X(q[0]), Y(q[1])) : g.moveTo(X(q[0]), Y(q[1])); });
+    g.globalAlpha = 0.3 + 0.7 * (1 - r.t); g.strokeStyle = css('--accent'); g.lineWidth = 1.4; g.stroke();
+  });
+  g.globalAlpha = 1;
+}
+
+/* ---------- 3D preview ---------- */
+let renderer, scene, camera, controls, group, meshObj, geo, glOk = false;
+function initThree() {
+  try {
+    const el = $('stage');
+    renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    el.insertBefore(renderer.domElement, el.firstChild);
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(32, 1, 1, 2000);
+    camera.position.set(120, 100, 215);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.dampingFactor = 0.08;
+    controls.target.set(0, 52, 0);
+    const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    controls.autoRotate = !reduce; controls.autoRotateSpeed = 1.0;
+    controls.addEventListener('start', () => { controls.autoRotate = false; });
+    scene.add(new THREE.HemisphereLight(0xEAF2EC, 0x1B2724, 0.85));
+    const key = new THREE.DirectionalLight(0xFFFFFF, 0.9); key.position.set(120, 180, 140); scene.add(key);
+    const rim = new THREE.DirectionalLight(0x9DB2FF, 0.35); rim.position.set(-140, 60, -120); scene.add(rim);
+    group = new THREE.Group(); group.rotation.x = -Math.PI / 2; scene.add(group);
+    const resize = () => {
+      const w = el.clientWidth, h = el.clientHeight; if (!w || !h) return;
+      renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    };
+    new ResizeObserver(resize).observe(el); resize();
+    (function loop() { requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); })();
+    glOk = true;
+  } catch (e) {
+    $('nogl').style.display = 'flex';
+  }
+}
+
+function updateMesh(m) {
+  if (!glOk) return;
+  if (meshObj) { group.remove(meshObj); geo.dispose(); }
+  geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(m.pos, 3));
+  geo.computeVertexNormals();
+  meshObj = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color:0xDCE6D3, roughness:0.62, metalness:0.0, side:THREE.DoubleSide }));
+  if (!meshObj.material.userData) meshObj.material.userData = {};
+  group.add(meshObj);
+  if (firstBuild) { controls.target.set(0, (m.p.height + m.p.baseH) / 2, 0); firstBuild = false; }
+}
+
+/* ---------- Rebuild loop ---------- */
+let pending = false;
+function schedule() { if (pending) return; pending = true; requestAnimationFrame(() => { pending = false; rebuild(); }); }
+function rebuild() {
+  const m = buildModel(state); model = m;
+  syncInputs(m); updateMesh(m); drawFoot(m); renderStats(m, false);
+}
+
+/* ---------- Buttons ---------- */
+$('dl').addEventListener('click', () => {
+  const m = model || buildModel(state);
+  const blob = new Blob([toBinarySTL(m.pos)], { type:'model/stl' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `leaf-${state.base}-${state.edge}mm-twist${state.twist}.stl`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+$('reset').addEventListener('click', () => { Object.assign(state, DEFAULTS); rebuild(); });
+window.addEventListener('resize', () => { if (model) drawFoot(model); });
+
+buildPanel(); initThree(); applyLang(); rebuild(); applyLang();
+</script>
+</body>
+</html>
