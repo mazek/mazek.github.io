@@ -38,3 +38,7 @@
 - title: "Swarm Puck — swarm of hockey-puck robots"
   url: /projects/swarm-puck.html
   description: "Autonomous puck-shaped robots that run away from walls and each other: 3D-printable enclosure (OpenSCAD), ESP32 firmware, parts list and verification notes (EN/PL)."
+
+- title: "Transistor beat machine"
+  url: /projects/beat-machine.html
+  description: "Discrete light-controlled rhythm machine built from six BC547 transistors, no microcontroller: schematic, stripboard layout (PDF), parts list and a sound simulator (PL)."
