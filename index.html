@@ -27,7 +27,8 @@ layout: default
     <h2 class="section-heading">Articles <span class="section-sub">Local Sovereign AI series</span></h2>
     <ul class="project-list">
       {% for item in site.data.articles %}
-      <li class="project-item">
+      {% assign anchor = item.url | split: '/' | last | remove: '.html' %}
+      <li class="project-item" id="{{ anchor }}">
         <a class="project-link" href="{{ item.url }}"{% if item.external %} target="_blank" rel="noopener"{% endif %}>{{ item.title }}</a>
         {% if item.description %}<p class="project-desc">{{ item.description }}</p>{% endif %}
       </li>
@@ -39,7 +40,8 @@ layout: default
     <h2 class="section-heading">Projects</h2>
     <ul class="project-list">
       {% for item in site.data.projects %}
-      <li class="project-item">
+      {% assign anchor = item.url | split: '/' | last | remove: '.html' %}
+      <li class="project-item" id="{{ anchor }}">
         <a class="project-link" href="{{ item.url }}"{% if item.external %} target="_blank" rel="noopener"{% endif %}>{{ item.title }}</a>
         {% if item.description %}<p class="project-desc">{{ item.description }}</p>{% endif %}
       </li>

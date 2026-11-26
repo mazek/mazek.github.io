@@ -176,9 +176,9 @@
     align-items: baseline;
     flex-wrap: wrap;
     gap: 4px 14px;
-    padding: 8px 0 14px;
+    padding: 4px 0 10px;
     border-bottom: 1px solid $grey-color-light;
-    margin-bottom: 22px;
+    margin-bottom: 16px;
 }
 
 .hero-name {
@@ -202,7 +202,7 @@
  * Sections
  */
 .section {
-    margin-bottom: 28px;
+    margin-bottom: 20px;
 }
 
 .section-heading {
@@ -211,8 +211,8 @@
     letter-spacing: 1.5px;
     text-transform: uppercase;
     color: $grey-color;
-    margin-bottom: 10px;
-    padding-bottom: 6px;
+    margin-bottom: 6px;
+    padding-bottom: 5px;
     border-bottom: 1px solid $grey-color-light;
 }
 
@@ -235,6 +235,9 @@
 
 .home-grid {
     display: grid;
+
+    .project-list { margin-bottom: 0; }
+
     grid-template-columns: 1fr 1fr;
     gap: 0 40px;
 
@@ -305,16 +308,28 @@
 }
 
 .project-item {
-    margin-bottom: 10px;
+    margin: 0 -8px 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    scroll-margin-top: 30vh;
+
+    &:target {
+        animation: target-flash 2.4s ease-out;
+    }
+}
+
+@keyframes target-flash {
+    0%, 40% { background: rgba($brand-color, 0.10); }
+    100%    { background: transparent; }
 }
 
 .project-link {
-    font-size: 14.5px;
+    font-size: 14px;
     font-weight: 500;
-    line-height: 1.35;
+    line-height: 1.3;
     color: $text-color;
     display: block;
-    margin-bottom: 1px;
+    margin-bottom: 0;
 
     &:visited {
         color: $text-color;
@@ -327,8 +342,8 @@
 }
 
 .project-desc {
-    font-size: 13px;
-    line-height: 1.4;
+    font-size: 12.5px;
+    line-height: 1.35;
     color: $grey-color;
     margin-bottom: 0;
     display: -webkit-box;
