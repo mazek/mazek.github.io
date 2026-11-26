@@ -11,6 +11,10 @@
 
 # Example — a local HTML experiment:
 
+- title: "Ukwiał — 3D-printable kinetic sculpture"
+  url: /projects/ukwial.html
+  description: "13 meshing bevel gears with wide concave leaves. Interactive 3D model, STL files, wiring and assembly guide (English / Polish)."
+
 - title: "Local Sovereign AI #1 — Running Local LLMs"
   url: /projects/article-01-local-llm.html
   description: "How to run open-source LLMs locally with Ollama — privacy, cost, and control."
@@ -46,10 +50,6 @@
 - title: "Heksy generator"
   url: /projects/heksy-generator.html
   description: "Parametric hex relief: 3D preview, paper cut sheets (PDF/SVG), 1:1 assembly template and STL files for 3D printing. PL/EN/ES/ZH/AR."
-
-- title: "Ukwiał — kinetic sculpture"
-  url: /projects/ukwial.html
-  description: "3D-printable kinetic sculpture: 13 meshing bevel gears with wide concave leaves. Interactive 3D model, STL files, electronics and assembly guide (PL)."
 
 - title: "Paper relief — simulator"
   url: /paper-relief/
