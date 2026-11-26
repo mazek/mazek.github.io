@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Transistor beat machine — Marcin Mazurek</title>
+<meta name="description" content="Dyskretna maszyna rytmiczna zbudowana wyłącznie z tranzystorów BC547, bez mikrokontrolera. Schemat, layout stripboard, symulator dźwiękowy.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FAFAF8;
+  --bg2: #F1F0EC;
+  --fg: #1A1A18;
+  --fg2: #5A5A56;
+  --fg3: #8A8A84;
+  --accent: #534AB7;
+  --accent-l: #EEEDFE;
+  --teal: #0F6E56;
+  --teal-l: #E1F5EE;
+  --coral: #D85A30;
+  --coral-l: #FAECE7;
+  --amber: #854F0B;
+  --amber-l: #FAEEDA;
+  --border: #E0DED8;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Inter', system-ui, sans-serif;
+  --radius: 10px;
+  --max-w: 720px;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #18181A;
+    --bg2: #232326;
+    --fg: #E8E8E4;
+    --fg2: #A0A09A;
+    --fg3: #6A6A64;
+    --accent: #AFA9EC;
+    --accent-l: #26215C;
+    --teal: #5DCAA5;
+    --teal-l: #04342C;
+    --coral: #F0997B;
+    --coral-l: #4A1B0C;
+    --amber: #EF9F27;
+    --amber-l: #412402;
+    --border: #333330;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: var(--max-w); margin: 0 auto; padding: 0 20px; }
+
+header {
+  padding: 60px 0 40px;
+  border-bottom: 1px solid var(--border);
+}
+header .wrap { display: flex; flex-direction: column; gap: 12px; }
+header h1 {
+  font-size: clamp(28px, 5vw, 38px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+header .sub {
+  font-size: 15px;
+  color: var(--fg2);
+  max-width: 540px;
+}
+header .meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--fg3);
+  margin-top: 8px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+section { padding: 48px 0; border-bottom: 1px solid var(--border); }
+section:last-of-type { border-bottom: none; }
+h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  letter-spacing: -0.01em;
+}
+h3 {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 28px 0 12px;
+  color: var(--fg);
+}
+p { margin-bottom: 16px; color: var(--fg2); font-size: 15px; }
+p:last-child { margin-bottom: 0; }
+
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 20px 0;
+}
+.card-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fg3);
+  margin-bottom: 12px;
+  letter-spacing: 0.03em;
+}
+
+/* ── Beat machine ── */
+.machine {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin: 24px 0;
+}
+.machine-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.machine-top .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--fg3);
+  transition: background 0.3s;
+}
+.machine-top .title {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--fg3);
+  letter-spacing: 0.05em;
+}
+.machine-top button {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 5px 16px;
+  cursor: pointer;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.machine-top button:hover { background: var(--border); }
+
+.led-strip {
+  display: flex; gap: 5px;
+  justify-content: center;
+  margin-bottom: 16px;
+  height: 24px;
+  align-items: center;
+}
+.led-strip .led {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.08s, box-shadow 0.08s;
+}
+
+.viz-box {
+  height: 64px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.viz-box canvas { width: 100%; height: 100%; display: block; }
+
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.ctrl-row label {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--fg3);
+  min-width: 56px;
+}
+.ctrl-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+.ctrl-row .val {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 28px;
+  text-align: right;
+}
+
+.seq-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fg3);
+  margin: 12px 0 6px;
+}
+.seq-row {
+  display: flex; gap: 3px; flex-wrap: wrap;
+}
+.seq-row .step {
+  width: 28px; height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--fg3);
+  user-select: none;
+  transition: background 0.1s, border-color 0.1s;
+}
+.seq-row .step.on {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.machine-btns {
+  display: flex; gap: 6px; margin-top: 12px;
+}
+.machine-btns button {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  background: var(--bg);
+  color: var(--fg2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+
+/* ── Schematic ── */
+.schematic-wrap {
+  margin: 24px 0;
+  overflow-x: auto;
+}
+.schematic-wrap svg {
+  width: 100%;
+  min-width: 400px;
+  display: block;
+}
+.schematic-wrap .wire { stroke: var(--fg); stroke-width: 1.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.schematic-wrap .comp { stroke: var(--fg); stroke-width: 1; fill: none; }
+.schematic-wrap .comp-fill { stroke: var(--fg); stroke-width: 1; fill: var(--fg); }
+.schematic-wrap .lbl { font-family: var(--mono); font-size: 11px; fill: var(--fg2); }
+.schematic-wrap .lbl-val { font-family: var(--mono); font-size: 10px; fill: var(--fg3); }
+.schematic-wrap .note { font-family: var(--sans); font-size: 11px; fill: var(--fg2); }
+.schematic-wrap .zone { fill: var(--bg2); stroke: var(--border); stroke-width: 0.5; stroke-dasharray: 4 3; }
+.schematic-wrap .section-lbl { font-family: var(--sans); font-size: 13px; fill: var(--fg); font-weight: 500; }
+
+/* ── BOM table ── */
+.bom-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 16px 0;
+}
+.bom-table th {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fg3);
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
+}
+.bom-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg2);
+}
+.bom-table td:first-child {
+  font-family: var(--mono);
+  color: var(--fg);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+/* ── Stepper (oscillator explanation) ── */
+.stepper { margin: 24px 0; }
+.stepper-pills {
+  display: flex; gap: 4px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.stepper-pills button {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.stepper-pills button.active {
+  background: var(--accent-l);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.stepper-desc {
+  font-size: 14px;
+  color: var(--fg2);
+  line-height: 1.7;
+  min-height: 60px;
+}
+
+/* ── Print styles ── */
+.print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg2);
+  cursor: pointer;
+  margin-top: 12px;
+}
+@media print {
+  header, section { break-inside: avoid; }
+  .machine, .stepper-pills, .machine-btns, .print-btn { display: none !important; }
+}
+
+footer {
+  padding: 32px 0;
+  font-size: 13px;
+  color: var(--fg3);
+  text-align: center;
+}
+footer a { color: var(--fg2); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+@media (max-width: 520px) {
+  header { padding: 40px 0 28px; }
+  section { padding: 32px 0; }
+  .machine { padding: 16px; }
+  .seq-row .step { width: 24px; height: 22px; font-size: 9px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+<div class="wrap">
+  <h1>Transistor beat machine</h1>
+  <p class="sub">Dyskretna maszyna rytmiczna z sensorem światła i LEDami. Żadnego mikrokontrolera — tylko 6 tranzystorów BC547, kondensatory, rezystory i fotorezystor.</p>
+  <div class="meta">
+    <span>6× BC547</span>
+    <span>9V battery</span>
+    <span>~20 PLN</span>
+    <span>2026</span>
+  </div>
+</div>
+</header>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION: Interactive simulator                 -->
+<!-- ═══════════════════════════════════════════════ -->
+<section id="simulator">
+<div class="wrap">
+  <h2>Symulator</h2>
+  <p>Dwa głosy z niezależnymi sekwencerami 16-krokowymi. Suwak światła symuluje fotorezystor — moduluje filtr, kształt fali i wysokość dźwięku w czasie rzeczywistym.</p>
+
+  <div class="machine" id="beat-machine">
+    <div class="machine-top">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="dot" id="pw-dot"></div>
+        <span class="title">bitbeat</span>
+      </div>
+      <button id="play-btn">play</button>
+    </div>
+
+    <div class="led-strip" id="led-strip"></div>
+    <div class="viz-box"><canvas id="wave-canvas"></canvas></div>
+
+    <div class="ctrl-row">
+      <label>bpm</label>
+      <input type="range" min="40" max="240" value="120" step="1" id="bpm">
+      <span class="val" id="bpm-out">120</span>
+    </div>
+    <div class="ctrl-row">
+      <label>light</label>
+      <input type="range" min="0" max="100" value="50" step="1" id="light">
+      <span class="val" id="light-out">50</span>
+    </div>
+    <div class="ctrl-row">
+      <label>pitch</label>
+      <input type="range" min="60" max="800" value="220" step="1" id="pitch">
+      <span class="val" id="pitch-out">220</span>
+    </div>
+    <div class="ctrl-row">
+      <label>decay</label>
+      <input type="range" min="5" max="80" value="30" step="1" id="decay">
+      <span class="val" id="decay-out">30</span>
+    </div>
+
+    <div class="seq-label">Voice 1</div>
+    <div class="seq-row" id="seq1"></div>
+    <div class="seq-label">Voice 2</div>
+    <div class="seq-row" id="seq2"></div>
+
+    <div class="machine-btns">
+      <button id="rand-btn">random</button>
+      <button id="reset-btn">reset</button>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION: How an oscillator works               -->
+<!-- ═══════════════════════════════════════════════ -->
+<section id="oscillator">
+<div class="wrap">
+  <h2>Jak działa oscylator</h2>
+  <p>Oscylator to układ, który generuje powtarzający się sygnał z niczego poza zasilaniem stałoprądowym. Dwa tranzystory, z których każdy próbuje wyłączyć drugi — to cała sztuczka. Kliknij poniżej żeby zobaczyć cykl krok po kroku.</p>
+
+  <div class="stepper" id="osc-stepper">
+    <div class="stepper-pills" id="osc-pills"></div>
+    <div class="schematic-wrap">
+      <svg id="osc-svg" viewBox="0 0 680 420">
+        <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+        <!-- +9V / GND rails -->
+        <line class="wire" x1="100" y1="40" x2="580" y2="40"/>
+        <text class="lbl" x="590" y="44">+9V</text>
+        <line class="wire" x1="100" y1="380" x2="580" y2="380" opacity="0.5"/>
+        <text class="lbl" x="590" y="384">GND</text>
+        <!-- R1 -->
+        <line class="wire" x1="160" y1="40" x2="160" y2="62"/>
+        <rect x="148" y="62" width="24" height="50" rx="4" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
+        <text class="lbl" x="124" y="90" text-anchor="end">R1 1k</text>
+        <line class="wire" x1="160" y1="112" x2="160" y2="150"/>
+        <!-- R2 -->
+        <line class="wire" x1="480" y1="40" x2="480" y2="62"/>
+        <rect x="468" y="62" width="24" height="50" rx="4" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
+        <text class="lbl" x="516" y="90">R2 1k</text>
+        <line class="wire" x1="480" y1="112" x2="480" y2="150"/>
+        <!-- Collector dots -->
+        <circle cx="160" cy="150" r="3" class="comp-fill"/>
+        <circle cx="480" cy="150" r="3" class="comp-fill"/>
+        <!-- Q1 -->
+        <circle id="sv-q1" cx="160" cy="220" r="28" class="comp"/>
+        <text class="lbl" x="160" y="224" text-anchor="middle" font-weight="500">Q1</text>
+        <line class="wire" x1="160" y1="150" x2="160" y2="192"/>
+        <line class="wire" x1="160" y1="248" x2="160" y2="300"/>
+        <line class="wire" x1="132" y1="220" x2="100" y2="220"/>
+        <!-- Q2 -->
+        <circle id="sv-q2" cx="480" cy="220" r="28" class="comp"/>
+        <text class="lbl" x="480" y="224" text-anchor="middle" font-weight="500">Q2</text>
+        <line class="wire" x1="480" y1="150" x2="480" y2="192"/>
+        <line class="wire" x1="480" y1="248" x2="480" y2="300"/>
+        <line class="wire" x1="508" y1="220" x2="540" y2="220"/>
+        <!-- R3 -->
+        <line class="wire" x1="100" y1="220" x2="100" y2="310"/>
+        <rect x="88" y="310" width="24" height="40" rx="4" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+        <text class="lbl-val" x="74" y="334" text-anchor="end">R3 100k</text>
+        <line class="wire" x1="100" y1="350" x2="100" y2="380"/>
+        <!-- R4 -->
+        <line class="wire" x1="540" y1="220" x2="540" y2="310"/>
+        <rect x="528" y="310" width="24" height="40" rx="4" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+        <text class="lbl-val" x="566" y="334">R4 100k</text>
+        <line class="wire" x1="540" y1="350" x2="540" y2="380"/>
+        <!-- GND connections -->
+        <line class="wire" x1="160" y1="300" x2="160" y2="380"/>
+        <line class="wire" x1="480" y1="300" x2="480" y2="380"/>
+        <!-- C1 -->
+        <line class="wire" x1="160" y1="150" x2="260" y2="150"/>
+        <line x1="260" y1="136" x2="260" y2="164" stroke="var(--accent)" stroke-width="2.5"/>
+        <line x1="270" y1="136" x2="270" y2="164" stroke="var(--accent)" stroke-width="2.5"/>
+        <text class="lbl" x="265" y="128" text-anchor="middle">C1 47uF</text>
+        <line class="wire" x1="270" y1="150" x2="340" y2="150"/>
+        <!-- C2 -->
+        <line class="wire" x1="480" y1="150" x2="380" y2="150"/>
+        <line x1="380" y1="136" x2="380" y2="164" stroke="var(--accent)" stroke-width="2.5"/>
+        <line x1="370" y1="136" x2="370" y2="164" stroke="var(--accent)" stroke-width="2.5"/>
+        <text class="lbl" x="375" y="180" text-anchor="middle">C2 47uF</text>
+        <!-- Cross-coupling -->
+        <line class="wire" x1="340" y1="150" x2="340" y2="190"/>
+        <circle cx="340" cy="150" r="3" class="comp-fill"/>
+        <line class="wire" x1="340" y1="190" x2="100" y2="220" stroke-dasharray="4 3" opacity="0.5"/>
+        <line class="wire" x1="340" y1="190" x2="540" y2="220" stroke-dasharray="4 3" opacity="0.5"/>
+        <!-- Flow arrows (animated) -->
+        <path id="sv-f1" d="" fill="none" stroke="var(--coral)" stroke-width="2" opacity="0"/>
+        <path id="sv-f2" d="" fill="none" stroke="var(--teal)" stroke-width="2" opacity="0"/>
+        <!-- State labels -->
+        <rect id="sv-q1s-bg" x="110" y="390" width="100" height="22" rx="4" fill="var(--bg2)" stroke="var(--border)" stroke-width="0.5"/>
+        <text id="sv-q1s" class="lbl" x="160" y="405" text-anchor="middle">Q1: idle</text>
+        <rect id="sv-q2s-bg" x="430" y="390" width="100" height="22" rx="4" fill="var(--bg2)" stroke="var(--border)" stroke-width="0.5"/>
+        <text id="sv-q2s" class="lbl" x="480" y="405" text-anchor="middle">Q2: idle</text>
+        <!-- Output -->
+        <line class="wire" x1="486" y1="150" x2="600" y2="150" stroke-dasharray="6 3" opacity="0.5"/>
+        <text class="note" x="604" y="154">Output</text>
+      </svg>
+    </div>
+    <div class="stepper-desc" id="osc-desc"></div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION: Full circuit schematic                -->
+<!-- ═══════════════════════════════════════════════ -->
+<section id="schematic">
+<div class="wrap">
+  <h2>Pełny schemat</h2>
+  <p>Cztery bloki funkcjonalne: oscylator zegara (~2–8 Hz), oscylator tonu (~200–2000 Hz z LDR), bramka łącząca oba sygnały, driver LEDów. Wszystko na 9V.</p>
+
+  <div class="schematic-wrap">
+    <svg viewBox="0 0 680 580">
+      <defs><marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Clock oscillator zone -->
+      <rect class="zone" x="20" y="20" width="300" height="230" rx="10"/>
+      <text class="section-lbl" x="34" y="42">Oscylator zegara ~2-8 Hz</text>
+      <!-- +9V -->
+      <line class="wire" x1="80" y1="60" x2="260" y2="60"/>
+      <text class="lbl" x="268" y="64">+9V</text>
+      <!-- R1 R2 -->
+      <line class="wire" x1="110" y1="60" x2="110" y2="74"/>
+      <rect x="104" y="74" width="12" height="24" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
+      <text class="lbl-val" x="122" y="90">R1</text>
+      <line class="wire" x1="110" y1="98" x2="110" y2="120"/>
+      <line class="wire" x1="230" y1="60" x2="230" y2="74"/>
+      <rect x="224" y="74" width="12" height="24" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
+      <text class="lbl-val" x="240" y="90">R2</text>
+      <line class="wire" x1="230" y1="98" x2="230" y2="120"/>
+      <!-- Q1 Q2 -->
+      <circle cx="110" cy="145" r="18" class="comp"/>
+      <text class="lbl" x="110" y="149" text-anchor="middle" font-weight="500">Q1</text>
+      <line class="wire" x1="110" y1="120" x2="110" y2="127"/>
+      <line class="wire" x1="110" y1="163" x2="110" y2="200"/>
+      <circle cx="230" cy="145" r="18" class="comp"/>
+      <text class="lbl" x="230" y="149" text-anchor="middle" font-weight="500">Q2</text>
+      <line class="wire" x1="230" y1="120" x2="230" y2="127"/>
+      <line class="wire" x1="230" y1="163" x2="230" y2="200"/>
+      <!-- Cross caps -->
+      <line class="wire" x1="110" y1="120" x2="140" y2="120"/>
+      <line x1="140" y1="114" x2="140" y2="126" stroke="var(--accent)" stroke-width="2"/>
+      <line x1="146" y1="114" x2="146" y2="126" stroke="var(--accent)" stroke-width="2"/>
+      <line class="wire" x1="146" y1="120" x2="170" y2="120"/>
+      <text class="lbl-val" x="143" y="110">C1</text>
+      <line class="wire" x1="230" y1="120" x2="200" y2="120"/>
+      <line x1="200" y1="114" x2="200" y2="126" stroke="var(--accent)" stroke-width="2"/>
+      <line x1="194" y1="114" x2="194" y2="126" stroke="var(--accent)" stroke-width="2"/>
+      <line class="wire" x1="194" y1="120" x2="170" y2="120"/>
+      <text class="lbl-val" x="197" y="110">C2</text>
+      <!-- Cross coupling wires -->
+      <circle cx="170" cy="120" r="2" class="comp-fill"/>
+      <line class="wire" x1="170" y1="120" x2="170" y2="145"/>
+      <line class="wire" x1="170" y1="145" x2="92" y2="145" stroke-dasharray="3 2" opacity="0.4"/>
+      <line class="wire" x1="170" y1="145" x2="248" y2="145" stroke-dasharray="3 2" opacity="0.4"/>
+      <!-- R3 R4 -->
+      <rect x="86" y="170" width="12" height="20" rx="3" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+      <text class="lbl-val" x="78" y="183" text-anchor="end">R3</text>
+      <line class="wire" x1="92" y1="145" x2="92" y2="170"/>
+      <line class="wire" x1="92" y1="190" x2="92" y2="215"/>
+      <rect x="242" y="170" width="12" height="20" rx="3" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+      <text class="lbl-val" x="260" y="183">R4</text>
+      <line class="wire" x1="248" y1="145" x2="248" y2="170"/>
+      <line class="wire" x1="248" y1="190" x2="248" y2="215"/>
+      <!-- GND -->
+      <line class="wire" x1="92" y1="215" x2="248" y2="215"/>
+      <line class="wire" x1="110" y1="200" x2="110" y2="215"/>
+      <line class="wire" x1="230" y1="200" x2="230" y2="215"/>
+      <text class="lbl-val" x="170" y="234" text-anchor="middle">GND</text>
+      <!-- Clock output -->
+      <circle cx="270" cy="120" r="3" fill="var(--coral)"/>
+      <line class="wire" x1="230" y1="120" x2="270" y2="120"/>
+
+      <!-- Tone oscillator zone -->
+      <rect class="zone" x="350" y="20" width="310" height="230" rx="10"/>
+      <text class="section-lbl" x="364" y="42">Oscylator tonu ~200-2kHz</text>
+      <!-- Same structure, condensed -->
+      <line class="wire" x1="410" y1="60" x2="590" y2="60"/>
+      <line class="wire" x1="440" y1="60" x2="440" y2="74"/>
+      <rect x="434" y="74" width="12" height="24" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
+      <text class="lbl-val" x="452" y="90">R5</text>
+      <line class="wire" x1="440" y1="98" x2="440" y2="120"/>
+      <line class="wire" x1="560" y1="60" x2="560" y2="74"/>
+      <rect x="554" y="74" width="12" height="24" rx="3" fill="var(--teal-l)" stroke="var(--teal)" stroke-width="0.5"/>
+      <text class="lbl-val" x="572" y="90">R6</text>
+      <line class="wire" x1="560" y1="98" x2="560" y2="120"/>
+      <circle cx="440" cy="145" r="18" class="comp"/>
+      <text class="lbl" x="440" y="149" text-anchor="middle" font-weight="500">Q3</text>
+      <line class="wire" x1="440" y1="120" x2="440" y2="127"/>
+      <line class="wire" x1="440" y1="163" x2="440" y2="200"/>
+      <circle cx="560" cy="145" r="18" class="comp"/>
+      <text class="lbl" x="560" y="149" text-anchor="middle" font-weight="500">Q4</text>
+      <line class="wire" x1="560" y1="120" x2="560" y2="127"/>
+      <line class="wire" x1="560" y1="163" x2="560" y2="200"/>
+      <!-- Caps C3 C4 -->
+      <line class="wire" x1="440" y1="120" x2="470" y2="120"/>
+      <line x1="470" y1="114" x2="470" y2="126" stroke="var(--accent)" stroke-width="2"/>
+      <line x1="476" y1="114" x2="476" y2="126" stroke="var(--accent)" stroke-width="2"/>
+      <line class="wire" x1="476" y1="120" x2="500" y2="120"/>
+      <text class="lbl-val" x="473" y="110">C3 10nF</text>
+      <line class="wire" x1="560" y1="120" x2="530" y2="120"/>
+      <line x1="530" y1="114" x2="530" y2="126" stroke="var(--accent)" stroke-width="2"/>
+      <line x1="524" y1="114" x2="524" y2="126" stroke="var(--accent)" stroke-width="2"/>
+      <line class="wire" x1="524" y1="120" x2="500" y2="120"/>
+      <text class="lbl-val" x="527" y="110">C4 10nF</text>
+      <circle cx="500" cy="120" r="2" class="comp-fill"/>
+      <line class="wire" x1="500" y1="120" x2="500" y2="145"/>
+      <line class="wire" x1="500" y1="145" x2="422" y2="145" stroke-dasharray="3 2" opacity="0.4"/>
+      <line class="wire" x1="500" y1="145" x2="578" y2="145" stroke-dasharray="3 2" opacity="0.4"/>
+      <!-- LDR instead of R7 -->
+      <circle cx="422" cy="175" r="12" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.8"/>
+      <text class="lbl-val" x="422" y="178" text-anchor="middle">LDR</text>
+      <line x1="412" y1="162" x2="416" y2="168" stroke="var(--amber)" stroke-width="0.6"/>
+      <line x1="418" y1="160" x2="422" y2="166" stroke="var(--amber)" stroke-width="0.6"/>
+      <line class="wire" x1="422" y1="145" x2="422" y2="163"/>
+      <line class="wire" x1="422" y1="187" x2="422" y2="215"/>
+      <!-- R8 -->
+      <rect x="572" y="170" width="12" height="20" rx="3" fill="var(--amber-l)" stroke="var(--amber)" stroke-width="0.5"/>
+      <text class="lbl-val" x="590" y="183">R8 10k</text>
+      <line class="wire" x1="578" y1="145" x2="578" y2="170"/>
+      <line class="wire" x1="578" y1="190" x2="578" y2="215"/>
+      <!-- GND -->
+      <line class="wire" x1="422" y1="215" x2="578" y2="215"/>
+      <line class="wire" x1="440" y1="200" x2="440" y2="215"/>
+      <line class="wire" x1="560" y1="200" x2="560" y2="215"/>
+      <text class="lbl-val" x="500" y="234" text-anchor="middle">GND</text>
+      <!-- Tone output -->
+      <circle cx="600" cy="120" r="3" fill="var(--teal)"/>
+      <line class="wire" x1="560" y1="120" x2="600" y2="120"/>
+
+      <!-- Gate zone -->
+      <rect class="zone" x="20" y="270" width="300" height="150" rx="10"/>
+      <text class="section-lbl" x="34" y="292">Bramka (gate)</text>
+      <circle cx="170" cy="360" r="18" class="comp"/>
+      <text class="lbl" x="170" y="364" text-anchor="middle" font-weight="500">Q5</text>
+      <!-- Clock in -->
+      <line class="wire" x1="270" y1="120" x2="270" y2="260"/>
+      <path class="wire" d="M270 260 L270 290 L50 290 L50 360 L152 360"/>
+      <text class="lbl-val" x="54" y="354">Clock</text>
+      <!-- Tone in -->
+      <line class="wire" x1="600" y1="120" x2="600" y2="260"/>
+      <path class="wire" d="M600 260 L600 290 L290 290 L290 320 L170 320"/>
+      <line class="wire" x1="170" y1="320" x2="170" y2="342"/>
+      <text class="lbl-val" x="200" y="316">Tone</text>
+      <!-- Output -->
+      <line class="wire" x1="170" y1="378" x2="170" y2="405"/>
+      <circle cx="170" cy="405" r="3" fill="var(--coral)"/>
+      <text class="lbl-val" x="186" y="408">Gated out → speaker</text>
+
+      <!-- LED driver zone -->
+      <rect class="zone" x="350" y="270" width="310" height="150" rx="10"/>
+      <text class="section-lbl" x="364" y="292">Driver LEDów</text>
+      <circle cx="500" cy="360" r="18" class="comp"/>
+      <text class="lbl" x="500" y="364" text-anchor="middle" font-weight="500">Q6</text>
+      <!-- Clock in -->
+      <path class="wire" d="M270 290 L270 310 L380 310 L380 360 L482 360"/>
+      <text class="lbl-val" x="384" y="354">Clock</text>
+      <!-- LEDs -->
+      <polygon points="460,300 472,300 466,314" class="comp"/>
+      <line class="comp" x1="460" y1="314" x2="472" y2="314"/>
+      <line class="wire" x1="466" y1="288" x2="466" y2="300"/>
+      <line class="wire" x1="466" y1="314" x2="466" y2="340"/>
+      <text class="lbl-val" x="466" y="284" text-anchor="middle">LED1</text>
+      <polygon points="530,300 542,300 536,314" class="comp"/>
+      <line class="comp" x1="530" y1="314" x2="542" y2="314"/>
+      <line class="wire" x1="536" y1="288" x2="536" y2="300"/>
+      <line class="wire" x1="536" y1="314" x2="536" y2="340"/>
+      <text class="lbl-val" x="536" y="284" text-anchor="middle">LED2</text>
+      <line class="wire" x1="466" y1="340" x2="536" y2="340"/>
+      <line class="wire" x1="500" y1="340" x2="500" y2="342"/>
+      <!-- GND -->
+      <line class="wire" x1="500" y1="378" x2="500" y2="405"/>
+      <text class="lbl-val" x="516" y="402">GND</text>
+
+      <!-- Output stage label -->
+      <text class="note" x="20" y="440">Wyjście audio: kondensator sprzęgający 100nF → potencjometr głośności 10k → głośnik 8Ω</text>
+
+      <!-- Formula -->
+      <rect x="20" y="460" width="640" height="60" rx="8" fill="var(--bg2)" stroke="var(--border)" stroke-width="0.5"/>
+      <text class="section-lbl" x="34" y="482">Częstotliwość oscylatora</text>
+      <text class="lbl" x="34" y="502">f = 1 / (1.4 × R × C)</text>
+      <text class="lbl-val" x="34" y="514">Clock: R=100k, C=47uF → ~0.15 Hz     Tone: R=LDR(1k–100k), C=10nF → 700–70000 Hz</text>
+    </svg>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION: BOM                                   -->
+<!-- ═══════════════════════════════════════════════ -->
+<section id="bom">
+<div class="wrap">
+  <h2>Lista części</h2>
+  <p>Wszystko dostępne w TME lub Botland. Koszt: około 15–20 PLN.</p>
+  <table class="bom-table">
+    <thead><tr><th>Element</th><th>Wartość</th><th>Szt.</th><th>Uwagi</th></tr></thead>
+    <tbody>
+      <tr><td>Q1–Q6</td><td>BC547</td><td>6</td><td>NPN, zamienniki: 2N2222, 2N3904</td></tr>
+      <tr><td>R1,R2,R5,R6</td><td>1k</td><td>4</td><td>1/4W</td></tr>
+      <tr><td>R3,R4</td><td>100k</td><td>2</td><td>lub potencjometr 220k (tempo)</td></tr>
+      <tr><td>R8</td><td>10k</td><td>1</td><td>1/4W</td></tr>
+      <tr><td>R9</td><td>4.7k</td><td>1</td><td>1/4W</td></tr>
+      <tr><td>R10</td><td>470Ω</td><td>1</td><td>1/4W</td></tr>
+      <tr><td>R11,R12</td><td>330Ω</td><td>2</td><td>ogranicznik prądu LED</td></tr>
+      <tr><td>R13</td><td>100Ω</td><td>1</td><td>1/4W</td></tr>
+      <tr><td>C1,C2</td><td>47uF</td><td>2</td><td>elektrolityczne, 16V+, polaryzacja!</td></tr>
+      <tr><td>C3,C4</td><td>10nF</td><td>2</td><td>ceramiczne (103)</td></tr>
+      <tr><td>C5</td><td>100nF</td><td>1</td><td>ceramiczny (104), sprzęgający</td></tr>
+      <tr><td>LDR</td><td>GL5528</td><td>1</td><td>fotorezystor 1k–100k</td></tr>
+      <tr><td>LED1</td><td>czerwona 5mm</td><td>1</td><td></td></tr>
+      <tr><td>LED2</td><td>zielona 5mm</td><td>1</td><td></td></tr>
+      <tr><td>VOL</td><td>10k pot</td><td>1</td><td>liniowy, głośność</td></tr>
+      <tr><td>SPKR</td><td>8Ω</td><td>1</td><td>mały głośnik lub piezo</td></tr>
+      <tr><td>—</td><td>bateria 9V</td><td>1</td><td>ze złączem</td></tr>
+      <tr><td>—</td><td>płytka stripboard</td><td>1</td><td>min. 30×24 otwory</td></tr>
+    </tbody>
+  </table>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION: Build notes                           -->
+<!-- ═══════════════════════════════════════════════ -->
+<section id="build">
+<div class="wrap">
+  <h2>Budowa</h2>
+
+  <h3>Kolejność montażu</h3>
+  <p>Wytnij płytkę 30×24 otwory. Zrób wszystkie przecięcia ścieżek miedzianych najpierw (wiertło 3mm, ręcznie). Sprawdź każde cięcie miernikiem. Potem lutuj od najniższych elementów: zworki, rezystory, kondensatory ceramiczne, tranzystory, elektrolityczne, LEDy, LDR, potencjometr, złącza.</p>
+
+  <h3>Tranzystor BC547</h3>
+  <p>Pinout (płaską stroną do siebie): E–B–C od lewej do prawej. Przy 2N2222 (TO-92) jest tak samo, ale zawsze sprawdź datasheet swojego konkretnego egzemplarza.</p>
+
+  <h3>Modyfikacje</h3>
+  <p>Regulacja tempa: zamień R3+R4 na podwójny potencjometr 220k. Zakres tonu: zmień C3/C4 — większe = niższy, mniejsze = wyższy. Więcej LEDów: równoległe pary LED+rezystor na kolektorze Q6. Efekt tremolo: trzeci multiwibrator astabilny (~5 Hz) podłączony do potencjometru głośności.</p>
+
+  <button class="print-btn" onclick="window.print()">Drukuj stronę</button>
+</div>
+</section>
+
+<footer>
+<div class="wrap">
+  <a href="../">← mazek.github.io</a>
+</div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SCRIPTS                                        -->
+<!-- ═══════════════════════════════════════════════ -->
+<script>
+/* ── Beat machine ── */
+(function(){
+  const AC = new (window.AudioContext || window.webkitAudioContext)();
+  let playing = false, step = 0, timer = null;
+  const STEPS = 16;
+  const seq1 = [1,0,0,0,1,0,0,1,0,0,1,0,0,0,1,0];
+  const seq2 = [0,0,1,0,0,0,1,0,0,1,0,0,1,0,0,0];
+
+  const strip = document.getElementById('led-strip');
+  for(let i=0;i<STEPS;i++){
+    const d = document.createElement('div');
+    d.className='led';d.id='led-'+i;
+    strip.appendChild(d);
+  }
+
+  function buildSeq(id, arr){
+    const c=document.getElementById(id);c.innerHTML='';
+    for(let i=0;i<STEPS;i++){
+      const b=document.createElement('div');
+      b.className='step'+(arr[i]?' on':'');
+      b.textContent=i+1;b.dataset.idx=i;
+      b.onclick=()=>{arr[i]=arr[i]?0:1;b.classList.toggle('on',!!arr[i]);};
+      c.appendChild(b);
+    }
+  }
+  buildSeq('seq1',seq1);buildSeq('seq2',seq2);
+
+  const bpmEl=document.getElementById('bpm'),bpmOut=document.getElementById('bpm-out');
+  const lightEl=document.getElementById('light'),lightOut=document.getElementById('light-out');
+  const pitchEl=document.getElementById('pitch'),pitchOut=document.getElementById('pitch-out');
+  const decayEl=document.getElementById('decay'),decayOut=document.getElementById('decay-out');
+  bpmEl.oninput=()=>{bpmOut.textContent=bpmEl.value;if(playing)restartTimer();};
+  lightEl.oninput=()=>{lightOut.textContent=lightEl.value;};
+  pitchEl.oninput=()=>{pitchOut.textContent=pitchEl.value;};
+  decayEl.oninput=()=>{decayOut.textContent=decayEl.value;};
+
+  const canvas=document.getElementById('wave-canvas'),ctx=canvas.getContext('2d');
+  const analyser=AC.createAnalyser();analyser.fftSize=512;
+  const bufLen=analyser.frequencyBinCount,dataArr=new Uint8Array(bufLen);
+
+  function resizeCanvas(){
+    canvas.width=canvas.offsetWidth*(window.devicePixelRatio||1);
+    canvas.height=canvas.offsetHeight*(window.devicePixelRatio||1);
+  }
+  resizeCanvas();window.addEventListener('resize',resizeCanvas);
+
+  function drawWave(){
+    requestAnimationFrame(drawWave);
+    analyser.getByteTimeDomainData(dataArr);
+    const w=canvas.width,h=canvas.height;
+    ctx.clearRect(0,0,w,h);ctx.lineWidth=2;
+    const light=parseInt(lightEl.value);
+    const cs=getComputedStyle(document.documentElement);
+    const accent=cs.getPropertyValue('--accent').trim()||'#534AB7';
+    ctx.strokeStyle=accent;
+    ctx.beginPath();const sliceW=w/bufLen;let x=0;
+    for(let i=0;i<bufLen;i++){const v=dataArr[i]/128;const y=v*h/2;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);x+=sliceW;}
+    ctx.stroke();
+  }
+  drawWave();
+
+  function playNote(freq,time,dur,vol,pan){
+    const osc=AC.createOscillator(),gain=AC.createGain(),panner=AC.createStereoPanner(),filter=AC.createBiquadFilter();
+    const light=parseInt(lightEl.value);
+    filter.type='lowpass';filter.frequency.setValueAtTime(200+light*40,time);filter.Q.setValueAtTime(2+light*0.08,time);
+    const freqMod=freq*(0.7+light*0.006);
+    osc.type=light<30?'square':light<65?'sawtooth':'triangle';
+    osc.frequency.setValueAtTime(freqMod,time);
+    gain.gain.setValueAtTime(vol,time);gain.gain.exponentialRampToValueAtTime(0.001,time+dur);
+    panner.pan.setValueAtTime(pan,time);
+    osc.connect(filter);filter.connect(gain);gain.connect(panner);panner.connect(analyser);analyser.connect(AC.destination);
+    osc.start(time);osc.stop(time+dur);
+  }
+
+  function tick(){
+    const now=AC.currentTime,baseFreq=parseInt(pitchEl.value),dur=parseInt(decayEl.value)/100;
+    if(seq1[step])playNote(baseFreq,now,dur,0.35,-0.3);
+    if(seq2[step])playNote(baseFreq*1.5,now,dur*0.7,0.25,0.3);
+    for(let i=0;i<STEPS;i++){
+      const led=document.getElementById('led-'+i);
+      if(i===step){
+        const a1=seq1[i],a2=seq2[i];
+        if(a1&&a2){led.style.background='var(--coral)';led.style.boxShadow='0 0 6px var(--coral)';}
+        else if(a1){led.style.background='var(--accent)';led.style.boxShadow='0 0 6px var(--accent)';}
+        else if(a2){led.style.background='var(--teal)';led.style.boxShadow='0 0 5px var(--teal)';}
+        else{led.style.background='var(--fg3)';led.style.boxShadow='none';}
+      }else{led.style.background='var(--border)';led.style.boxShadow='none';}
+    }
+    step=(step+1)%STEPS;
+  }
+
+  function restartTimer(){if(timer)clearInterval(timer);const bpm=parseInt(bpmEl.value);timer=setInterval(tick,(60/bpm/4)*1000);}
+
+  document.getElementById('play-btn').onclick=()=>{
+    if(AC.state==='suspended')AC.resume();
+    playing=!playing;
+    document.getElementById('play-btn').textContent=playing?'stop':'play';
+    document.getElementById('pw-dot').style.background=playing?'var(--teal)':'var(--fg3)';
+    if(playing){step=0;restartTimer();}
+    else{clearInterval(timer);timer=null;
+      for(let i=0;i<STEPS;i++){const l=document.getElementById('led-'+i);l.style.background='var(--border)';l.style.boxShadow='none';}
+    }
+  };
+  document.getElementById('rand-btn').onclick=()=>{
+    for(let i=0;i<STEPS;i++){seq1[i]=Math.random()>0.6?1:0;seq2[i]=Math.random()>0.65?1:0;}
+    buildSeq('seq1',seq1);buildSeq('seq2',seq2);
+  };
+  document.getElementById('reset-btn').onclick=()=>{
+    const d1=[1,0,0,0,1,0,0,1,0,0,1,0,0,0,1,0],d2=[0,0,1,0,0,0,1,0,0,1,0,0,1,0,0,0];
+    for(let i=0;i<STEPS;i++){seq1[i]=d1[i];seq2[i]=d2[i];}
+    buildSeq('seq1',seq1);buildSeq('seq2',seq2);
+  };
+})();
+
+/* ── Oscillator stepper ── */
+(function(){
+  const steps=[
+    {title:"Spoczynek",q1:"idle",q2:"idle",q1c:"",q2c:"",f1:"",f2:"",
+     desc:"Układ jest symetryczny — dwa identyczne tranzystory, dwa identyczne rezystory, dwa identyczne kondensatory, sprzężone na krzyż. Ale symetria nie może się utrzymać. Najmniejsza różnica w parametrach komponentów powoduje, że jeden tranzystor włącza się ułamek nanosekundy wcześniej. To łamie pat."},
+    {title:"Q1 włącza się",q1:"ON",q2:"OFF",q1c:"var(--teal-l)",q2c:"",
+     f1:"M160 40 L160 220 L160 380",f2:"",
+     desc:"Q1 wygrywa wyścig i włącza się. Prąd płynie z +9V przez R1, przez Q1 do masy. Napięcie na kolektorze Q1 spada do prawie 0V. Ten nagły spadek przechodzi przez kondensator C1 do bazy Q2, ciągnąc ją w dół. Q2 jest zmuszony do wyłączenia."},
+    {title:"C1 przenosi spadek",q1:"ON",q2:"OFF",q1c:"var(--teal-l)",q2c:"var(--coral-l)",
+     f1:"M160 150 L260 150",f2:"",
+     desc:"Kondensator C1 siedzi między kolektorem Q1 a bazą Q2. Gdy kolektor Q1 spada do 0V, C1 przekazuje tę zmianę napięcia bezpośrednio na bazę Q2 — ciągnąc ją w ujemne. Tranzystor z ujemną bazą jest twardo wyłączony. To jest sprzężenie krzyżowe — serce oscylatora."},
+    {title:"C1 ładuje się przez R4",q1:"ON",q2:"OFF",q1c:"var(--teal-l)",q2c:"var(--coral-l)",
+     f1:"M540 380 L540 310",f2:"",
+     desc:"Teraz C1 zaczyna się ładować przez R4 (100k). To jest element czasowy — stała czasowa RC. Napięcie na bazie Q2 powoli rośnie od ujemnego w stronę dodatniego. R4 jest duży (100k) i C1 jest duży (47uF), więc to trwa: t ≈ 0.7 × R × C = 0.7 × 100k × 47uF ≈ 3.3 sekundy. To jest twój interwał beatu."},
+    {title:"Q2 się włącza — flip!",q1:"OFF",q2:"ON",q1c:"var(--coral-l)",q2c:"var(--teal-l)",
+     f1:"",f2:"M480 40 L480 220 L480 380",
+     desc:"Gdy C1 naładuje się wystarczająco, baza Q2 osiąga ~0.6V i Q2 przeskakuje na ON. Jego kolektor spada do 0V. Teraz C2 przenosi ten spadek na bazę Q1 — zmuszając Q1 do wyłączenia. Cała sytuacja się odwraca. C2 zaczyna się ładować przez R3 i cykl powtórzy się w odwrotnym kierunku."},
+    {title:"Ciągła oscylacja",q1:"ON / OFF",q2:"OFF / ON",q1c:"var(--amber-l)",q2c:"var(--amber-l)",
+     f1:"M160 150 L260 150",f2:"M480 150 L380 150",
+     desc:"Układ przerzuca się w kółko, w nieskończoność. Każda połówka trwa ~0.7 × R × C sekund. Przy 100k i 47uF to ~3.3s na połówkę, czyli pełny cykl co ~6.6s — wolny beat ~0.15 Hz. Zmniejsz C do 10nF (jak w oscylatorze tonu) i dostaniesz tysiące cykli na sekundę — słyszalny dźwięk."}
+  ];
+  let cur=0;
+  const pills=document.getElementById('osc-pills');
+  const desc=document.getElementById('osc-desc');
+  function render(i){
+    cur=i;const s=steps[i];
+    document.querySelectorAll('#osc-pills button').forEach((p,j)=>p.classList.toggle('active',j===i));
+    document.getElementById('sv-q1s').textContent='Q1: '+s.q1;
+    document.getElementById('sv-q2s').textContent='Q2: '+s.q2;
+    const q1=document.getElementById('sv-q1'),q2=document.getElementById('sv-q2');
+    q1.style.fill=s.q1c||'none';q2.style.fill=s.q2c||'none';
+    document.getElementById('sv-q1s-bg').style.fill=s.q1c||'var(--bg2)';
+    document.getElementById('sv-q2s-bg').style.fill=s.q2c||'var(--bg2)';
+    const f1=document.getElementById('sv-f1'),f2=document.getElementById('sv-f2');
+    if(s.f1){f1.setAttribute('d',s.f1);f1.style.opacity='0.5';}else{f1.style.opacity='0';}
+    if(s.f2){f2.setAttribute('d',s.f2);f2.style.opacity='0.5';}else{f2.style.opacity='0';}
+    desc.textContent=s.desc;
+  }
+  steps.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.textContent=s.title;b.onclick=()=>render(i);
+    pills.appendChild(b);
+  });
+  render(0);
+})();
+</script>
+</body>
+</html>
